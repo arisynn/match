@@ -4,124 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Syncard</title>
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     
     <style>
         :root {
-            /* Tema Eye-Care Pastel Premium */
-            --bg-main: #f4f7fb; 
-            --card-back: #cbd5e1; 
-            --card-front: #fdfcfa; 
-            --p1-color: #6366f1; /* Indigo Soft */
-            --p2-color: #f43f5e; /* Rose Soft */
-            --success: #10b981; 
-            --text-main: #334155;
-            --text-muted: #94a3b8;
-            --danger: #ef4444;
-            --surface: #ffffff;
+            --bg-main: #f4f7fb; --card-back: #cdd6e4; --card-front: #fdfcfa; 
+            --p1-color: #6366f1; --p2-color: #f43f5e; --success: #10b981; 
+            --text-main: #334155; --text-muted: #94a3b8; --danger: #ef4444; 
+            --surface: #ffffff; --amber: #f59e0b;
         }
 
-        html, body {
-            font-family: 'Nunito', sans-serif; background-color: var(--bg-main);
-            touch-action: none !important; overscroll-behavior: none !important;
-            margin: 0; padding: 0; height: 100vh; height: 100dvh; width: 100vw;
-            color: var(--text-main); overflow: hidden; user-select: none; -webkit-user-select: none;
-            display: flex; align-items: center; justify-content: center;
-        }
-
+        html, body { font-family: 'Nunito', sans-serif; background-color: var(--bg-main); touch-action: none !important; overscroll-behavior: none !important; margin: 0; padding: 0; height: 100vh; height: 100dvh; width: 100vw; color: var(--text-main); overflow: hidden; user-select: none; -webkit-user-select: none; display: flex; align-items: center; justify-content: center; }
         .screen-hidden { display: none !important; }
         
-        /* Layout Pembungkus Utama (Absolute Center Portrait) */
-        .main-wrapper {
-            width: 100%; height: 100%; max-width: 450px; 
-            display: flex; flex-direction: column; 
-            /* Memaksa konten selalu berada di tengah secara vertikal */
-            justify-content: center; align-items: center;
-            padding: 1.2rem; box-sizing: border-box; position: relative;
-        }
+        .main-wrapper { width: 100%; height: 100%; max-width: 450px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 1.2rem; box-sizing: border-box; position: relative; }
+        .center-box { width: 100%; margin: auto 0; display: flex; flex-direction: column; gap: 0.8rem; }
 
-        /* Kontainer dalam agar tidak meregang */
-        .content-box {
-            width: 100%; display: flex; flex-direction: column; gap: 1rem;
-            margin: auto 0; /* Auto margin for vertical centering inside flex */
-        }
-
-        /* --- UI Components Premium --- */
-        .input-stylish {
-            width: 100%; background: var(--surface); border-radius: 1rem; padding: 1.1rem;
-            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1rem;
-            color: var(--text-main); text-align: center; border: 2px solid #e2e8f0;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.02); outline: none; transition: all 0.3s;
-        }
+        /* UI Components */
+        .input-stylish { width: 100%; background: var(--surface); border-radius: 1rem; padding: 1rem; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1rem; color: var(--text-main); text-align: center; border: 2px solid #e2e8f0; outline: none; transition: all 0.3s; }
         .input-stylish:focus { border-color: var(--p1-color); box-shadow: 0 4px 15px rgba(99,102,241,0.15); }
         .input-stylish::placeholder { color: #cbd5e1; }
 
-        .btn-3d {
-            width: 100%; font-weight: 900; font-size: 0.9rem; padding: 1rem;
-            border-radius: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.4rem;
-            transition: transform 0.1s, box-shadow 0.1s, background 0.3s; cursor: pointer; border: none;
-            text-transform: uppercase; letter-spacing: 1.2px; color: white;
-        }
+        .btn-3d { width: 100%; font-weight: 900; font-size: 0.85rem; padding: 1rem; border-radius: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.4rem; transition: transform 0.1s, box-shadow 0.1s, background 0.3s; cursor: pointer; border: none; text-transform: uppercase; letter-spacing: 1px; color: white; }
         .btn-3d:active { transform: translateY(3px); box-shadow: none !important; margin-bottom: -3px; margin-top: 3px;}
-        
         .btn-solo { background: #3b82f6; box-shadow: 0 4px 0 #2563eb; }
-        .btn-host { background: var(--p1-color); box-shadow: 0 3px 0 #4f46e5; font-size: 0.75rem; padding: 0.8rem;}
-        .btn-join { background: var(--p2-color); box-shadow: 0 3px 0 #e11d48; font-size: 0.75rem; padding: 0.8rem;}
+        .btn-host { background: var(--p1-color); box-shadow: 0 3px 0 #4f46e5; }
+        .btn-join { background: var(--p2-color); box-shadow: 0 3px 0 #e11d48; }
         .btn-start { background: var(--success); box-shadow: 0 4px 0 #059669; }
-        .btn-cancel { background: #f1f5f9; box-shadow: 0 3px 0 #cbd5e1; color: var(--text-muted); font-size: 0.75rem; padding: 0.8rem;}
-        .btn-action { background: #e2e8f0; box-shadow: 0 3px 0 #cbd5e1; color: var(--text-main); font-size: 0.7rem; padding: 0.5rem 0.8rem; border-radius: 0.8rem;}
+        .btn-cancel { background: #f1f5f9; box-shadow: 0 3px 0 #cbd5e1; color: var(--text-muted); }
+        .btn-action { background: #e2e8f0; box-shadow: 0 3px 0 #cbd5e1; color: var(--text-main); font-size: 0.75rem; padding: 0.5rem 0.8rem; border-radius: 0.8rem;}
 
-        /* --- Game Board (Perfect Center Square) --- */
-        .game-board-container {
-            width: 100%; max-width: 100%; 
-            aspect-ratio: 1/1; 
-            background-color: rgba(255,255,255,0.6);
-            border-radius: 1.5rem; padding: 6px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-            display: flex; align-items: center; justify-content: center;
-            position: relative; transition: box-shadow 0.5s ease;
-            margin: 0 auto;
-        }
-
+        /* Game Board */
+        .game-board-container { width: 100%; max-width: 100%; max-height: 52vh; aspect-ratio: 1/1; background-color: rgba(255,255,255,0.6); border-radius: 1.5rem; padding: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); display: flex; align-items: center; justify-content: center; position: relative; transition: all 0.5s ease; margin: 0 auto; }
         .board-pulse { animation: pulse-glow 1.5s infinite alternate; }
+        .board-hot-streak { border: 3px solid var(--amber); box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); }
         @keyframes pulse-glow { 0% { box-shadow: 0 0 0 0px rgba(99, 102, 241, 0.4); } 100% { box-shadow: 0 0 0 15px rgba(99, 102, 241, 0); } }
 
         .grid-layout { display: grid; width: 100%; height: 100%; gap: 6px; }
 
-        /* --- 3D Card Premium --- */
+        /* Cards */
         .card { perspective: 1000px; width: 100%; height: 100%; cursor: pointer; }
-        .card-inner {
-            position: relative; width: 100%; height: 100%;
-            text-align: center; transform-style: preserve-3d;
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
+        .card-inner { position: relative; width: 100%; height: 100%; text-align: center; transform-style: preserve-3d; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .card.flipped .card-inner { transform: rotateY(180deg); }
         .card.matched .card-inner { transform: rotateY(180deg) scale(0.9); }
-        
-        /* Guide Mode Force Open */
         .card.guide-open .card-inner { transform: rotateY(180deg); }
-        .card.guide-open .card-front { opacity: 0.5; }
+        .card.guide-open .card-front { opacity: 0.7; }
+        .card.guide-bomb .card-front { border-color: var(--danger); background-color: rgba(239,68,68,0.1); }
         
-        .card-face {
-            position: absolute; width: 100%; height: 100%;
-            backface-visibility: hidden; -webkit-backface-visibility: hidden;
-            border-radius: 10px; display: flex; align-items: center; justify-content: center;
-        }
-        .card-back {
-            background-color: var(--card-back);
-            box-shadow: inset 0 -3px 0 rgba(0,0,0,0.08), inset 0 2px 0 rgba(255,255,255,0.6);
-            transition: background-color 0.3s;
-        }
-        .card-front {
-            background-color: var(--card-front); transform: rotateY(180deg);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 2px solid #e2e8f0;
-            transition: border-color 0.3s, background-color 0.3s, opacity 0.3s;
-        }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        .card-back { background-color: var(--card-back); box-shadow: inset 0 -3px 0 rgba(0,0,0,0.08), inset 0 2px 0 rgba(255,255,255,0.6); transition: background-color 0.3s; }
+        .card-front { background-color: var(--card-front); transform: rotateY(180deg); box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 2px solid #e2e8f0; transition: border-color 0.3s, background-color 0.3s, opacity 0.3s; }
 
-        /* EMOJI HD OPTIMIZATION (Hanya untuk Kartu) */
+        /* HD Emoji inside Cards ONLY */
         .emoji-hd { line-height: 1; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); transition: transform 0.2s;}
         .card:active .emoji-hd { transform: scale(0.9); }
 
@@ -130,81 +66,87 @@
         .card.matched.p2-match .card-front { border-color: var(--p2-color); background-color: rgba(244,63,94,0.1); opacity: 0.9; }
         .card.matched.coop-match .card-front { border-color: var(--success); background-color: rgba(16,185,129,0.1); opacity: 0.9; }
 
-        /* Hukuman Frozen & Bom (SVG, bukan emoji) */
-        .frozen-overlay {
-            position: absolute; inset: 0; border-radius: 1.5rem;
-            background: rgba(255,255,255,0.6); backdrop-filter: blur(4px);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.3s;
-        }
+        /* FX Overlays */
+        .frozen-overlay { position: absolute; inset: 0; border-radius: 1.5rem; background: rgba(255,255,255,0.7); backdrop-filter: blur(4px); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
         .frozen-active .frozen-overlay { opacity: 1; pointer-events: auto; }
         .shake-danger { animation: shake-hard 0.4s ease-in-out; }
         @keyframes shake-hard { 0%,100%{transform:translate(0,0)} 20%{transform:translate(-5px,5px)} 40%{transform:translate(5px,-5px)} 60%{transform:translate(-5px,-5px)} 80%{transform:translate(5px,5px)} }
 
-        /* Assistant Pop-up (Aman di dalam border) */
-        .assistant-badge {
-            position: absolute; top: -14px; right: 10px;
-            background: var(--text-main); color: white;
-            padding: 4px 10px; border-radius: 99px; font-weight: 900; font-size: 0.7rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 2px solid white;
-            display: flex; align-items: center; gap: 4px;
-            transform: scale(0); transform-origin: bottom right; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 100; letter-spacing: 1px; text-transform: uppercase;
-        }
+        /* Assistant Countdown Badge */
+        .assistant-badge { position: absolute; top: -14px; right: 10px; background: var(--text-main); color: white; padding: 4px 10px; border-radius: 99px; font-weight: 900; font-size: 0.75rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 2px solid white; display: flex; align-items: center; gap: 4px; transform: scale(0); transform-origin: bottom right; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 100; letter-spacing: 1px; text-transform: uppercase; }
         .assistant-badge.show { transform: scale(1); animation: float-badge 2s ease-in-out infinite alternate; }
         @keyframes float-badge { 0% {transform: scale(1) translateY(0);} 100% {transform: scale(1) translateY(-3px);} }
 
-        /* Modal & UI Elements */
-        .modal-overlay {
-            position: fixed; inset: 0; background: rgba(240,244,248,0.85); backdrop-filter: blur(6px);
-            display: flex; align-items: center; justify-content: center; z-index: 9999;
-            opacity: 0; pointer-events: none; transition: opacity 0.3s;
-        }
+        /* Combo Badge */
+        .combo-badge { position: absolute; top: -12px; left: 10px; background: var(--amber); color: white; padding: 4px 10px; border-radius: 99px; font-weight: 900; font-size: 0.7rem; box-shadow: 0 4px 10px rgba(245,158,11,0.3); border: 2px solid white; display: flex; align-items: center; gap: 4px; transform: scale(0); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 100; text-transform: uppercase; }
+        .combo-badge.show { transform: scale(1); }
+
+        /* Modals */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(240,244,248,0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
         .modal-overlay.show { opacity: 1; pointer-events: auto; }
-        .modal-content {
-            background: var(--surface); padding: 1.8rem 1.5rem; border-radius: 1.5rem; width: 88%; max-width: 340px;
-            text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.08); border: 1px solid #f1f5f9;
-            transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
+        .modal-content { background: var(--surface); padding: 1.5rem; border-radius: 1.5rem; width: 88%; max-width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.08); border: 1px solid #f1f5f9; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .modal-overlay.show .modal-content { transform: scale(1); }
 
-        .chip-opt {
-            flex: 1; padding: 0.6rem 0.2rem; border-radius: 0.8rem; font-weight: 800; font-size: 0.7rem;
-            background: #f1f5f9; color: var(--text-muted); cursor: pointer; transition: all 0.2s;
-            display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.2;
-            border: 2px solid transparent;
-        }
+        .chip-opt { flex: 1; padding: 0.6rem 0.2rem; border-radius: 0.8rem; font-weight: 800; font-size: 0.7rem; background: #f1f5f9; color: var(--text-muted); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.2; border: 2px solid transparent; }
         .chip-opt.active { background: #eef2ff; color: var(--p1-color); border-color: var(--p1-color); box-shadow: 0 2px 6px rgba(99,102,241,0.1); }
 
         .bar-wrap { width: 100%; height: 6px; background: #e2e8f0; border-radius: 6px; overflow: hidden; margin-top: 0.3rem;}
-        .bar-inner { height: 100%; background: var(--p1-color); width: 0%; transition: width 0.3s linear, background 0.3s; }
+        .bar-inner { height: 100%; background: var(--p1-color); width: 100%; transition: width 1s linear, background 0.3s; }
         
-        .divider-line { width: 100%; height: 2px; background: #e2e8f0; margin: 1rem 0; position: relative; }
-        .divider-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-main); padding: 0 0.8rem; font-size: 0.65rem; font-weight: 900; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase;}
+        /* Lobby Tabs */
+        .lobby-tabs { display: flex; width: 100%; border-bottom: 2px solid #f1f5f9; margin-bottom: 0.8rem; }
+        .lobby-tab { flex: 1; padding: 0.6rem; text-align: center; font-weight: 900; font-size: 0.75rem; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; text-transform: uppercase; letter-spacing: 1px;}
+        .lobby-tab.active.tab-duel { color: var(--p1-color); border-bottom-color: var(--p1-color); }
+        .lobby-tab.active.tab-coop { color: var(--success); border-bottom-color: var(--success); }
+
+        /* Touch Pan Container */
+        .mode-grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; width: 100%; max-height: 180px; overflow-y: auto; padding-right: 4px; padding-bottom: 4px; touch-action: pan-y; overscroll-behavior: contain; }
+        .mode-grid-container::-webkit-scrollbar { width: 4px; }
+        .mode-grid-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        .mode-card-sm { border: 2px solid #f1f5f9; background: var(--surface); border-radius: 0.8rem; padding: 8px; cursor: pointer; transition: all 0.2s; text-align: left; display: flex; align-items: center; gap: 6px; }
+        .mode-card-sm.active { border-color: var(--p1-color); background: #f5f7ff; color: var(--p1-color); transform: scale(0.97);}
+        .mode-card-sm svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+        .mode-info-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px; border-radius: 0.8rem; text-align: left; min-height: 40px; display: flex; align-items: center; gap: 8px; }
+        .mode-tag { background: #e2e8f0; color: var(--text-main); font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; font-weight: 900; }
+
+        /* Mistake Dots */
+        .mistake-dot { width: 6px; height: 6px; border-radius: 50%; background: #e2e8f0; transition: background 0.3s; }
+        .mistake-dot.err { background: var(--danger); box-shadow: 0 0 5px rgba(239,68,68,0.5); }
+
+        /* Confetti */
+        .confetti { position: absolute; top: -10px; width: 8px; height: 8px; z-index: 10000; animation: fall 3s linear forwards; }
+        @keyframes fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+
+        /* Floating Action Btn */
+        .fab-action { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%) scale(0); background: var(--amber); color: white; padding: 10px 20px; border-radius: 99px; font-weight: 900; box-shadow: 0 5px 15px rgba(245,158,11,0.4); border: 2px solid white; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 90; display: flex; align-items: center; gap: 6px; }
+        .fab-action.show { transform: translateX(-50%) scale(1); }
+        .fab-action:active { transform: translateX(-50%) scale(0.95); }
     </style>
 </head>
 <body>
 
-<!-- GLOBAL NOTIF -->
+<!-- TOAST -->
 <div id="toast" class="fixed top-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-5 py-2.5 rounded-full font-bold text-[10px] uppercase tracking-wide opacity-0 transition-all duration-300 pointer-events-none z-[99999] shadow-xl text-center min-w-[180px]">Notif</div>
 
 <!-- SCREEN 1: MENU -->
 <div id="screen-menu" class="main-wrapper">
-    <div class="content-box">
+    <div class="center-box">
         <div class="text-center w-full mb-2">
             <h1 class="text-6xl font-black leading-tight tracking-tight text-slate-800 drop-shadow-sm">SYN<span style="color:var(--p1-color)">CARD</span></h1>
-            <p class="text-[var(--text-muted)] font-bold tracking-widest uppercase text-[9px] mt-1">Memory Match Engine</p>
+            <p class="text-[var(--text-muted)] font-bold tracking-widest uppercase text-[9px] mt-1">v2.0 Massive Update</p>
         </div>
 
-        <input type="text" id="player-name" class="input-stylish mb-2" placeholder="Ketik Namamu..." maxlength="10">
+        <input type="text" id="player-name" class="input-stylish mb-4" placeholder="Ketik Namamu..." maxlength="10">
 
-        <button onclick="openSoloModal()" class="btn-3d btn-solo !py-3.5 !text-lg !rounded-xl w-full">MAIN SOLO</button>
+        <button onclick="openSoloModal()" class="btn-3d btn-solo !py-3.5 !text-lg !rounded-xl w-full mb-2 border border-blue-400">MAIN SOLO</button>
         
-        <div class="divider-line"><div class="divider-text">Multiplayer</div></div>
+        <div class="w-full h-0.5 bg-slate-200 my-2 relative"><div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[var(--bg-main)] px-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Multiplayer</div></div>
         
-        <div class="flex gap-2 w-full">
-            <button onclick="doHostLobby()" class="btn-3d btn-host flex-1">BUAT ROOM</button>
-            <button onclick="openJoinModal()" class="btn-3d btn-join flex-1">GABUNG</button>
+        <div class="flex gap-2 w-full mt-2">
+            <button onclick="doHostLobby()" class="btn-3d btn-host flex-1 border border-indigo-400">BUAT ROOM</button>
+            <button onclick="openJoinModal()" class="btn-3d btn-join flex-1 border border-rose-400">GABUNG</button>
         </div>
     </div>
 </div>
@@ -213,26 +155,34 @@
 <div id="solo-modal" class="modal-overlay">
     <div class="modal-content">
         <h2 class="text-xl font-black text-slate-800 mb-1">Mode Solo</h2>
-        <p class="text-[9px] font-bold text-slate-400 mb-4 uppercase tracking-wider">Pemanasan Otak</p>
         
-        <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl border border-slate-100 mb-4">
-            <div class="text-left">
-                <div class="text-[7px] font-black text-slate-400 uppercase">Best Score</div>
-                <div class="text-base font-black text-[var(--p1-color)] leading-none" id="solo-best-score">0</div>
+        <!-- Sub-mode Solo Tabs -->
+        <div class="flex gap-1 w-full bg-slate-100 p-1 rounded-xl mb-3">
+            <button class="flex-1 py-1.5 text-[9px] font-black rounded-lg transition-colors bg-white text-[var(--p1-color)] shadow-sm solo-tab" id="s-tab-rush" onclick="setSoloSub('solo_rush')">RUSH</button>
+            <button class="flex-1 py-1.5 text-[9px] font-black rounded-lg transition-colors text-slate-400 solo-tab" id="s-tab-challenge" onclick="setSoloSub('solo_challenge')">CHALLENGE</button>
+            <button class="flex-1 py-1.5 text-[9px] font-black rounded-lg transition-colors text-slate-400 solo-tab" id="s-tab-blitz" onclick="setSoloSub('solo_blitz')">BLITZ</button>
+            <button class="flex-1 py-1.5 text-[9px] font-black rounded-lg transition-colors text-slate-400 solo-tab" id="s-tab-zen" onclick="setSoloSub('solo_zen')">ZEN</button>
+        </div>
+
+        <div class="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100 mb-4">
+            <div class="text-left w-1/2 border-r border-slate-200">
+                <div class="text-[7px] font-black text-slate-400 uppercase" id="lbl-solo-stat1">Best Score</div>
+                <div class="text-sm font-black text-[var(--p1-color)] leading-none mt-1" id="solo-stat1">0</div>
             </div>
-            <div class="text-right">
-                <div class="text-[7px] font-black text-slate-400 uppercase">Fastest Time</div>
-                <div class="text-base font-black text-[var(--success)] leading-none" id="solo-best-time">-</div>
+            <div class="text-right w-1/2 pl-2">
+                <div class="text-[7px] font-black text-slate-400 uppercase" id="lbl-solo-stat2">Total Games</div>
+                <div class="text-sm font-black text-[var(--success)] leading-none mt-1" id="solo-stat2">0</div>
             </div>
         </div>
 
         <div class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 text-center">Pilih Grid</div>
-        <div class="flex gap-1.5 w-full mb-3">
+        <div class="flex gap-1.5 w-full mb-4">
             <div class="chip-opt active" id="solo-grid-4" onclick="setSoloGrid(4)">4x4</div>
             <div class="chip-opt" id="solo-grid-6" onclick="setSoloGrid(6)">6x6</div>
             <div class="chip-opt" id="solo-grid-8" onclick="setSoloGrid(8)">8x8</div>
         </div>
 
+        <!-- Tambahkan kembali elemen Batas Waktu agar tidak terjadi error Cannot read properties of null -->
         <div class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 text-center">Batas Waktu</div>
         <div class="flex gap-1.5 w-full mb-5">
             <div class="chip-opt active" id="solo-time-0" onclick="setSoloTimer(0)">Off</div>
@@ -260,44 +210,40 @@
     </div>
 </div>
 
-<!-- INFO MODAL (Accordion replacement) -->
-<div id="info-modal" class="modal-overlay">
-    <div class="modal-content !p-4 !max-w-[320px]">
-        <h2 class="text-lg font-black text-slate-800 mb-3">Aturan Mode</h2>
-        <div class="max-h-[250px] overflow-y-auto text-left pr-2 mb-3 border-b border-slate-100" id="info-list-content" style="scrollbar-width: thin;">
-            <!-- Populated by JS -->
+<!-- QUIT CONFIRM MODAL -->
+<div id="quit-modal" class="modal-overlay">
+    <div class="modal-content !p-5">
+        <h2 class="text-xl font-black text-slate-800 mb-2">Akhiri Game?</h2>
+        <p class="text-[10px] font-bold text-slate-500 mb-5" id="quit-desc">Progres kamu akan hilang.</p>
+        <div class="flex gap-2 w-full">
+            <button onclick="closeModal('quit-modal')" class="btn-3d btn-cancel flex-1">BATAL</button>
+            <button onclick="forceQuitGame()" class="btn-3d !bg-red-500 !shadow-[0_3px_0_#b91c1c] flex-1">KELUAR</button>
         </div>
-        <button onclick="closeModal('info-modal')" class="btn-3d btn-cancel w-full !py-2">TUTUP</button>
     </div>
 </div>
 
-<!-- SCREEN 2: LOBBY -->
+<!-- SCREEN 2: LOBBY MULTI -->
 <div id="screen-lobby" class="main-wrapper screen-hidden">
-    <div class="content-box">
-        <div class="w-full flex items-center justify-between mb-1">
-            <button onclick="leaveLobby()" class="bg-white p-2 rounded-xl shadow-sm text-slate-400 active:scale-95 transition border border-slate-100">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+    <div class="center-box !gap-2.5">
+        <!-- Header -->
+        <div class="w-full flex items-center justify-between bg-white rounded-2xl p-2 shadow-sm border border-slate-100">
+            <button onclick="leaveLobby()" class="bg-slate-50 p-2 rounded-xl text-slate-400 active:scale-95 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m15 18-6-6 6-6"/></svg>
             </button>
-            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Lobby Multi</span>
-            <div class="w-8"></div>
-        </div>
-
-        <!-- Room Code Bar -->
-        <div class="w-full bg-white border border-slate-200 rounded-2xl p-3 flex justify-between items-center shadow-sm">
-            <div>
-                <div class="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Kode Room</div>
-                <div class="text-2xl font-black tracking-widest text-[var(--p1-color)] leading-none" id="lobby-code">ABCD</div>
+            <div class="flex flex-col items-center">
+                <span class="text-[8px] font-black uppercase tracking-widest text-slate-400">Kode Room</span>
+                <span class="text-xl font-black tracking-widest text-[var(--p1-color)] leading-none" id="lobby-code">ABCD</span>
             </div>
-            <button onclick="copyCode()" class="bg-slate-100 px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 active:scale-95 transition border border-slate-200">Salin</button>
+            <button onclick="copyCode()" class="bg-slate-50 px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 active:scale-95 transition">Salin</button>
         </div>
 
         <!-- Session Score Display -->
         <div id="session-score-display" class="w-full bg-slate-800 rounded-xl p-2 shadow-md hidden flex-col items-center justify-center text-white">
-            <div class="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Skor Sesi Ini</div>
+            <div class="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Skor Head-to-Head</div>
             <div class="flex items-center gap-3 text-lg font-black leading-none">
-                <span id="ses-p1-name" class="text-[var(--p1-color)] text-xs truncate max-w-[70px]">P1</span>
+                <span class="text-[var(--p1-color)] text-[10px]">KAMU</span>
                 <span id="ses-s1">0</span> <span class="text-slate-500 text-sm">-</span> <span id="ses-s2">0</span>
-                <span id="ses-p2-name" class="text-[var(--p2-color)] text-xs truncate max-w-[70px]">P2</span>
+                <span class="text-[var(--p2-color)] text-[10px]">LAWAN</span>
             </div>
         </div>
 
@@ -314,19 +260,29 @@
             </div>
         </div>
 
-        <!-- Host Settings (Compact Grid) -->
-        <div id="host-settings" class="w-full bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col gap-3">
-            <div>
-                <div class="flex justify-between items-center mb-2">
-                    <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Pilih Mode</div>
-                    <button onclick="openInfoModal()" class="text-[8px] text-[var(--p1-color)] font-bold bg-indigo-50 px-2 py-1 rounded border border-indigo-100 active:scale-95 transition">Aturan Mode</button>
-                </div>
-                <div class="grid grid-cols-2 gap-1.5 w-full" id="mode-list">
-                    <!-- Populated by JS -->
+        <!-- Host Settings -->
+        <div id="host-settings" class="w-full bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col gap-2">
+            <!-- Tabs -->
+            <div class="lobby-tabs">
+                <div class="lobby-tab tab-duel active" id="tab-duel" onclick="setLobbyTab('duel')">DUEL</div>
+                <div class="lobby-tab tab-coop" id="tab-coop" onclick="setLobbyTab('coop')">CO-OP</div>
+            </div>
+
+            <!-- Scroll Grid Mode -->
+            <div class="mode-grid-container" id="mode-list">
+                <!-- Populated by JS -->
+            </div>
+            
+            <!-- Dinamis Info Mode -->
+            <div class="mode-info-box mt-1">
+                <div id="mode-icon-box" class="w-6 h-6 text-[var(--p1-color)] flex-shrink-0 flex items-center justify-center"></div>
+                <div class="flex flex-col gap-0.5">
+                    <div class="flex items-center gap-2"><span class="font-black text-[10px] text-slate-700 leading-none" id="mode-title-box">Nama</span> <span class="mode-tag" id="mode-tag-box">TAG</span></div>
+                    <div class="text-[8px] font-bold text-slate-500 leading-tight" id="mode-desc-box">Deskripsi mode...</div>
                 </div>
             </div>
 
-            <div class="flex gap-2 w-full mt-1">
+            <div class="flex gap-2 w-full mt-2">
                 <div class="flex-1">
                     <div class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 text-center">Ukuran Grid</div>
                     <div class="flex gap-1 w-full">
@@ -348,44 +304,55 @@
 
         <!-- Joiner Info Read-Only -->
         <div id="joiner-info" class="w-full bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hidden text-center">
-            <div class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2 flex justify-between items-center px-1">
-                <span>Settingan Host:</span>
-                <button onclick="openInfoModal()" class="text-[8px] text-[var(--p1-color)] font-bold bg-indigo-50 px-2 py-1 rounded border border-indigo-100 active:scale-95 transition">Aturan Mode</button>
+            <div class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Settingan Host:</div>
+            
+            <div class="mode-info-box mb-3 justify-center text-center flex-col !items-center !py-3">
+                <div class="text-sm font-black text-[var(--p1-color)] leading-none mb-1" id="joiner-mode-name">Mode Name</div>
+                <span class="mode-tag mb-1" id="joiner-mode-tag">TAG</span>
+                <div class="text-[9px] font-bold text-slate-500 leading-tight px-2" id="joiner-mode-desc">Mode Description...</div>
             </div>
-            <div class="text-sm font-black text-[var(--p1-color)] mb-3" id="joiner-mode-name">Mode Name</div>
             
             <div class="flex justify-center gap-1.5 text-[9px] font-black text-slate-600">
                 <span class="bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">Grid: <span id="joiner-grid-val" class="text-[var(--p1-color)]">4x4</span></span>
                 <span class="bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">Timer: <span id="joiner-time-val" class="text-[var(--p1-color)]">Off</span></span>
             </div>
             <div class="mt-4 text-[9px] font-black text-amber-500 uppercase tracking-widest animate-pulse flex items-center justify-center gap-1">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg> Menunggu Host Memulai
+                <svg class="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Menunggu Host
             </div>
         </div>
 
-        <button id="btn-start-game" onclick="startGameHost()" class="btn-3d btn-start opacity-50 pointer-events-none hidden mt-1 !py-3">MULAI PERTANDINGAN</button>
+        <button id="btn-start-game" onclick="startGameHost()" class="btn-3d btn-start opacity-50 pointer-events-none mt-1 !py-3">MULAI PERTANDINGAN</button>
     </div>
 </div>
 
-<!-- SCREEN 3: GAME BOARD (Centered) -->
+<!-- SCREEN 3: GAME BOARD -->
 <div id="screen-game" class="main-wrapper screen-hidden">
-    <div class="content-box">
+    <div class="center-box">
         <!-- Top Info Bar -->
-        <div class="w-full bg-white rounded-xl p-3 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col gap-1.5 border border-slate-100">
-            <div class="flex justify-between items-center w-full">
-                <div class="flex flex-col items-start w-[30%]">
+        <div class="w-full bg-white rounded-xl p-3 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col gap-1.5 border border-slate-100 relative">
+            
+            <!-- Combo & Sound Top Absolutes -->
+            <div id="combo-badge" class="combo-badge">3X COMBO!</div>
+            <button onclick="toggleSound()" class="absolute top-2 right-2 p-1 text-slate-400 active:scale-90 transition z-10" id="btn-sound">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M13 3.167v17.666c0 .716-.827 1.112-1.39.673l-5.6-4.384H3a1 1 0 0 1-1-1v-8.248a1 1 0 0 1 1-1h3.01l5.6-4.384c.563-.44 1.39-.043 1.39.673zm3.766 4.316a.75.75 0 0 0-1.06 1.06 5.5 5.5 0 0 1 0 7.778.75.75 0 0 0 1.06 1.06 7 7 0 0 0 0-9.898zM19.94 4.543a.75.75 0 0 0-1.06 1.06 9 9 0 0 1 0 12.728.75.75 0 0 0 1.06 1.06 10.5 10.5 0 0 0 0-14.848z"/></svg>
+            </button>
+
+            <div class="flex justify-between items-center w-full mt-2 px-1">
+                <div class="flex flex-col items-start w-[35%]">
                     <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest truncate w-full" id="game-p1-name">KAMU</span>
                     <span class="text-xl font-black text-[var(--p1-color)] leading-none mt-0.5" id="game-p1-score">0</span>
+                    <div class="flex gap-0.5 mt-1 h-1.5" id="game-p1-mistakes"></div>
                 </div>
                 
-                <div class="flex flex-col items-center w-[40%] text-center relative">
-                    <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest truncate w-full" id="game-mode-display">Mode</span>
-                    <span class="text-[9px] font-black text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full mt-1 tracking-widest" id="game-turn-display">VS</span>
+                <div class="flex flex-col items-center w-[30%] text-center">
+                    <span class="text-[7px] font-black text-slate-400 uppercase tracking-widest truncate w-full" id="game-mode-display">Mode</span>
+                    <span class="text-[9px] font-black text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full mt-1 tracking-widest transition-colors" id="game-turn-display">VS</span>
                 </div>
                 
-                <div class="flex flex-col items-end w-[30%] text-right">
+                <div class="flex flex-col items-end w-[35%] text-right">
                     <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest truncate w-full" id="game-p2-name">LAWAN</span>
                     <span class="text-xl font-black text-[var(--p2-color)] leading-none mt-0.5" id="game-p2-score">0</span>
+                    <div class="flex gap-0.5 mt-1 h-1.5 justify-end" id="game-p2-mistakes"></div>
                 </div>
             </div>
             
@@ -398,16 +365,16 @@
                 <div class="bar-wrap !mt-0 !h-[4px]"><div class="bar-inner bg-amber-400" id="timer-bar"></div></div>
             </div>
             
-            <!-- Progress Bar (Duel Race) -->
+            <!-- Progress Bar (Race/Ghost) -->
             <div class="w-full hidden flex-col gap-1 mt-1" id="race-container">
                 <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-[var(--p1-color)]"></div><div class="bar-wrap !mt-0 !h-[4px]"><div class="bar-inner bg-[var(--p1-color)]" id="race-p1"></div></div></div>
-                <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-[var(--p2-color)]"></div><div class="bar-wrap !mt-0 !h-[4px]"><div class="bar-inner bg-[var(--p2-color)]" id="race-p2"></div></div></div>
+                <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-[var(--p2-color)] shadow-sm"></div><div class="bar-wrap !mt-0 !h-[4px]"><div class="bar-inner bg-[var(--p2-color)]" id="race-p2"></div></div></div>
             </div>
         </div>
 
         <!-- Papan Permainan -->
         <div class="game-board-container" id="board-container">
-            <!-- Asisten Pintar (SVG Icon) -->
+            <!-- Assistant Countdown Badge -->
             <div id="assistant-badge" class="assistant-badge">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> 
                 <span id="assistant-text">Hafalkan!</span>
@@ -415,103 +382,139 @@
 
             <div class="grid-layout" id="grid"></div>
             
-            <!-- Hukuman Frozen (SVG Icon) -->
+            <!-- Frozen UI (SVG Icon) -->
             <div class="frozen-overlay" id="frozen-layer">
                 <svg class="w-10 h-10 text-slate-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v20m10-10H2m15.364-7.364l-14.142 14.142m14.142 0L4.93 4.93M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                 <div class="text-[10px] font-black text-slate-700 bg-white px-3 py-1 rounded-full shadow-sm uppercase tracking-widest" id="frozen-text">Dibekukan!</div>
             </div>
         </div>
         
+        <!-- FAB (Floating Action) untuk Duel Frozen / Roulette -->
+        <button id="fab-action" class="fab-action" onclick="executeFabAction()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <span id="fab-text">AKSI</span>
+        </button>
+
         <!-- Action Bar Bawah -->
         <div class="w-full flex justify-between items-center mt-2 px-1">
-            <button onclick="requestLobby()" class="btn-action flex items-center gap-1 font-black text-[9px] uppercase tracking-widest active:scale-95 transition">
+            <button onclick="requestQuit()" class="btn-action flex items-center gap-1 font-black text-[9px] uppercase tracking-widest active:scale-95 transition">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg> Keluar
             </button>
-            <span class="text-[9px] font-black text-slate-400 opacity-60 uppercase tracking-widest">Syncard HD</span>
+            <span class="text-[9px] font-black text-slate-400 opacity-60 uppercase tracking-widest">Syncard v2.0</span>
         </div>
     </div>
 </div>
 
 <!-- RESULT MODAL -->
 <div id="result-modal" class="modal-overlay">
-    <div class="modal-content">
+    <div class="modal-content !p-5">
         <h2 id="res-title" class="text-2xl font-black text-slate-800 mb-1">SELESAI!</h2>
         <p id="res-desc" class="text-[9px] font-bold text-slate-500 mb-4 uppercase tracking-wider">Hasil Pertandingan</p>
         
-        <!-- Skor Kompetisi -->
-        <div id="res-duel-box" class="hidden flex justify-between items-center bg-slate-50 rounded-xl p-4 mb-5 border border-slate-100">
+        <div id="res-perfect-badge" class="hidden font-black text-amber-500 text-sm tracking-widest mb-2 animate-bounce uppercase drop-shadow-sm">⭐ PERFECT CLEAR ⭐</div>
+        
+        <!-- Skor Kompetisi / Solo -->
+        <div id="res-duel-box" class="hidden justify-between items-center bg-slate-50 rounded-xl p-4 mb-3 border border-slate-100">
             <div class="text-center w-2/5"><div class="text-[9px] font-black text-slate-400 uppercase mb-1 truncate" id="res-name-p1">KAMU</div><div class="text-3xl font-black text-[var(--p1-color)] leading-none" id="res-score-p1">0</div></div>
             <div class="text-slate-300 font-black text-xl">-</div>
             <div class="text-center w-2/5"><div class="text-[9px] font-black text-slate-400 uppercase mb-1 truncate" id="res-name-p2">LAWAN</div><div class="text-3xl font-black text-[var(--p2-color)] leading-none" id="res-score-p2">0</div></div>
         </div>
 
         <!-- Rating Co-op -->
-        <div id="res-coop-box" class="hidden flex flex-col items-center bg-slate-50 rounded-xl p-4 mb-5 border border-slate-100">
+        <div id="res-coop-box" class="hidden flex-col items-center bg-slate-50 rounded-xl p-4 mb-3 border border-slate-100">
             <div class="text-[9px] font-black text-slate-400 uppercase mb-1">Sync Rating Telepati</div>
             <div class="text-6xl font-black mb-1 drop-shadow-md leading-none" id="res-tier-text">A</div>
-            <div class="text-[10px] font-bold text-slate-500 mt-1 px-1 leading-tight" id="res-coop-desc">Kesalahan: 0</div>
+        </div>
+
+        <!-- Extra Stats -->
+        <div class="flex flex-col gap-1 text-[9px] font-bold text-slate-500 mb-4 bg-slate-50 border border-slate-100 rounded-xl p-2 text-left">
+            <div class="flex justify-between" id="stat-time-row"><span>Waktu Total:</span> <span id="stat-time-val" class="font-black text-slate-700">0:00</span></div>
+            <div class="flex justify-between"><span>Mistakes / Kesalahan:</span> <span id="stat-err-val" class="font-black text-slate-700">0</span></div>
+            <div class="flex justify-between"><span>Best Combo:</span> <span id="stat-combo-val" class="font-black text-slate-700">0x</span></div>
+            <div class="flex justify-between hidden text-amber-500" id="stat-bonus-row"><span>Time Bonus:</span> <span id="stat-bonus-val" class="font-black">+0</span></div>
         </div>
 
         <div class="flex gap-2 w-full" id="res-btn-container">
-            <button onclick="backToMenuFromRes()" class="btn-3d btn-cancel flex-1 !py-3">KE LOBBY</button>
-            <button id="btn-next-solo" onclick="nextLevelSolo()" class="btn-3d btn-solo flex-1 hidden !py-3">LANJUT</button>
+            <button onclick="backToMenuFromRes()" class="btn-3d btn-cancel flex-1 !py-3 !text-[10px]">KE LOBBY</button>
+            <button id="btn-next-solo" onclick="nextLevelSolo()" class="btn-3d btn-solo flex-1 hidden !py-3 !text-[10px]">LANJUT</button>
+            <button id="btn-retry-solo" onclick="startConfiguredSolo()" class="btn-3d btn-start flex-1 hidden !py-3 !text-[10px]">ULANG</button>
         </div>
     </div>
 </div>
 
-<!-- SVG Ikon Bom (Hidden) -->
 <template id="bomb-icon-template">
     <svg class="w-3/5 h-3/5 text-slate-700" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));" fill="currentColor" viewBox="0 0 24 24"><path d="M11 2a1 1 0 0 1 2 0v1.077A9.004 9.004 0 0 1 20.923 11H22a1 1 0 1 1 0 2h-1.077A9.004 9.004 0 0 1 13 20.923V22a1 1 0 1 1-2 0v-1.077A9.004 9.004 0 0 1 3.077 13H2a1 1 0 1 1 0-2h1.077A9.004 9.004 0 0 1 11 3.077V2zm1 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm4.95 2.05a1 1 0 1 1-1.414 1.414A5.002 5.002 0 0 0 12 7a1 1 0 1 1 0-2c2.21 0 4.21.896 5.657 2.343z"/></svg>
 </template>
 
 <script>
 // =========================================================
-// 8 MODES CONFIGURATION
+// SVG ICONS UTILS
+// =========================================================
+const SVG = {
+    race: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/></svg>',
+    clash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h5v5"/><path d="M19.5 4l-5 5"/><path d="M9.5 20h-5v-5"/><path d="M4.5 20l5-5"/><path d="M14.5 20h5v-5"/><path d="M19.5 20l-5-5"/><path d="M9.5 4h-5v5"/><path d="M4.5 4l5 5"/></svg>',
+    mine: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M6.34 17.66l-1.41 1.41"/><path d="M19.07 4.93l-1.41 1.41"/></svg>',
+    shuffle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>',
+    telepati: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+    estafet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3v18"/><path d="M10 18l7 3 7-3"/><path d="M7 21V3"/><path d="M14 6L7 3 0 6"/></svg>',
+    guide: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    squad: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>',
+    scratch: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+    frozen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5l-10 14M7 5l10 14M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07l14.14-14.14"/></svg>',
+    roulette: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/><line x1="12" y1="2" x2="12" y2="10"/><line x1="12" y1="14" x2="12" y2="22"/><line x1="2" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="22" y2="12"/></svg>',
+    mirror: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg>'
+};
+
+// =========================================================
+// 12 MODES CONFIGURATION
 // =========================================================
 const MODES = [
-    { id: 'solo', name: 'Solo Rush', desc: 'Bersihkan papan secepatnya. Latihan akurasi dan kecepatan.' }, 
-    { id: 'race', name: 'Duel Race', desc: 'Adu lari beda papan! Bersihkan papanmu sendiri duluan.' },
-    { id: 'clash', name: 'Duel Clash', desc: 'Adu mekanik di 1 papan sama. Berebut warnai wilayah.' },
-    { id: 'mine', name: 'Duel Ranjau', desc: 'Ada Bom! Jangan salah klik atau terkena stun beku.' },
-    { id: 'shuffle', name: 'Gempa Shuffle', desc: 'Tiap ada yang cocok, sisa kartu diacak ulang.' },
-    { id: 'telepati', name: 'Co-op Telepati', desc: 'Beda Papan. Gantian saling sebut & cari pasangan.' },
-    { id: 'estafet', name: 'Co-op Estafet', desc: '1 Papan. P1 buka kartu pertama, P2 eksekusi kartu kedua.' },
-    { id: 'guide', name: 'Co-op Pemandu', desc: '1 Papan. Host melihat semua kartu & memandu Anggota.' }
+    { id: 'race', name: 'Duel Race', category: 'duel', tag: 'PAPAN BEDA', icon: SVG.race, desc: 'Adu cepat! Fokus bersihkan papanmu sendiri duluan.' },
+    { id: 'clash', name: 'Duel Clash', category: 'duel', tag: 'PAPAN SAMA', icon: SVG.clash, desc: 'Adu mekanik. Berebut wilayah warna dengan cepat.' },
+    { id: 'mine', name: 'Duel Ranjau', category: 'duel', tag: 'PAPAN SAMA', icon: SVG.mine, desc: 'Awas Bom! Jangan salah klik atau poin -50 & bom berpindah.' },
+    { id: 'shuffle', name: 'Gempa Shuffle', category: 'duel', tag: 'PAPAN SAMA', icon: SVG.shuffle, desc: 'Chaos! Tiap ada yang cocok, posisi sisa kartu diacak ulang.' },
+    { id: 'scratch_race', name: 'Gosok Balapan', category: 'duel', tag: 'PAPAN BEDA', icon: SVG.scratch, desc: 'Gosok semua hadiah instan! Hindari bom (-200 poin).' },
+    { id: 'scratch_clash', name: 'Gosok Rebutan', category: 'duel', tag: 'PAPAN SAMA', icon: SVG.scratch, desc: 'Berebut gosok hadiah terbanyak tanpa menyentuh bom.' },
+    { id: 'duel_frozen', name: 'Duel Frozen', category: 'duel', tag: 'PAPAN SAMA', icon: SVG.frozen, desc: 'Lawan salah 2x beruntun? Klik tombol AKSI untuk bekukan dia!' },
+    { id: 'duel_roulette', name: 'Duel Roulette', category: 'duel', tag: 'PAPAN SAMA', icon: SVG.roulette, desc: 'Setiap 20 detik, Roulette memutar efek acak ekstrem!' },
+    { id: 'telepati', name: 'Co-op Telepati', category: 'coop', tag: 'PAPAN BEDA', icon: SVG.telepati, desc: 'Tanpa emoji ganda. Gantian saling sebut & cari pasangan.' },
+    { id: 'estafet', name: 'Co-op Estafet', category: 'coop', tag: 'BERGANTIAN', icon: SVG.estafet, desc: 'P1 buka kartu pertama, P2 WAJIB mendengarkan untuk kartu kedua.' },
+    { id: 'guide', name: 'Co-op Pemandu', category: 'coop', tag: 'PAPAN SAMA', icon: SVG.guide, desc: 'Host melihat semua kartu (tembus pandang) & memandu Anggota.' },
+    { id: 'squad', name: 'Penjinak Bom', category: 'coop', tag: 'PAPAN SAMA', icon: SVG.squad, desc: 'Host melihat 3 Bom, Anggota mencari tanpa boleh kena bom!' },
+    { id: 'coop_mirror', name: 'Co-op Mirror', category: 'coop', tag: 'PAPAN IDENTIK', icon: SVG.mirror, desc: 'Dua papan sama persis. Klik kartu yang sama dalam 3s untuk Sync Bonus!' }
 ];
 
-// EMOJI HD ASSETS (>150 Varian)
-const EMOJIS = [
-    '🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🐛','🦋','🐌','🐞','🐜','🦟','🦗','🕷','🦂','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐕‍🦺','🐈','🐈‍⬛','🐓','🦃','🦚','🦜','🦢','🦩','🕊','🐇','🦝','🦨','🦡','🦦','🦥','🐁','🐀','🐿','🦔',
-    '🍎','🍏','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🍈','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🍆','🥑','🥦','🥬','🥒','🌶','🌽','🥕','🧄','🧅','🥔','🍠','🥐','🥯','🍞','🥖','🥨','🧀','🥚','🍳','🧈','🥞','🧇','🥓','🥩','🍗','🍖','🌭','🍔','🍟','🍕','🥪','🥙','🧆','🌮','🌯','🥗','🥘','🥫','🍝','🍜','🍲','🍛','🍣','🍱','🥟','🦪','🍤','🍙','🍚','🍘','🍥','🥠','🥮','🍢','🍡','🍧','🍨','🍦','🥧','🧁','🍰','🎂','🍮','🍭','🍬','🍫','🍿','🍩','🍪','🌰','🥜','🍯','🥛','🍼','☕','🍵','🧃','🥤','🍶','🍺','🍻','🥂','🍷','🥃','🍸','🍹','🧉','🍾','🧊','🥄','🍴','🍽','🥣','🥡','🥢','🧂',
-    '🚗','🚕','🚙','🚌','🚎','🏎','🚓','🚑','🚒','🚐','🚚','🚛','🚜','🦯','🦽','🦼','🛴','🚲','🛵','🏍','🛺','🚨','🚔','🚍','🚘','🚖','🚡','🚠','🚟','🚃','🚋','🚞','🚝','🚄','🚅','🚈','🚂','🚆','🚇','🚊','🚉','✈','🛫','🛬','🛩','💺','🛰','🚀','🛸','🚁','🛶','⛵','🚤','🛥','🛳','⛴','🚢','⚓','⛽','🚧','🚦','🚥','🚏','🗺','🗿','🗽','🗼','🏰','🏯','🏟','🎡','🎢','🎠','⛲','⛱','🏖','🏝','🏜','🌋','⛰','🏔','🗻','🏕','⛺','🏠','🏡','🏘','🏚','🏗','🏭','🏢','🏬','🏣','🏤','🏥','🏦','🏨','🏪','🏫','🏩','💒','🏛','⛪','🕌','🕍','🛕','🕋','⛩','🛤','🛣','🗾','🎑','🏞','🌅','🌄','🌠','🎇','🎆','🌇','🌆','🏙','🌃','🌌','🌉','🌁'
-];
+const SOLO_SUBMODES = {
+    'solo_rush': { name: 'Rush', desc: 'Selesaikan papan secepat mungkin.' },
+    'solo_challenge': { name: 'Challenge', desc: 'Hati-hati, ada 2 Bom (-30 & Beku)!' },
+    'solo_blitz': { name: 'Blitz', desc: 'Waktu sangat singkat! Match +bonus waktu.' },
+    'solo_zen': { name: 'Zen', desc: 'Endless. Tanpa waktu, tanpa beban.' }
+};
 
+const EMOJIS = ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🐛','🦋','🐌','🐞','🐜','🦟','🦗','🕷','🦂','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐕‍🦺','🐈','🐈‍⬛','🐓','🦃','🦚','🦜','🦢','🦩','🕊','🐇','🦝','🦨','🦡','🦦','🦥','🐁','🐀','🐿','🦔','🍎','🍏','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🍈','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🍆','🥑','🥦','🥬','🥒','🌶','🌽','🥕','🧄','🧅','🥔','🍠','🥐','🥯','🍞','🥖','🥨','🧀','🥚','🍳','🧈','🥞','🧇','🥓','🥩','🍗','🍖','🌭','🍔','🍟','🍕','🥪','🥙','🧆','🌮','🌯','🥗','🥘','🥫','🍝','🍜','🍲','🍛','🍣','🍱','🥟','🦪','🍤','🍙','🍚','🍘','🍥','🥠','🥮','🍢','🍡','🍧','🍨','🍦','🥧','🧁','🍰','🎂','🍮','🍭','🍬','🍫','🍿','🍩','🍪','🌰','🥜','🍯','🥛','🍼','☕','🍵','🧃','🥤','🍶','🍺','🍻','🥂','🍷','🥃','🍸','🍹','🧉','🍾','🧊','🚗','🚕','🚙','🚌','🚎','🏎','🚓','🚑','🚒','🚐','🚚','🚛','🚜','🛴','🚲','🛵','🏍','🚨','🚔','🚍','🚘','🚖','🚡','🚠','🚟','🚃','🚋','🚞','🚝','🚄','🚅','🚈','🚂','🚆','🚇','🚊','🚉','✈','🛫','🛬','🛩','🚀','🛸','🚁','🛶','⛵','🚤','🛥','🛳','⛴','🚢','⚓','🚥','🗼','🏰','🏯','🏟','🎡','🎢','🎠','⛲','⛺','🏠','🏡','🏘','🏚','🏗','🏭','🏢','🏬','🏣','🏤','🏥','🏦','🏨','🏪','🏫','🏩','💒','🏛','⛪','🕌','🕍','🛕','🕋','⛩'];
 let currentEmojiSet = [];
-
-function getEmojiHtml(idx) {
-    if(idx === 999) return document.getElementById('bomb-icon-template').innerHTML; 
-    return `<div class="emoji-hd">${currentEmojiSet[idx % currentEmojiSet.length]}</div>`;
-}
+function getEmojiHtml(idx) { if(idx === 999) return document.getElementById('bomb-icon-template').innerHTML; return `<div class="emoji-hd">${currentEmojiSet[idx % currentEmojiSet.length]}</div>`; }
 
 // =========================================================
 // GLOBAL STATE & ABLY
 // =========================================================
 const ABLY_KEY = "4opURQ.FVPiqg:z5W8zQxWoBNlXmlAXvOv4Bz1bmn_ISnFucJGpjFijS8";
-let myId = crypto.randomUUID();
-let myName = localStorage.getItem('cm_name') || "";
-document.getElementById('player-name').value = myName;
-
+let myId = crypto.randomUUID(); let myName = localStorage.getItem('cm_name') || ""; document.getElementById('player-name').value = myName;
 let ably = null; let roomChan = null;
 
 let state = {
-    role: '', roomId: '', opName: '', opId: '',
-    modeIdx: 2, grid: 4, timer: 0, soloGrid: 4, soloTimer: 0,
+    role: '', roomId: '', opName: '', opId: '', 
+    modeIdx: 0, grid: 4, timer: 0, lobbyTab: 'duel',
+    soloSubMode: 'solo_rush', soloGrid: 4, soloTimer: 0, zenLevel: 1,
     sessionMyWins: 0, sessionOpWins: 0,
-    isPlaying: false, isMemorizing: false, board: [], 
-    score: 0, opScore: 0, progress: 0, opProgress: 0,
-    lockedLocal: [], errorsLocal: 0, turnIdx: 0, turnSeq: [1, 2, 2, 1], 
-    coopInitiatorCard: null, coopErrors: 0,
-    timeLeft: 0, timeElapsed: 0, timerInt: null, isFrozen: false
+    isPlaying: false, memoPhase: false, clickLock: false, board: [], 
+    score: 0, opScore: 0, progress: 0, opProgress: 0, 
+    lockedLocal: [], errorsLocal: 0, opErrorsSeq: 0, myErrorsSeq: 0,
+    turnIdx: 0, turnSeq: [1, 2, 2, 1], coopInitiatorCard: null, coopErrors: 0,
+    comboStreak: 0, bestCombo: 0, firstMatchDone: false,
+    timeLeft: 0, timeElapsed: 0, timerInt: null, isFrozen: false,
+    soundEnabled: localStorage.getItem('syncard_sound') !== 'false',
+    ghostInt: null, mirrorPending: null
 };
 
 // =========================================================
@@ -520,130 +523,159 @@ let state = {
 let actx;
 function initAudio() { if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if(actx.state === 'suspended') actx.resume(); }
 function playSfx(type) {
-    if(!actx || actx.state !== 'running') return;
-    const now = actx.currentTime, osc = actx.createOscillator(), gain = actx.createGain();
-    osc.connect(gain); gain.connect(actx.destination);
-    if(type==='flip'){ osc.type='sine'; osc.frequency.setValueAtTime(500,now); osc.frequency.exponentialRampToValueAtTime(800,now+0.1); gain.gain.setValueAtTime(0.15,now); gain.gain.exponentialRampToValueAtTime(0.01,now+0.1); osc.start(now); osc.stop(now+0.1); }
-    else if(type==='match'){ osc.type='sine'; osc.frequency.setValueAtTime(600,now); osc.frequency.setValueAtTime(900,now+0.1); gain.gain.setValueAtTime(0.25,now); gain.gain.linearRampToValueAtTime(0,now+0.3); osc.start(now); osc.stop(now+0.3); }
-    else if(type==='fail'){ osc.type='sawtooth'; osc.frequency.setValueAtTime(200,now); osc.frequency.linearRampToValueAtTime(50,now+0.3); gain.gain.setValueAtTime(0.2,now); gain.gain.linearRampToValueAtTime(0,now+0.3); osc.start(now); osc.stop(now+0.3); }
-    else if(type==='freeze'){ osc.type='square'; osc.frequency.setValueAtTime(800,now); osc.frequency.exponentialRampToValueAtTime(50,now+0.6); gain.gain.setValueAtTime(0.3,now); gain.gain.exponentialRampToValueAtTime(0.01,now+0.6); osc.start(now); osc.stop(now+0.6); }
-    else if(type==='bomb'){ osc.type='sawtooth'; osc.frequency.setValueAtTime(100,now); osc.frequency.exponentialRampToValueAtTime(10,now+0.8); gain.gain.setValueAtTime(0.5,now); gain.gain.exponentialRampToValueAtTime(0.01,now+0.8); osc.start(now); osc.stop(now+0.8); }
-    else if(type==='shuffle'){ osc.type='triangle'; osc.frequency.setValueAtTime(300,now); osc.frequency.linearRampToValueAtTime(600,now+0.2); gain.gain.setValueAtTime(0.1,now); gain.gain.linearRampToValueAtTime(0,now+0.4); osc.start(now); osc.stop(now+0.4); }
+    if(!actx || actx.state !== 'running' || !state.soundEnabled) return; const now = actx.currentTime, osc = actx.createOscillator(), gain = actx.createGain(); osc.connect(gain); gain.connect(actx.destination);
+    if(type==='flip'){ osc.type='sine'; osc.frequency.setValueAtTime(500,now); osc.frequency.exponentialRampToValueAtTime(800,now+0.1); gain.gain.setValueAtTime(0.1,now); gain.gain.exponentialRampToValueAtTime(0.01,now+0.1); osc.start(now); osc.stop(now+0.1); }
+    else if(type==='match'){ osc.type='sine'; osc.frequency.setValueAtTime(600,now); osc.frequency.setValueAtTime(900,now+0.1); gain.gain.setValueAtTime(0.2,now); gain.gain.linearRampToValueAtTime(0,now+0.3); osc.start(now); osc.stop(now+0.3); }
+    else if(type==='fail'){ osc.type='sawtooth'; osc.frequency.setValueAtTime(200,now); osc.frequency.linearRampToValueAtTime(50,now+0.3); gain.gain.setValueAtTime(0.15,now); gain.gain.linearRampToValueAtTime(0,now+0.3); osc.start(now); osc.stop(now+0.3); }
+    else if(type==='freeze'){ osc.type='square'; osc.frequency.setValueAtTime(800,now); osc.frequency.exponentialRampToValueAtTime(50,now+0.6); gain.gain.setValueAtTime(0.2,now); gain.gain.exponentialRampToValueAtTime(0.01,now+0.6); osc.start(now); osc.stop(now+0.6); }
+    else if(type==='bomb'){ osc.type='sawtooth'; osc.frequency.setValueAtTime(100,now); osc.frequency.exponentialRampToValueAtTime(10,now+0.8); gain.gain.setValueAtTime(0.4,now); gain.gain.exponentialRampToValueAtTime(0.01,now+0.8); osc.start(now); osc.stop(now+0.8); }
+    else if(type==='combo'){ osc.type='sine'; osc.frequency.setValueAtTime(800,now); osc.frequency.setValueAtTime(1200,now+0.1); osc.frequency.setValueAtTime(1600,now+0.2); gain.gain.setValueAtTime(0.2,now); gain.gain.linearRampToValueAtTime(0,now+0.4); osc.start(now); osc.stop(now+0.4); }
 }
-
+function sanitize(str) { return str.replace(/[<>&"']/g, '').substring(0, 12); }
 function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.style.opacity = '1'; t.style.transform = 'translate(-50%, 10px)'; setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translate(-50%, -10px)'; }, 3000); }
-function switchScreen(id) { ['screen-menu','screen-lobby','screen-game'].forEach(s => document.getElementById(s).classList.add('screen-hidden')); document.getElementById(id).classList.remove('screen-hidden'); closeModal('result-modal'); }
+function switchScreen(id) { ['screen-menu','screen-lobby','screen-game'].forEach(s => document.getElementById(s).classList.add('screen-hidden')); document.getElementById(id).classList.remove('screen-hidden'); closeModal('result-modal'); closeModal('quit-modal'); }
 function openModal(id) { document.getElementById(id).classList.add('show'); }
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 function vibrate(ms) { if(navigator.vibrate) navigator.vibrate(ms); }
 function shuffle(arr) { let a=[...arr]; for(let i=a.length-1; i>0; i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-
-// Asisten Pintar
-function showAssistant(text, dur) { const b = document.getElementById('assistant-badge'); document.getElementById('assistant-text').innerText = text; b.classList.add('show'); if(dur > 0) setTimeout(() => b.classList.remove('show'), dur); }
-function hideAssistant() { document.getElementById('assistant-badge').classList.remove('show'); }
-
-function fallbackCopy(text) { const t = document.createElement("input"); t.value = text; document.body.appendChild(t); t.select(); t.setSelectionRange(0, 99999); try { document.execCommand("copy"); showToast("Kode Disalin!"); } catch(e) { showToast("Gagal menyalin."); } document.body.removeChild(t); }
+function stopTimer() { if(state.timerInt) { clearInterval(state.timerInt); state.timerInt = null; } if(state.ghostInt) { clearInterval(state.ghostInt); state.ghostInt = null; } }
 function formatTimeStr(s) { const m = Math.floor(s/60); const sc = s%60; return `${m}:${sc<10?'0':''}${sc}`; }
+function toggleSound() { state.soundEnabled = !state.soundEnabled; localStorage.setItem('syncard_sound', state.soundEnabled); document.getElementById('btn-sound').style.opacity = state.soundEnabled ? '1' : '0.4'; }
+
+// Confetti
+function triggerConfetti() {
+    for(let i=0; i<25; i++) {
+        let c = document.createElement('div'); c.className = 'confetti';
+        c.style.left = Math.random() * 100 + '%'; c.style.backgroundColor = ['#818cf8', '#fb7185', '#34d399', '#fbbf24'][Math.floor(Math.random()*4)];
+        c.style.animationDelay = Math.random() * 0.5 + 's'; c.style.animationDuration = (Math.random() * 1.5 + 1.5) + 's';
+        document.body.appendChild(c); setTimeout(() => c.remove(), 4000);
+    }
+}
+
+// Asisten & Combo Badge
+function updateMemoCountdown(sec) {
+    const b = document.getElementById('assistant-badge'); document.getElementById('assistant-text').innerText = `Hafalkan: ${sec}s`; b.classList.add('show');
+}
+function hideAssistant() { document.getElementById('assistant-badge').classList.remove('show'); }
+function showComboBadge() {
+    if(state.comboStreak >= 3) {
+        const b = document.getElementById('combo-badge'); b.innerText = `${state.comboStreak}X COMBO!`; b.classList.add('show');
+        document.getElementById('board-container').classList.add('board-hot-streak');
+        if(state.comboStreak >= 5) playSfx('combo');
+    }
+}
+function resetCombo() { state.comboStreak = 0; document.getElementById('combo-badge').classList.remove('show'); document.getElementById('board-container').classList.remove('board-hot-streak'); }
+function updateMistakesUI(isOp, errs) {
+    const c = document.getElementById(isOp ? 'game-p2-mistakes' : 'game-p1-mistakes'); c.innerHTML = '';
+    for(let i=0; i<3; i++) { const d = document.createElement('div'); d.className = `mistake-dot ${i < errs ? 'err' : ''}`; c.appendChild(d); }
+}
 
 // =========================================================
 // LOBBY UI & ABLY INIT
 // =========================================================
+function setLobbyTab(tab) {
+    state.lobbyTab = tab; document.getElementById('tab-duel').classList.toggle('active', tab==='duel'); document.getElementById('tab-coop').classList.toggle('active', tab==='coop');
+    let firstIdx = -1;
+    for(let i=0; i<MODES.length; i++) { if(MODES[i].category === tab) { firstIdx = i; break; } }
+    if(MODES[state.modeIdx].category !== tab) setModeIdx(firstIdx); else populateModeList();
+}
+
 function populateModeList() {
     const c = document.getElementById('mode-list'); c.innerHTML = '';
-    const infoC = document.getElementById('info-list-content'); infoC.innerHTML = '';
-    
-    MODES.forEach(m => {
-        const div = document.createElement('div'); div.className = 'mb-2 pb-2 border-b border-slate-100 last:border-0';
-        div.innerHTML = `<div class="font-black text-[11px] text-[var(--p1-color)]">${m.name}</div><div class="text-[9px] font-bold text-slate-500 leading-tight mt-0.5">${m.desc}</div>`;
-        infoC.appendChild(div);
+    MODES.forEach((m, i) => {
+        if(m.category === state.lobbyTab) {
+            const btn = document.createElement('div'); btn.className = `mode-card-sm ${i === state.modeIdx ? 'active' : ''}`;
+            btn.innerHTML = `${m.icon} <span class="font-black text-[10px] leading-tight flex-1">${m.name}</span>`;
+            btn.onclick = () => { if(state.role==='host') setModeIdx(i); }; c.appendChild(btn);
+        }
     });
+    const curr = MODES[state.modeIdx];
+    document.getElementById('mode-title-box').innerText = curr.name; document.getElementById('mode-tag-box').innerText = curr.tag; document.getElementById('mode-desc-box').innerText = curr.desc;
+    document.getElementById('mode-icon-box').innerHTML = curr.icon;
+}
 
-    for(let i=1; i<MODES.length; i++) {
-        const m = MODES[i]; const btn = document.createElement('button');
-        btn.className = `chip-opt ${i === state.modeIdx ? 'active' : ''} !py-1 !text-[9px] border border-slate-200`;
-        btn.innerText = m.name;
-        btn.onclick = () => { if(state.role==='host') setModeIdx(i); };
-        c.appendChild(btn);
+document.getElementById('mode-list').addEventListener('touchmove', (e) => { e.stopPropagation(); }, { passive: true });
+window.addEventListener('DOMContentLoaded', () => { document.getElementById('btn-sound').style.opacity = state.soundEnabled ? '1' : '0.4'; setLobbyTab('duel'); });
+
+async function initAbly() { 
+    return new Promise((resolve) => { 
+        if(ably && ably.connection.state === 'connected') return resolve(); 
+        ably = new Ably.Realtime({ key: ABLY_KEY, clientId: myId }); 
+        ably.connection.on('disconnected', () => showToast("Koneksi terputus..."));
+        ably.connection.on('connected', () => { showToast("Terhubung ke server."); resolve(); });
+    }); 
+}
+
+function openJoinModal() { initAudio(); document.getElementById('room-code-input').value = ''; openModal('join-modal'); setTimeout(() => document.getElementById('room-code-input').focus(), 100); }
+function openSoloModal() { 
+    initAudio(); myName = sanitize(document.getElementById('player-name').value.trim()) || 'Pemain'; localStorage.setItem('cm_name', myName); 
+    setSoloSub(state.soloSubMode); openModal('solo-modal'); 
+}
+function setSoloSub(sub) {
+    state.soloSubMode = sub; document.querySelectorAll('.solo-tab').forEach(e => { e.classList.remove('bg-white', 'text-[var(--p1-color)]', 'shadow-sm'); e.classList.add('text-slate-400'); });
+    const tab = document.getElementById('s-tab-' + sub.split('_')[1]); tab.classList.remove('text-slate-400'); tab.classList.add('bg-white', 'text-[var(--p1-color)]', 'shadow-sm');
+    
+    const bs = localStorage.getItem(`syncard_${sub}_score_${state.soloGrid}`) || '0';
+    const bt = localStorage.getItem(`syncard_${sub}_time_${state.soloGrid}`) || '-';
+    
+    if(sub === 'solo_zen') { document.getElementById('lbl-solo-stat1').innerText = 'Highest Level'; document.getElementById('lbl-solo-stat2').innerText = 'Total Boards'; document.getElementById('solo-stat1').innerText = localStorage.getItem('syncard_zen_level') || '1'; document.getElementById('solo-stat2').innerText = localStorage.getItem('syncard_total_games') || '0'; }
+    else { document.getElementById('lbl-solo-stat1').innerText = 'Best Score'; document.getElementById('lbl-solo-stat2').innerText = 'Best Time'; document.getElementById('solo-stat1').innerText = bs; document.getElementById('solo-stat2').innerText = bt; }
+    
+    const timeOpt = document.getElementById('solo-time-0');
+    if(timeOpt) {
+        if(sub === 'solo_blitz') { setSoloTimer(60); timeOpt.parentElement.classList.add('opacity-50', 'pointer-events-none'); }
+        else { timeOpt.parentElement.classList.remove('opacity-50', 'pointer-events-none'); }
     }
 }
-window.addEventListener('DOMContentLoaded', populateModeList);
 
-async function initAbly() { return new Promise((resolve) => { if(ably && ably.connection.state === 'connected') return resolve(); ably = new Ably.Realtime({ key: ABLY_KEY, clientId: myId }); ably.connection.once('connected', () => resolve()); }); }
-function openJoinModal() { initAudio(); document.getElementById('room-code-input').value = ''; openModal('join-modal'); setTimeout(() => document.getElementById('room-code-input').focus(), 100); }
-function openInfoModal() { initAudio(); openModal('info-modal'); }
-
-function openSoloModal() { 
-    initAudio(); myName = document.getElementById('player-name').value.trim() || 'Pemain'; localStorage.setItem('cm_name', myName); 
-    const bs = localStorage.getItem('syncard_best_score') || '0'; const bt = localStorage.getItem('syncard_best_time_str') || '-';
-    document.getElementById('solo-best-score').innerText = bs; document.getElementById('solo-best-time').innerText = bt;
-    openModal('solo-modal'); 
-}
-function setSoloGrid(g) { state.soloGrid=g; [4,6,8].forEach(v=>document.getElementById('solo-grid-'+v).classList.remove('active')); document.getElementById('solo-grid-'+g).classList.add('active'); }
-function setSoloTimer(t) { state.soloTimer=t; [0,60,120].forEach(v=>document.getElementById('solo-time-'+v).classList.remove('active')); document.getElementById('solo-time-'+t).classList.add('active'); }
+function setSoloGrid(g) { state.soloGrid=g; [4,6,8].forEach(v=>document.getElementById('solo-grid-'+v).classList.remove('active')); document.getElementById('solo-grid-'+g).classList.add('active'); setSoloSub(state.soloSubMode); }
+function setSoloTimer(t) { state.soloTimer=t; [0,60,120].forEach(v=>{ const el=document.getElementById('solo-time-'+v); if(el) el.classList.remove('active');}); const act=document.getElementById('solo-time-'+t); if(act) act.classList.add('active'); }
 
 function startConfiguredSolo() {
-    closeModal('solo-modal'); state.role = 'solo'; state.opName = ''; state.modeIdx = 0; 
-    state.grid = state.soloGrid; state.timer = state.soloTimer;
+    closeModal('solo-modal'); state.role = 'solo'; state.opName = ''; state.modeIdx = -1; state.grid = state.soloGrid; state.timer = state.soloTimer;
+    if(state.soloSubMode === 'solo_blitz') state.timer = state.grid === 4 ? 30 : (state.grid === 6 ? 60 : 90);
+    else if(state.soloSubMode === 'solo_zen') state.timer = 0;
+    
     currentEmojiSet = shuffle([...EMOJIS]).slice(0, (state.grid*state.grid)/2);
-    const b = shuffle([...Array(currentEmojiSet.length).keys(), ...Array(currentEmojiSet.length).keys()]);
-    setupGame(b, true);
+    let arr = []; for(let i=0; i<currentEmojiSet.length; i++) arr.push(i);
+    if(state.soloSubMode === 'solo_challenge') { arr[0] = 999; }
+    const b = shuffle([...arr, ...arr]); setupGame(b, true);
 }
-function nextLevelSolo() { startConfiguredSolo(); }
+function nextLevelSolo() { if(state.soloSubMode==='solo_zen') { state.zenLevel++; localStorage.setItem('syncard_zen_level', state.zenLevel); } startConfiguredSolo(); }
 
 async function doHostLobby() {
-    initAudio(); myName = document.getElementById('player-name').value.trim() || 'Host'; localStorage.setItem('cm_name', myName);
-    showToast("Membuat Room..."); await initAbly();
-    state.role = 'host'; state.roomId = Array(4).fill(0).map(()=>'ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.floor(Math.random()*24)]).join(''); state.opName = ''; state.isPlaying = false;
-    state.sessionMyWins = 0; state.sessionOpWins = 0;
-    roomChan = ably.channels.get('syn-room-' + state.roomId); roomChan.subscribe(handleMsg);
-    updateLobbyUI(); switchScreen('screen-lobby');
+    initAudio(); myName = sanitize(document.getElementById('player-name').value.trim()) || 'Host'; localStorage.setItem('cm_name', myName); showToast("Membuat Room..."); await initAbly();
+    state.role = 'host'; state.roomId = Array(4).fill(0).map(()=>'ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.floor(Math.random()*24)]).join(''); state.opName = ''; state.isPlaying = false; state.sessionMyWins = 0; state.sessionOpWins = 0;
+    roomChan = ably.channels.get('syn-room-' + state.roomId); roomChan.subscribe(handleMsg); updateLobbyUI(); switchScreen('screen-lobby');
 }
 
 async function submitJoin() {
-    initAudio(); myName = document.getElementById('player-name').value.trim() || 'Anggota'; localStorage.setItem('cm_name', myName);
+    initAudio(); myName = sanitize(document.getElementById('player-name').value.trim()) || 'Anggota'; localStorage.setItem('cm_name', myName);
     const code = document.getElementById('room-code-input').value.trim(); if(code.length !== 4) return showToast("Kode 4 huruf!");
     closeModal('join-modal'); showToast("Mencari Room..."); await initAbly();
-    state.role = 'joiner'; state.roomId = code; state.opName = ''; state.isPlaying = false;
-    state.sessionMyWins = 0; state.sessionOpWins = 0;
-    roomChan = ably.channels.get('syn-room-' + state.roomId); roomChan.subscribe(handleMsg);
-    roomChan.publish('JOIN_REQ', { name: myName, id: myId });
+    state.role = 'joiner'; state.roomId = code; state.opName = ''; state.isPlaying = false; state.sessionMyWins = 0; state.sessionOpWins = 0;
+    roomChan = ably.channels.get('syn-room-' + state.roomId); roomChan.subscribe(handleMsg); roomChan.publish('JOIN_REQ', { name: myName, id: myId });
 }
 
-function leaveLobby() { if(roomChan) { roomChan.publish('LEAVE', {id: myId}); roomChan.unsubscribe(); roomChan.detach(); roomChan = null; } state.opName = ''; switchScreen('screen-menu'); }
+function leaveLobby() { if(roomChan) { if(state.role==='host') roomChan.publish('ROOM_CLOSED', {}); else roomChan.publish('JOINER_LEAVE', {}); roomChan.unsubscribe(); roomChan.detach(); roomChan = null; } state.opName = ''; switchScreen('screen-menu'); }
 function copyCode() { const c = state.roomId; if(navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(c).then(()=>showToast("Disalin!")).catch(()=>fallbackCopy(c)); } else { fallbackCopy(c); } }
-function requestLobby() { if(state.role==='host' || state.role==='solo') backToMenuFromRes(); else { if(roomChan){ showToast("Permintaan dikirim ke Host."); roomChan.publish('REQ_LOBBY', {}); } else backToMenuFromRes(); } }
+function requestQuit() { openModal('quit-modal'); if(state.role !== 'solo') document.getElementById('quit-desc').innerText = "Sesi partner juga akan diakhiri."; else document.getElementById('quit-desc').innerText = "Progres kamu akan hilang."; }
+function forceQuitGame() { closeModal('quit-modal'); stopTimer(); if(state.role==='solo') switchScreen('screen-menu'); else leaveLobby(); }
 
 function setModeIdx(i) { state.modeIdx=i; populateModeList(); syncLobby(); }
 function setGrid(g) { state.grid=g; [4,6,8].forEach(v=>document.getElementById('opt-grid-'+v).classList.remove('active')); document.getElementById('opt-grid-'+g).classList.add('active'); syncLobby(); }
-function setTimer(t) { state.timer=t; [0,60,120].forEach(v=>document.getElementById('opt-time-'+v).classList.remove('active')); document.getElementById('opt-time-'+t).classList.add('active'); syncLobby(); }
-function syncLobby() { if(state.role==='host') roomChan.publish('LOBBY_STATE', { host: myName, m: state.modeIdx, g: state.grid, t: state.timer }); }
+function setTimer(t) { state.timer=t; [0,60,120].forEach(v=>{ const el=document.getElementById('opt-time-'+v); if(el) el.classList.remove('active');}); const act=document.getElementById('opt-time-'+t); if(act) act.classList.add('active'); syncLobby(); }
+function syncLobby() { if(state.role==='host' && roomChan) roomChan.publish('LOBBY_STATE', { host: myName, m: state.modeIdx, g: state.grid, t: state.timer, s1: state.sessionMyWins, s2: state.sessionOpWins, tb: state.lobbyTab }); }
 
 function updateLobbyUI() {
-    document.getElementById('lobby-code').innerText = state.roomId;
-    document.getElementById('lb-p1-name').innerText = state.role === 'host' ? myName : (state.opName || 'Host');
-    document.getElementById('lb-p2-name').innerText = state.opName ? (state.role === 'host' ? state.opName : myName) : 'Menunggu Partner...';
-    
+    document.getElementById('lobby-code').innerText = state.roomId; document.getElementById('lb-p1-name').innerText = state.role === 'host' ? myName : (state.opName || 'Host'); document.getElementById('lb-p2-name').innerText = state.opName ? (state.role === 'host' ? state.opName : myName) : 'Menunggu Partner...';
     const p2Card = document.getElementById('lb-p2-card'), p2Av = document.getElementById('lb-p2-avatar');
-    if(state.opName) { p2Card.classList.add('border-[var(--p2-color)]'); p2Av.classList.replace('bg-slate-200','bg-[#fb7185]'); p2Av.classList.replace('text-slate-400','text-white'); } 
-    else { p2Card.classList.remove('border-[var(--p2-color)]'); p2Av.classList.replace('bg-[#fb7185]','bg-slate-200'); p2Av.classList.replace('text-white','text-slate-400'); }
-
-    if(state.sessionMyWins > 0 || state.sessionOpWins > 0) {
-        document.getElementById('session-score-display').classList.remove('hidden'); document.getElementById('session-score-display').classList.add('flex');
-        document.getElementById('ses-p1-name').innerText = myName; // Always Local Name
-        document.getElementById('ses-s1').innerText = state.sessionMyWins; document.getElementById('ses-s2').innerText = state.sessionOpWins;
-        document.getElementById('ses-p2-name').innerText = state.opName||'Lawan'; // Always Op Name
-    } else { document.getElementById('session-score-display').classList.add('hidden'); document.getElementById('session-score-display').classList.remove('flex'); }
-
-    document.getElementById('host-settings').classList.toggle('hidden', state.role !== 'host');
-    document.getElementById('joiner-info').classList.toggle('hidden', state.role === 'host');
-    
-    if(state.role === 'joiner') {
-        const mod = MODES[state.modeIdx]; document.getElementById('joiner-mode-name').innerText = mod.name; 
-        document.getElementById('joiner-grid-val').innerText = `${state.grid}x${state.grid}`; document.getElementById('joiner-time-val').innerText = state.timer === 0 ? "Off" : `${state.timer/60} Menit`;
-    }
-
+    if(state.opName) { p2Card.classList.add('border-[var(--p2-color)]'); p2Av.classList.replace('bg-slate-200','bg-[#f43f5e]'); p2Av.classList.replace('text-slate-400','text-white'); } else { p2Card.classList.remove('border-[var(--p2-color)]'); p2Av.classList.replace('bg-[#f43f5e]','bg-slate-200'); p2Av.classList.replace('text-white','text-slate-400'); }
+    if(state.sessionMyWins > 0 || state.sessionOpWins > 0) { document.getElementById('session-score-display').classList.remove('hidden'); document.getElementById('session-score-display').classList.add('flex'); document.getElementById('ses-s1').innerText = state.sessionMyWins; document.getElementById('ses-s2').innerText = state.sessionOpWins; } else { document.getElementById('session-score-display').classList.add('hidden'); document.getElementById('session-score-display').classList.remove('flex'); }
+    document.getElementById('host-settings').classList.toggle('hidden', state.role !== 'host'); document.getElementById('joiner-info').classList.toggle('hidden', state.role === 'host');
+    if(state.role === 'joiner') { const mod = MODES[state.modeIdx]; document.getElementById('joiner-mode-name').innerText = mod.name; document.getElementById('joiner-mode-tag').innerText = mod.tag; document.getElementById('joiner-mode-desc').innerText = mod.desc; document.getElementById('joiner-grid-val').innerText = `${state.grid}x${state.grid}`; document.getElementById('joiner-time-val').innerText = state.timer === 0 ? "Off" : `${state.timer/60} Menit`; }
     const btnStart = document.getElementById('btn-start-game'); btnStart.classList.toggle('hidden', state.role !== 'host');
-    if(state.opName && state.role === 'host') btnStart.classList.remove('opacity-50','pointer-events-none'); else btnStart.classList.add('opacity-50','pointer-events-none');
+    if(state.opName !== '' && state.role === 'host') btnStart.classList.remove('opacity-50','pointer-events-none'); else btnStart.classList.add('opacity-50','pointer-events-none');
 }
 
 // =========================================================
@@ -653,37 +685,43 @@ function handleMsg(msg) {
     if(msg.clientId === myId) return; const d = msg.data;
     switch(msg.name) {
         case 'JOIN_REQ': if(state.role==='host' && !state.opName) { state.opName = d.name; state.opId = d.id; updateLobbyUI(); syncLobby(); } break;
-        case 'LOBBY_STATE': if(state.role==='joiner') { state.opName = d.host; state.modeIdx = d.m; state.grid = d.g; state.timer = d.t; updateLobbyUI(); switchScreen('screen-lobby'); } break;
-        case 'LEAVE': state.opName = ''; updateLobbyUI(); if(state.isPlaying){ showToast("Partner Keluar!"); setTimeout(backToMenuFromRes, 2000); } break;
-        case 'REQ_LOBBY': showToast(`${state.opName} meminta kembali ke Lobby.`); break;
-        case 'START': state.modeIdx = d.m; state.grid = d.g; state.timer = d.t; currentEmojiSet = d.emojis; setupGame(d.b, false); break;
+        case 'LOBBY_STATE': if(state.role==='joiner') { state.opName = d.host; state.modeIdx = d.m; state.grid = d.g; state.timer = d.t; state.sessionMyWins=d.s2; state.sessionOpWins=d.s1; state.lobbyTab=d.tb; updateLobbyUI(); switchScreen('screen-lobby'); } break;
+        case 'ROOM_CLOSED': showToast("Host menutup Room."); if(roomChan){ roomChan.unsubscribe(); roomChan.detach(); roomChan = null; } stopTimer(); state.opName = ''; switchScreen('screen-menu'); break;
+        case 'JOINER_LEAVE': if(state.role==='host') { state.opName = ''; state.opId = ''; updateLobbyUI(); showToast("Partner Keluar."); if(state.isPlaying){ setTimeout(() => { stopTimer(); syncLobby(); switchScreen('screen-lobby'); }, 1500); } } break;
+        case 'START': if(!d.b) return; state.modeIdx = d.m; state.grid = d.g; state.timer = d.t; currentEmojiSet = d.emojis; setupGame(d.b, false); break;
         case 'RACE_PROG': state.opProgress = d.p; updateRaceUI(); break;
         case 'FLIP': handleOpFlip(d.idx); break; case 'MATCH': handleOpMatch(d.i1, d.i2); break; case 'WRONG': handleOpWrong(d.i1, d.i2); break;
-        case 'BOMB': handleOpBomb(d.idx); break; case 'SHUFFLE': handleOpShuffle(d.newBoard); break;
+        case 'BOMB_EXP': handleOpBomb(d.idx, d.mapping); break; case 'SHUFFLE': handleOpShuffle(d.newBoard); break;
         case 'COOP_INIT': handleOpCoopInit(d.eId); break; case 'COOP_RES': handleOpCoopRes(d.idx, d.isM); break; case 'ESTAFET_PICK': handleOpEstafet(d.idx); break;
-        case 'COOP_GAME_OVER': handleOpCoopGameOver(); break;
+        case 'SCRATCH_BOMB': handleOpScratchBomb(d.idx); break; case 'SCRATCH_REWARD': handleOpScratchReward(d.idx); break;
+        case 'SYNC_END_GAME': handleSyncEndGame(); break;
+        case 'MISTAKES': state.opErrorsSeq = d.c; updateMistakesUI(true, d.c); if(MODES[state.modeIdx].id === 'duel_frozen' && d.c >= 2) { showFab('BEKUKAN LAWAN!', 'frozen'); } break;
+        case 'ICE_ATTACK': playSfx('freeze'); triggerFreeze(3, "Dibekukan Lawan!"); break;
+        case 'ROULETTE': handleOpRoulette(d.eff); break;
+        case 'MIRROR_FLIP': handleOpMirrorFlip(d.eId); break;
     }
 }
+
+function sendMistakes() { if(roomChan && state.role !== 'solo') roomChan.publish('MISTAKES', {c: state.myErrorsSeq}); updateMistakesUI(false, state.myErrorsSeq); }
 
 // =========================================================
 // GAME INIT
 // =========================================================
 function startGameHost() {
     if(!state.opName) return; currentEmojiSet = shuffle([...EMOJIS]).slice(0, 32); 
-    const totalCards = state.grid * state.grid;
-    const mode = MODES[state.modeIdx].id;
+    const totalCards = state.grid * state.grid; const mode = MODES[state.modeIdx].id;
     let bData = [];
     
-    if(mode === 'telepati' || mode === 'guide') {
-        // Asymmetric: P1 and P2 have the SAME 16 unique emojis, but shuffled differently
-        let arr = []; for(let i=0; i<totalCards; i++) arr.push(i);
-        bData = { h: shuffle([...arr]), j: shuffle([...arr]) };
+    if(mode === 'telepati' || mode === 'guide') { let fullArr = []; for(let i=0; i<totalCards; i++) fullArr.push(i); bData = { h: shuffle([...fullArr]), j: shuffle([...fullArr]) }; } 
+    else if (mode === 'scratch_race' || mode === 'scratch_clash') {
+        const bombCount = Math.floor(totalCards * 0.2); const rewardCount = totalCards - bombCount; let arr = []; for(let i=0; i<bombCount; i++) arr.push(999);
+        for(let i=0; i<rewardCount; i++) arr.push(currentEmojiSet[i % currentEmojiSet.length]);
+        if (mode === 'scratch_race') bData = { h: shuffle([...arr]), j: shuffle([...arr]) }; else bData = shuffle([...arr]);
     } else if (mode === 'race') {
-        // Race: P1 has 8 pairs, P2 has 8 pairs.
-        let arr = []; for(let i=0; i<totalCards/2; i++) arr.push(i);
-        bData = { h: shuffle([...arr, ...arr]), j: shuffle([...arr, ...arr]) };
+        let arr = []; for(let i=0; i<totalCards/2; i++) arr.push(i); bData = { h: shuffle([...arr, ...arr]), j: shuffle([...arr, ...arr]) };
+    } else if (mode === 'squad') {
+        let arr = []; for(let i=0; i<(totalCards-6)/2; i++) arr.push(i); arr.push(999,999,999); bData = shuffle([...arr, ...arr]);
     } else {
-        // Standard shared board (Clash, Mine, Shuffle, Estafet)
         let arr = []; for(let i=0; i<totalCards/2; i++) arr.push(i);
         if(mode === 'mine') { arr[0] = 999; arr[1] = 999; }
         bData = shuffle([...arr, ...arr]);
@@ -695,16 +733,17 @@ function startGameHost() {
 function getCardFontSize() { if(state.grid === 4) return '3rem'; if(state.grid === 6) return '1.8rem'; return '1.4rem'; }
 
 function setupGame(boardData, isHost) {
-    state.isPlaying = true; state.isMemorizing = true; state.score = 0; state.opScore = 0; state.progress = 0; state.opProgress = 0;
-    state.lockedLocal = []; state.errorsLocal = 0; state.isFrozen = false;
-    state.coopInitiatorCard = null; state.coopErrors = 0; state.turnIdx = 0; hideAssistant();
-    if(state.timerInt) clearInterval(state.timerInt);
+    state.isPlaying = true; state.memoPhase = true; state.clickLock = false; state.score = 0; state.opScore = 0; state.progress = 0; state.opProgress = 0;
+    state.lockedLocal = []; state.errorsLocal = 0; state.myErrorsSeq = 0; state.opErrorsSeq = 0; state.isFrozen = false;
+    state.coopInitiatorCard = null; state.coopErrors = 0; state.turnIdx = 0; state.comboStreak = 0; state.bestCombo = 0; state.firstMatchDone = false; state.mirrorPending = null;
+    hideAssistant(); document.getElementById('fab-action').classList.remove('show'); resetCombo(); updateMistakesUI(false, 0); updateMistakesUI(true, 0);
+    stopTimer();
     
-    const mode = MODES[state.modeIdx].id;
-    if(mode === 'telepati' || mode === 'guide' || mode === 'estafet') state.turnSeq = [1, 2, 2, 1];
+    let modeId = state.role === 'solo' ? state.soloSubMode : MODES[state.modeIdx].id;
+    if(modeId === 'telepati' || modeId === 'guide' || modeId === 'estafet' || modeId === 'squad') state.turnSeq = [1, 2, 2, 1];
     
-    let layout = []; if(mode === 'race' || mode === 'telepati' || mode === 'guide') layout = isHost ? boardData.h : boardData.j; else layout = boardData;
-    state.board = layout.map((eId, i) => ({ id: i, eId, isFlipped: false, isMatched: false, owner: null }));
+    let layout = []; if(modeId === 'race' || modeId === 'telepati' || modeId === 'guide' || modeId === 'scratch_race') layout = isHost ? boardData.h : boardData.j; else layout = boardData;
+    state.board = layout.map((eId, i) => ({ id: i, eId, isFlipped: false, isMatched: false, owner: null, isClaimed: false }));
 
     const gEl = document.getElementById('grid'); gEl.style.gridTemplateColumns = `repeat(${state.grid}, 1fr)`; gEl.style.gridTemplateRows = `repeat(${state.grid}, 1fr)`; gEl.innerHTML = '';
     const fSize = getCardFontSize();
@@ -714,48 +753,94 @@ function setupGame(boardData, isHost) {
         el.onclick = () => handleCardClick(c.id); gEl.appendChild(el);
     });
 
-    setupTopBar(mode); switchScreen('screen-game'); document.getElementById('board-container').classList.add('board-pulse');
+    setupTopBar(modeId); switchScreen('screen-game'); document.getElementById('board-container').classList.add('board-pulse');
     
-    let memTime = state.grid === 4 ? 4 : (state.grid === 6 ? 7 : 10); showAssistant("Hafalkan!", memTime * 1000);
-    setTimeout(() => { state.board.forEach(c => document.getElementById(`card-${c.id}`).classList.add('flipped')); playSfx('flip'); vibrate([50]); }, 500);
+    let totalMemTime = state.grid === 4 ? 4 : (state.grid === 6 ? 7 : 10); 
+    
+    if(modeId === 'squad') {
+        if(state.role==='host') { state.board.forEach(c => { if(c.eId===999) document.getElementById(`card-${c.id}`).classList.add('guide-bomb', 'guide-open'); }); showAssistant("Tandai Bom!", 0); } else { showAssistant("Dengar P1!", 0); }
+        document.getElementById('board-container').classList.remove('board-pulse'); showGameStatus("Mulai!", "var(--success)"); state.memoPhase = false; startInGameTimers(modeId); updateCoopUI();
+    } else {
+        let cnt = totalMemTime;
+        updateMemoCountdown(cnt);
+        let mInt = setInterval(() => { cnt--; if(cnt>0) updateMemoCountdown(cnt); }, 1000);
+        
+        setTimeout(() => { state.board.forEach(c => document.getElementById(`card-${c.id}`).classList.add('flipped')); playSfx('flip'); vibrate([50]); }, 500);
 
-    setTimeout(() => {
-        document.getElementById('board-container').classList.remove('board-pulse');
-        if(mode === 'guide' && state.role === 'host') { 
-            state.board.forEach(c => document.getElementById(`card-${c.id}`).classList.add('guide-open'));
-        } else { state.board.forEach(c => document.getElementById(`card-${c.id}`).classList.remove('flipped')); playSfx('flip'); vibrate([30]); }
-        
-        showGameStatus("Mulai!", "var(--success)");
-        state.isMemorizing = false;
-        
-        state.timeElapsed = 0;
-        if(state.timer > 0) {
-            state.timeLeft = state.timer; document.getElementById('timer-container').classList.remove('hidden'); document.getElementById('timer-label').innerText = "Sisa Waktu"; document.getElementById('timer-bar').parentElement.classList.remove('hidden');
-            updateTimerUI(); state.timerInt = setInterval(() => { state.timeLeft--; updateTimerUI(); if(state.timeLeft <= 0) endGameTimer(); }, 1000);
-        } else {
-            document.getElementById('timer-container').classList.remove('hidden'); document.getElementById('timer-label').innerText = "Waktu"; document.getElementById('timer-bar').parentElement.classList.add('hidden'); document.getElementById('timer-text').innerText = formatTimeStr(0);
-            state.timerInt = setInterval(() => { state.timeElapsed++; document.getElementById('timer-text').innerText = formatTimeStr(state.timeElapsed); }, 1000);
-        }
-        
-        if(mode === 'guide') { if(state.role==='host') showAssistant("Pandu Partner!", 0); else showAssistant("Dengar Panduan!", 0); } else if (mode === 'telepati' || mode === 'estafet') { updateCoopUI(); }
-    }, memTime * 1000 + 500);
+        setTimeout(() => {
+            clearInterval(mInt); hideAssistant(); document.getElementById('board-container').classList.remove('board-pulse');
+            if(modeId === 'guide' && state.role === 'host') { state.board.forEach(c => document.getElementById(`card-${c.id}`).classList.add('guide-open')); } 
+            else { state.board.forEach(c => document.getElementById(`card-${c.id}`).classList.remove('flipped')); playSfx('flip'); vibrate([30]); }
+            
+            showGameStatus("Mulai!", "var(--success)"); state.memoPhase = false; startInGameTimers(modeId);
+            if(modeId === 'guide') { if(state.role==='host') showAssistant("Pandu Partner!", 0); else showAssistant("Dengar Panduan!", 0); } else if (modeId === 'telepati' || modeId === 'estafet') { updateCoopUI(); }
+            
+            // Register Total Games
+            localStorage.setItem('syncard_total_games', parseInt(localStorage.getItem('syncard_total_games')||'0') + 1);
+        }, totalMemTime * 1000 + 500);
+    }
 }
 
-function setupTopBar(mode) {
+function startInGameTimers(modeId) {
+    state.timeElapsed = 0;
+    if(state.timer > 0) {
+        state.timeLeft = state.timer; document.getElementById('timer-container').classList.remove('hidden'); document.getElementById('timer-label').innerText = "Sisa Waktu"; document.getElementById('timer-bar').parentElement.classList.remove('hidden');
+        updateTimerUI(); state.timerInt = setInterval(() => { state.timeLeft--; updateTimerUI(); if(state.timeLeft <= 0) endGameTimer(); }, 1000);
+    } else {
+        document.getElementById('timer-container').classList.remove('hidden'); document.getElementById('timer-label').innerText = "Waktu"; document.getElementById('timer-bar').parentElement.classList.add('hidden'); document.getElementById('timer-text').innerText = formatTimeStr(0);
+        state.timerInt = setInterval(() => { state.timeElapsed++; document.getElementById('timer-text').innerText = formatTimeStr(state.timeElapsed); }, 1000);
+    }
+    
+    if(modeId === 'duel_roulette' && state.role === 'host') {
+        state.ghostInt = setInterval(() => {
+            const effects = ['freeze_p1', 'freeze_p2', 'shuffle', 'bonus_p1', 'bonus_p2'];
+            const eff = effects[Math.floor(Math.random()*effects.length)];
+            roomChan.publish('ROULETTE', {eff}); handleOpRoulette(eff);
+        }, 20000);
+    }
+    
+    // Shadow Ghost for Solo Rush
+    if(modeId === 'solo_rush' && state.timer === 0) {
+        let bt = parseInt(localStorage.getItem(`syncard_solo_rush_time_${state.grid}`) || '0');
+        if(bt > 0) {
+            document.getElementById('race-container').classList.remove('hidden'); document.getElementById('race-container').classList.add('flex');
+            document.getElementById('race-p1').style.width = '0%'; document.getElementById('race-p2').style.width = '0%';
+            let simTime = 0;
+            state.ghostInt = setInterval(() => {
+                simTime++; document.getElementById('race-p2').style.width = `${Math.min((simTime/bt)*100, 100)}%`;
+                document.getElementById('race-p1').style.width = `${(state.progress/(state.grid*state.grid))*100}%`;
+                if(simTime >= bt) clearInterval(state.ghostInt);
+            }, 1000);
+        }
+    }
+}
+
+function handleOpRoulette(eff) {
+    showToast("ROULETTE SPIN!"); playSfx('combo');
+    setTimeout(() => {
+        if(eff === 'freeze_p1') { if(state.role==='host') { triggerFreeze(3, "Roulette Ice!"); playSfx('freeze'); } else { showToast("Host Terbeku!"); } }
+        else if(eff === 'freeze_p2') { if(state.role==='joiner') { triggerFreeze(3, "Roulette Ice!"); playSfx('freeze'); } else { showToast("Anggota Terbeku!"); } }
+        else if(eff === 'shuffle') { if(state.role==='host') doShuffleBoard(); }
+        else if(eff === 'bonus_p1') { if(state.role==='host') { state.score+=200; updateScoreRaceUI(); showToast("+200 Bonus!"); } else { state.opScore+=200; updateScoreRaceUI(); } }
+        else if(eff === 'bonus_p2') { if(state.role==='joiner') { state.score+=200; updateScoreRaceUI(); showToast("+200 Bonus!"); } else { state.opScore+=200; updateScoreRaceUI(); } }
+    }, 1500);
+}
+
+function setupTopBar(modeId) {
     document.getElementById('game-p1-name').innerText = 'KAMU';
-    document.getElementById('game-p2-name').innerText = state.role === 'solo' ? 'WAKTU' : (state.role === 'host' ? state.opName.substring(0,6).toUpperCase() : state.opName.substring(0,6).toUpperCase());
-    document.getElementById('game-p1-score').innerText = '0'; document.getElementById('game-p2-score').innerText = state.role === 'solo' ? '-' : '0';
-    document.getElementById('game-mode-display').innerText = MODES[state.modeIdx].name.split('.')[1] || MODES[state.modeIdx].name;
+    document.getElementById('game-p2-name').innerText = state.role === 'solo' ? (modeId==='solo_zen'?'LEVEL':'WAKTU') : 'LAWAN';
+    document.getElementById('game-p1-score').innerText = '0'; document.getElementById('game-p2-score').innerText = state.role === 'solo' ? (modeId==='solo_zen'?state.zenLevel:'-') : '0';
+    document.getElementById('game-mode-display').innerText = state.role === 'solo' ? SOLO_SUBMODES[modeId].name : (MODES[state.modeIdx].name.split('.')[1] || MODES[state.modeIdx].name);
     document.getElementById('race-container').classList.add('hidden'); document.getElementById('timer-container').classList.add('hidden');
     
-    if(mode === 'race') { document.getElementById('race-container').classList.remove('hidden'); document.getElementById('race-container').classList.add('flex'); }
-    if(mode === 'telepati' || mode === 'estafet' || mode === 'guide') document.getElementById('game-turn-display').innerText = 'CO-OP';
-    else if(mode === 'solo') document.getElementById('game-turn-display').innerText = 'SOLO'; else document.getElementById('game-turn-display').innerText = 'VS';
+    if(modeId === 'race' || modeId === 'scratch_race') { document.getElementById('race-container').classList.remove('hidden'); document.getElementById('race-container').classList.add('flex'); }
+    if(['telepati', 'estafet', 'guide', 'squad', 'coop_mirror'].includes(modeId)) document.getElementById('game-turn-display').innerText = 'CO-OP';
+    else if(state.role === 'solo') document.getElementById('game-turn-display').innerText = 'SOLO'; else document.getElementById('game-turn-display').innerText = 'VS';
 }
 
 function showGameStatus(msg, color) {
     const d = document.getElementById('game-turn-display'); d.innerText = msg; d.style.color = 'white'; d.style.backgroundColor = color;
-    setTimeout(() => { const m = MODES[state.modeIdx].id; d.innerText = (m === 'telepati' || m === 'estafet' || m === 'guide') ? 'CO-OP' : (m === 'solo' ? 'SOLO' : 'VS'); d.style.color = '#334155'; d.style.backgroundColor = '#f1f5f9'; }, 2000);
+    setTimeout(() => { const m = state.role==='solo' ? state.soloSubMode : MODES[state.modeIdx].id; d.innerText = ['telepati', 'estafet', 'guide', 'squad', 'coop_mirror'].includes(m) ? 'CO-OP' : (state.role === 'solo' ? 'SOLO' : 'VS'); d.style.color = '#334155'; d.style.backgroundColor = '#f1f5f9'; }, 2000);
 }
 
 function updateTimerUI() {
@@ -767,14 +852,16 @@ function updateTimerUI() {
 // INTERACTION & MODES
 // =========================================================
 function handleCardClick(idx) {
-    if(!state.isPlaying || state.isFrozen || state.isMemorizing) return; 
-    const card = state.board[idx]; if(card.isFlipped || card.isMatched) return;
-    const mode = MODES[state.modeIdx].id;
+    if(!state.isPlaying || state.isFrozen || state.memoPhase || state.clickLock) return; 
+    const card = state.board[idx]; if(card.isFlipped || card.isMatched || card.isClaimed) return;
+    const mode = state.role === 'solo' ? state.soloSubMode : MODES[state.modeIdx].id;
 
-    if(mode === 'guide') { 
-        if(state.role === 'host') return showGameStatus("Pandu dari Suara!", "var(--danger)"); 
-        handleStandardClick(card, mode); 
+    state.clickLock = true; setTimeout(() => state.clickLock = false, 250);
+
+    if(mode === 'guide' || mode === 'squad') { 
+        if(state.role === 'host') return showGameStatus("Pandu dari Suara!", "var(--danger)"); handleStandardClick(card, mode); 
     }
+    else if(mode === 'scratch_race' || mode === 'scratch_clash') { handleScratchClick(card, mode); }
     else if(mode === 'estafet') {
         const curTurn = state.turnSeq[state.turnIdx % 4] === 1 ? 'host' : 'joiner';
         if(state.role !== curTurn) return showGameStatus("Bukan Giliranmu!", "var(--danger)");
@@ -790,49 +877,102 @@ function handleCardClick(idx) {
             if(state.role === curTurn) return; flipCard(idx, true); playSfx('flip'); vibrate([15]); checkCoopMatchResponder(card);
         }
     }
+    else if(mode === 'coop_mirror') {
+        flipCard(idx, true); vibrate([15]); state.lockedLocal.push(card); playSfx('flip'); roomChan.publish('FLIP', {idx: card.id});
+        if(state.mirrorPending === null) { roomChan.publish('MIRROR_FLIP', {eId: card.eId}); state.mirrorPending = card.eId; setTimeout(() => state.mirrorPending = null, 3000); }
+        if(state.lockedLocal.length === 2) checkStandardMatch(mode);
+    }
     else { if(state.lockedLocal.length >= 2) return; handleStandardClick(card, mode); }
+}
+
+function handleScratchClick(card, mode) {
+    card.isClaimed = true; 
+    if(card.eId === 999) {
+        playSfx('bomb'); vibrate([200,100,200]); document.getElementById('board-container').classList.add('shake-danger'); setTimeout(()=>document.getElementById('board-container').classList.remove('shake-danger'), 400);
+        triggerFreeze(3, "Kena Bom!"); state.score -= 200; updateScoreRaceUI(); flipCard(card.id, true);
+        if(mode === 'scratch_clash') roomChan.publish('SCRATCH_BOMB', {idx: card.id}); setTimeout(() => unflipCard(card.id), 1500);
+    } else {
+        playSfx('match'); vibrate([30,50]); lockMatch(card.id, 'p1'); state.score += 50; state.progress += 1; updateScoreRaceUI();
+        if(mode === 'scratch_clash') roomChan.publish('SCRATCH_REWARD', {idx: card.id}); else if(mode === 'scratch_race') roomChan.publish('RACE_PROG', {p: state.progress});
+        checkEndScratch();
+    }
+}
+
+function handleOpMirrorFlip(eId) {
+    state.mirrorPending = eId;
+    setTimeout(() => { if(state.mirrorPending === eId) state.mirrorPending = null; }, 3000);
 }
 
 function handleStandardClick(card, mode) {
     flipCard(card.id, true); vibrate([15]); state.lockedLocal.push(card);
-    if(mode === 'mine' && card.eId === 999) {
+    
+    if((mode === 'mine' || mode === 'squad' || mode === 'solo_challenge') && card.eId === 999) {
         playSfx('bomb'); vibrate([200,100,200]); document.getElementById('board-container').classList.add('shake-danger'); setTimeout(()=>document.getElementById('board-container').classList.remove('shake-danger'), 400);
-        triggerFreeze(4, "Kena Bom!"); state.score = Math.max(0, state.score - 50); updateScoreRaceUI();
-        if(state.role !== 'solo') roomChan.publish('BOMB', {idx: card.id}); setTimeout(() => { unflipCard(card.id); state.lockedLocal = []; }, 1000); return;
+        triggerFreeze(2, "Kena Bom!"); resetCombo(); state.myErrorsSeq++; sendMistakes();
+        
+        if(mode === 'mine') {
+            state.score = Math.max(0, state.score - 50); updateScoreRaceUI();
+            let cIdxs = state.board.filter(c => !c.isMatched && !c.isFlipped && c.id !== card.id).map(c => c.id); let map = [];
+            if(cIdxs.length > 0) { let tId = cIdxs[Math.floor(Math.random()*cIdxs.length)]; let tEid = state.board[tId].eId; state.board[tId].eId = 999; state.board[card.id].eId = tEid; map.push({id: tId, e: 999}, {id: card.id, e: tEid}); }
+            if(state.role !== 'solo') roomChan.publish('BOMB_EXP', {idx: card.id, mapping: map}); 
+            setTimeout(() => { unflipCard(card.id); state.lockedLocal = []; if(map.length>0) applyShuffleVisuals(map); }, 1000);
+        } else if (mode === 'solo_challenge') {
+            state.score = Math.max(0, state.score - 30); updateScoreRaceUI(); setTimeout(() => { unflipCard(card.id); state.lockedLocal = []; }, 1000);
+        } else { state.coopErrors += 10; state.lockedLocal = []; setTimeout(triggerSyncEndGame, 1000); }
+        return;
     }
     playSfx('flip'); 
-    // Broadcast for shared boards
-    if(mode === 'clash' || mode === 'mine' || mode === 'shuffle' || mode === 'guide') roomChan.publish('FLIP', {idx: card.id});
+    if(['clash', 'mine', 'shuffle', 'guide', 'squad', 'duel_frozen', 'duel_roulette'].includes(mode)) roomChan.publish('FLIP', {idx: card.id});
     if(state.lockedLocal.length === 2) checkStandardMatch(mode);
+}
+
+function processMatchLogic(mode, c1, c2) {
+    playSfx('match'); vibrate([30,50]); lockMatch(c1.id, 'p1'); lockMatch(c2.id, 'p1');
+    state.myErrorsSeq = 0; sendMistakes(); state.comboStreak++; if(state.comboStreak > state.bestCombo) state.bestCombo = state.comboStreak; showComboBadge();
+    
+    let baseSc = mode === 'solo_blitz' ? 120 : 100;
+    if(!state.firstMatchDone) { baseSc += 50; state.firstMatchDone = true; showToast("First Blood! +50"); }
+    let bonus = (state.comboStreak >= 8) ? 60 : ((state.comboStreak >= 5) ? 40 : ((state.comboStreak >= 3) ? 20 : 0));
+    
+    if(mode === 'coop_mirror' && state.mirrorPending === c1.eId) { baseSc += 50; showToast("Perfect Sync! +50"); state.mirrorPending = null; }
+    
+    state.score += baseSc + bonus; state.progress += 2;
+    if(['clash', 'mine', 'shuffle', 'guide', 'squad', 'duel_frozen', 'duel_roulette', 'coop_mirror'].includes(mode)) roomChan.publish('MATCH', {i1:c1.id, i2:c2.id}); else if(mode === 'race') roomChan.publish('RACE_PROG', {p: state.progress});
+    updateScoreRaceUI(); state.lockedLocal = []; if(mode === 'shuffle') setTimeout(doShuffleBoard, 500); else checkEnd();
+}
+
+function processWrongLogic(mode, c1, c2) {
+    state.errorsLocal++; state.myErrorsSeq++; sendMistakes(); resetCombo(); playSfx('fail'); vibrate([50,50]); 
+    if(['clash', 'mine', 'shuffle', 'guide', 'squad', 'duel_frozen', 'duel_roulette', 'coop_mirror'].includes(mode)) roomChan.publish('WRONG', {i1:c1.id, i2:c2.id});
+    if(['clash', 'shuffle', 'guide', 'duel_roulette'].includes(mode) && state.errorsLocal >= 3) { triggerFreeze(2, "Dibekukan!"); state.errorsLocal = 0; }
+    if(mode === 'squad') state.coopErrors++;
+    setTimeout(() => { if(!state.board[c1.id].isMatched) unflipCard(c1.id); if(!state.board[c2.id].isMatched) unflipCard(c2.id); state.lockedLocal = []; }, 800);
 }
 
 function checkStandardMatch(mode) {
     const [c1, c2] = state.lockedLocal; const isM = c1.eId === c2.eId;
-    if(isM) {
-        playSfx('match'); vibrate([30,50]); const owner = state.role === 'solo' ? 'p1' : 'p1'; // Local match is always P1 color locally
-        lockMatch(c1.id, owner); lockMatch(c2.id, owner); state.score += 100; state.errorsLocal = 0; state.progress += 2;
-        if(mode === 'clash' || mode === 'mine' || mode === 'shuffle' || mode === 'guide') roomChan.publish('MATCH', {i1:c1.id, i2:c2.id}); else if(mode === 'race') roomChan.publish('RACE_PROG', {p: state.progress});
-        updateScoreRaceUI(); state.lockedLocal = []; if(mode === 'shuffle') setTimeout(doShuffleBoard, 500); else checkEnd();
-    } else {
-        state.errorsLocal++; playSfx('fail'); vibrate([50,50]); if(mode === 'clash' || mode === 'mine' || mode === 'shuffle' || mode === 'guide') roomChan.publish('WRONG', {i1:c1.id, i2:c2.id});
-        if((mode === 'clash' || mode === 'shuffle' || mode === 'guide') && state.errorsLocal >= 3) { triggerFreeze(2, "Dibekukan!"); state.errorsLocal = 0; }
-        setTimeout(() => { if(!state.board[c1.id].isMatched) unflipCard(c1.id); if(!state.board[c2.id].isMatched) unflipCard(c2.id); state.lockedLocal = []; }, 800);
-    }
+    if(isM) processMatchLogic(mode, c1, c2); else processWrongLogic(mode, c1, c2);
 }
 
 function doShuffleBoard() {
-    if(state.role !== 'host') return; playSfx('shuffle'); let unflippedIdx = []; let unflippedEid = [];
-    state.board.forEach(c => { if(!c.isMatched && !c.isFlipped) { unflippedIdx.push(c.id); unflippedEid.push(c.eId); } });
-    if(unflippedIdx.length <= 2) { checkEnd(); return; }
-    let shuffledEid = shuffle(unflippedEid); let newMapping = []; unflippedIdx.forEach((id, i) => { state.board[id].eId = shuffledEid[i]; newMapping.push({id, e: shuffledEid[i]}); });
-    roomChan.publish('SHUFFLE', {newBoard: newMapping}); applyShuffleVisuals(newMapping);
+    if(state.role !== 'host') return; playSfx('shuffle'); let uIdx = []; let uEid = [];
+    state.board.forEach(c => { if(!c.isMatched && !c.isFlipped) { uIdx.push(c.id); uEid.push(c.eId); } });
+    if(uIdx.length <= 2) { checkEnd(); return; }
+    let sEid = shuffle(uEid); let map = []; uIdx.forEach((id, i) => { state.board[id].eId = sEid[i]; map.push({id, e: sEid[i]}); });
+    roomChan.publish('SHUFFLE', {newBoard: map}); applyShuffleVisuals(map);
 }
 
 function applyShuffleVisuals(mapping) { document.getElementById('board-container').classList.add('shake-danger'); setTimeout(()=>document.getElementById('board-container').classList.remove('shake-danger'), 400); mapping.forEach(m => { state.board[m.id].eId = m.e; document.getElementById(`card-${m.id}`).querySelector('.card-front').innerHTML = getEmojiHtml(m.e); }); }
 
-function triggerFreeze(sec, txt) {
-    state.isFrozen = true; const l = document.getElementById('frozen-layer'); document.getElementById('frozen-text').innerText = txt;
-    l.parentElement.classList.add('frozen-active'); setTimeout(() => { l.parentElement.classList.remove('frozen-active'); state.isFrozen = false; }, sec * 1000);
+function triggerFreeze(sec, txt) { state.isFrozen = true; const l = document.getElementById('frozen-layer'); document.getElementById('frozen-text').innerText = txt; l.parentElement.classList.add('frozen-active'); setTimeout(() => { l.parentElement.classList.remove('frozen-active'); state.isFrozen = false; }, sec * 1000); }
+
+function showFab(text, actionType) {
+    const f = document.getElementById('fab-action'); document.getElementById('fab-text').innerText = text; f.dataset.action = actionType; f.classList.add('show');
+    setTimeout(() => f.classList.remove('show'), 4000);
+}
+function executeFabAction() {
+    const type = document.getElementById('fab-action').dataset.action; document.getElementById('fab-action').classList.remove('show');
+    if(type === 'frozen' && roomChan) { roomChan.publish('ICE_ATTACK', {}); showToast("Lawan Dibekukan!"); playSfx('combo'); }
 }
 
 // --- CO-OP SPECIFIC ---
@@ -840,33 +980,35 @@ function checkCoopMatchResponder(myCard) { const isM = myCard.eId === state.coop
 function checkCoopMatchLocal(myCard) { const isM = myCard.eId === state.coopInitiatorCard.eId; roomChan.publish('COOP_RES', {idx: myCard.id, isM}); processCoopResEstafet(state.coopInitiatorCard.id, myCard.id, isM); }
 
 function processCoopRes(idx, isM) {
-    if(isM) { lockMatch(idx, 'coop'); state.score += 100; playSfx('match'); showAssistant("SYNC!", 1500); }
-    else { state.coopErrors++; playSfx('fail'); showGameStatus("Meleset!", "var(--danger)"); setTimeout(()=>unflipCard(idx), 1000); }
+    if(isM) { lockMatch(idx, 'coop'); state.score += 100; playSfx('match'); showAssistant("SYNC!", 1500); state.comboStreak++; if(state.comboStreak>state.bestCombo) state.bestCombo=state.comboStreak; showComboBadge(); }
+    else { state.coopErrors++; playSfx('fail'); showGameStatus("Meleset!", "var(--danger)"); resetCombo(); setTimeout(()=>unflipCard(idx), 1000); }
     state.coopInitiatorCard = null; state.turnIdx++; setTimeout(()=>{updateCoopUI(); checkEnd();}, 1000);
 }
 
 function processCoopResEstafet(i1, i2, isM) {
-    if(isM) { lockMatch(i1, 'coop'); lockMatch(i2, 'coop'); state.score += 100; playSfx('match'); showAssistant("SYNC!", 1500); }
-    else { state.coopErrors++; playSfx('fail'); showGameStatus("Meleset!", "var(--danger)"); setTimeout(()=>{unflipCard(i1); unflipCard(i2);}, 1000); }
+    if(isM) { lockMatch(i1, 'coop'); lockMatch(i2, 'coop'); state.score += 100; playSfx('match'); showAssistant("SYNC!", 1500); state.comboStreak++; if(state.comboStreak>state.bestCombo) state.bestCombo=state.comboStreak; showComboBadge(); }
+    else { state.coopErrors++; playSfx('fail'); showGameStatus("Meleset!", "var(--danger)"); resetCombo(); setTimeout(()=>{unflipCard(i1); unflipCard(i2);}, 1000); }
     state.coopInitiatorCard = null; state.turnIdx++; setTimeout(()=>{updateCoopUI(); checkEnd();}, 1000);
 }
 
 function updateCoopUI() {
-    const mode = MODES[state.modeIdx].id; if(mode !== 'telepati' && mode !== 'estafet') return;
+    const mode = state.role === 'solo' ? state.soloSubMode : MODES[state.modeIdx].id; if(!['telepati','estafet'].includes(mode)) return;
     const curTurn = state.turnSeq[state.turnIdx % 4] === 1 ? 'host' : 'joiner'; let msg = state.role === curTurn ? "Giliranmu!" : "Tunggu Partner...";
     if(state.coopInitiatorCard !== null) msg = state.role === curTurn ? "Cari Pasangan!" : "Partner Mencari..."; showAssistant(msg, 0); showGameStatus(msg, state.role === curTurn ? "var(--p1-color)" : "var(--text-muted)");
 }
 
 // --- OP HANDLERS ---
 function handleOpFlip(idx) { if(!state.board[idx].isFlipped && !state.board[idx].classList?.contains('guide-open')) { flipCard(idx, false); playSfx('flip'); } }
-function handleOpMatch(i1, i2) { const owner = 'p2'; /* Opponent is always p2 locally */ if(!state.board[i1].isFlipped) flipCard(i1, false); if(!state.board[i2].isFlipped) flipCard(i2, false); setTimeout(() => { lockMatch(i1, owner); lockMatch(i2, owner); state.opScore+=100; state.opProgress+=2; updateScoreRaceUI(); checkEnd(); playSfx('match'); }, 200); }
+function handleOpMatch(i1, i2) { if(!state.board[i1].isFlipped) flipCard(i1, false); if(!state.board[i2].isFlipped) flipCard(i2, false); setTimeout(() => { lockMatch(i1, 'p2'); lockMatch(i2, 'p2'); state.opScore+=100; state.opProgress+=2; updateScoreRaceUI(); checkEnd(); playSfx('match'); }, 200); }
 function handleOpWrong(i1, i2) { setTimeout(() => { if(!state.board[i1].isMatched) unflipCard(i1); if(!state.board[i2].isMatched) unflipCard(i2); }, 800); }
-function handleOpBomb(idx) { flipCard(idx, false); setTimeout(()=>unflipCard(idx), 1000); state.opScore = Math.max(0, state.opScore-50); updateScoreRaceUI(); }
+function handleOpBomb(idx, mapping) { flipCard(idx, false); playSfx('bomb'); document.getElementById('board-container').classList.add('shake-danger'); setTimeout(()=>document.getElementById('board-container').classList.remove('shake-danger'), 400); state.opScore = Math.max(0, state.opScore-50); updateScoreRaceUI(); setTimeout(() => { unflipCard(idx); if(mapping) applyShuffleVisuals(mapping); }, 1000); }
 function handleOpShuffle(mapping) { playSfx('shuffle'); applyShuffleVisuals(mapping); }
 function handleOpCoopInit(eId) { state.coopInitiatorCard = {eId}; updateCoopUI(); playSfx('flip'); vibrate([20]); }
-function handleOpCoopRes(idx, isM) { if(MODES[state.modeIdx].id === 'estafet') { processCoopResEstafet(state.coopInitiatorCard.id, idx, isM); } else { processCoopRes(state.coopInitiatorCard.id, isM); } }
+function handleOpCoopRes(idx, isM) { if((state.role==='solo'?state.soloSubMode:MODES[state.modeIdx].id) === 'estafet') { processCoopResEstafet(state.coopInitiatorCard.id, idx, isM); } else { processCoopRes(state.coopInitiatorCard.id, isM); } }
 function handleOpEstafet(idx) { flipCard(idx, false); state.coopInitiatorCard = state.board[idx]; state.turnIdx++; updateCoopUI(); playSfx('flip'); }
-function handleOpCoopGameOver() { if(state.isPlaying) { state.isPlaying = false; if(state.timerInt) clearInterval(state.timerInt); setTimeout(showResultModal, 500); } }
+function handleSyncEndGame() { if(state.isPlaying) { state.isPlaying = false; stopTimer(); setTimeout(showResultModal, 500); } }
+function handleOpScratchReward(idx) { if(!state.board[idx].isMatched) { state.board[idx].isClaimed = true; lockMatch(idx, 'p2'); state.opScore += 50; state.opProgress += 1; updateScoreRaceUI(); playSfx('match'); checkEndScratch(); } }
+function handleOpScratchBomb(idx) { flipCard(idx, false); playSfx('bomb'); state.opScore -= 200; updateScoreRaceUI(); setTimeout(()=>unflipCard(idx), 1000); }
 
 // --- UI & CORE FUNCS ---
 function flipCard(idx, isLoc) { state.board[idx].isFlipped=true; const el=document.getElementById(`card-${idx}`); el.classList.add('flipped'); if(!isLoc) el.classList.add('opp-focus'); }
@@ -874,49 +1016,65 @@ function unflipCard(idx) { state.board[idx].isFlipped=false; const el=document.g
 function lockMatch(idx, owner) { state.board[idx].isMatched=true; state.board[idx].owner=owner; const el=document.getElementById(`card-${idx}`); el.classList.add('matched'); el.classList.remove('opp-focus'); el.classList.add(owner+'-match'); }
 
 function updateScoreRaceUI() {
-    const isSolo = state.role === 'solo'; document.getElementById('game-p1-score').innerText = state.score; document.getElementById('game-p2-score').innerText = isSolo ? '-' : state.opScore;
-    if(MODES[state.modeIdx].id === 'race') { const total = state.grid * state.grid; document.getElementById('race-p1').style.width = `${(state.progress/total)*100}%`; document.getElementById('race-p2').style.width = `${(state.opProgress/total)*100}%`; }
+    const isSolo = state.role === 'solo'; document.getElementById('game-p1-score').innerText = state.score; document.getElementById('game-p2-score').innerText = isSolo ? (state.soloSubMode==='solo_zen'?state.zenLevel:(state.timer===0?'-':state.timeLeft)) : state.opScore;
+    const mode = isSolo ? state.soloSubMode : MODES[state.modeIdx].id;
+    if(mode === 'race' || mode === 'scratch_race' || mode === 'solo_rush') { const total = state.grid * state.grid; const tgt = mode === 'scratch_race' ? total - Math.floor(total*0.2) : total; document.getElementById('race-p1').style.width = `${(state.progress/tgt)*100}%`; document.getElementById('race-p2').style.width = `${(state.opProgress/tgt)*100}%`; }
 }
 function updateRaceUI() { updateScoreRaceUI(); checkEnd(); }
 
-function checkEnd() {
-    if(!state.isPlaying) return; const mode = MODES[state.modeIdx].id; let isFull = true;
-    if(mode === 'race' || mode === 'telepati' || mode === 'guide') { state.board.forEach(c => { if(!c.isMatched) isFull = false; }); if(mode === 'race' && !isFull && state.opProgress >= state.grid*state.grid) isFull = true; } 
-    else { state.board.forEach(c => { if(!c.isMatched && c.eId !== 999) isFull = false; }); }
-    
-    if(isFull) { 
-        state.isPlaying = false; if(state.timerInt) clearInterval(state.timerInt); 
-        // Sync Co-op end
-        if(mode === 'telepati' || mode === 'estafet' || mode === 'guide') roomChan.publish('COOP_GAME_OVER', {});
-        setTimeout(showResultModal, 800); 
-    }
+function checkEndScratch() {
+    let rLeft = false; const mode = state.role==='solo'?state.soloSubMode:MODES[state.modeIdx].id; const total = state.grid * state.grid; const tgt = total - Math.floor(total*0.2);
+    if(mode === 'scratch_race') { state.board.forEach(c => { if(c.eId !== 999 && !c.isMatched) rLeft = true; }); if(!rLeft || state.opProgress >= tgt) triggerSyncEndGame(); }
+    else if(mode === 'scratch_clash') { state.board.forEach(c => { if(c.eId !== 999 && !c.isMatched) rLeft = true; }); if(!rLeft) triggerSyncEndGame(); }
 }
 
-function endGameTimer() { if(!state.isPlaying) return; state.isPlaying = false; clearInterval(state.timerInt); setTimeout(showResultModal, 500); }
+function checkEnd() {
+    if(!state.isPlaying) return; const mode = state.role==='solo'?state.soloSubMode:MODES[state.modeIdx].id; let isFull = true;
+    if(mode === 'scratch_race' || mode === 'scratch_clash') return checkEndScratch();
+    if(mode === 'race' || mode === 'telepati') { state.board.forEach(c => { if(!c.isMatched) isFull = false; }); if(mode === 'race' && !isFull && state.opProgress >= state.grid*state.grid) isFull = true; } 
+    else { state.board.forEach(c => { if(!c.isMatched && c.eId !== 999) isFull = false; }); }
+    if(isFull) triggerSyncEndGame();
+}
+function triggerSyncEndGame() { state.isPlaying = false; stopTimer(); if(state.role !== 'solo' && roomChan) roomChan.publish('SYNC_END_GAME', {}); setTimeout(showResultModal, 800); }
+function endGameTimer() { if(!state.isPlaying) return; triggerSyncEndGame(); }
 
 function showResultModal() {
-    playSfx('match'); vibrate([100,50,100,50,200]); hideAssistant();
-    document.getElementById('res-duel-box').classList.add('hidden'); document.getElementById('res-coop-box').classList.add('hidden'); document.getElementById('btn-next-solo').classList.add('hidden');
-    const mode = MODES[state.modeIdx].id; const isCoop = (mode==='telepati' || mode==='estafet' || mode==='guide');
+    playSfx('match'); vibrate([100,50,100,50,200]); hideAssistant(); resetCombo(); stopTimer();
+    document.getElementById('res-duel-box').classList.add('hidden'); document.getElementById('res-duel-box').classList.remove('flex');
+    document.getElementById('res-coop-box').classList.add('hidden'); document.getElementById('res-coop-box').classList.remove('flex');
+    document.getElementById('btn-next-solo').classList.add('hidden'); document.getElementById('btn-retry-solo').classList.add('hidden');
+    document.getElementById('res-perfect-badge').classList.add('hidden'); document.getElementById('stat-bonus-row').classList.add('hidden');
     
+    const mode = state.role==='solo'?state.soloSubMode:MODES[state.modeIdx].id; const isCoop = ['telepati','estafet','guide','squad','coop_mirror'].includes(mode);
+    
+    document.getElementById('stat-time-val').innerText = formatTimeStr(state.timer===0 ? state.timeElapsed : (state.timer - Math.max(0, state.timeLeft)));
+    document.getElementById('stat-err-val').innerText = state.errorsLocal; document.getElementById('stat-combo-val').innerText = state.bestCombo + 'x';
+    
+    if(state.role === 'solo' && state.errorsLocal === 0) { document.getElementById('res-perfect-badge').classList.remove('hidden'); state.score += 200; triggerConfetti(); }
+
     if(isCoop) {
         document.getElementById('res-coop-box').classList.remove('hidden'); document.getElementById('res-coop-box').classList.add('flex');
         document.getElementById('res-title').innerText = "SINKRONISASI SELESAI"; document.getElementById('res-title').style.color = 'var(--p1-color)';
         let tier='C', desc="Butuh latihan komunikasi!", col="var(--text-muted)";
-        if(state.coopErrors <= 1) { tier='S'; desc="Kalian punya Telepati mutlak!"; col="#fbbf24"; } else if(state.coopErrors <= 4) { tier='A'; desc="Partner yang sangat solid."; col="var(--success)"; } else if(state.coopErrors <= 8) { tier='B'; desc="Bagus, walau ada miskomunikasi."; col="var(--p1-color)"; }
-        const tEl = document.getElementById('res-tier-text'); tEl.innerText=tier; tEl.style.color=col; document.getElementById('res-coop-desc').innerText=`Kesalahan: ${state.coopErrors} | ${desc}`;
+        if(state.coopErrors <= 1) { tier='S'; desc="Telepati mutlak!"; col="#f59e0b"; triggerConfetti(); } else if(state.coopErrors <= 4) { tier='A'; desc="Partner yang solid."; col="var(--success)"; triggerConfetti(); } else if(state.coopErrors <= 8) { tier='B'; desc="Bagus, walau ada miskomunikasi."; col="var(--p1-color)"; }
+        if(mode==='squad' && state.coopErrors >= 10) { tier='F'; desc="BOOM! Kalian meledakkan Bom!"; col="var(--danger)"; }
+        const tEl = document.getElementById('res-tier-text'); tEl.innerText=tier; tEl.style.color=col; document.getElementById('res-coop-desc').innerText=`Kesalahan Tim: ${state.coopErrors} | ${desc}`;
     } else {
         document.getElementById('res-duel-box').classList.remove('hidden'); document.getElementById('res-duel-box').classList.add('flex');
-        document.getElementById('res-name-p1').innerText = 'KAMU'; document.getElementById('res-name-p2').innerText = state.role==='solo'?'WAKTU':'LAWAN';
-        document.getElementById('res-score-p1').innerText = state.score; document.getElementById('res-score-p2').innerText = state.role==='solo'?formatTimeStr(state.timer===0?state.timeElapsed:state.timer-state.timeLeft):state.opScore;
+        document.getElementById('res-score-p1').innerText = state.score;
+        document.getElementById('res-score-p2').innerText = state.role==='solo' ? (mode==='solo_zen'?state.zenLevel:formatTimeStr(state.timer===0?state.timeElapsed:state.timer-state.timeLeft)) : state.opScore;
         
         if(state.role === 'solo') {
             document.getElementById('res-title').innerText = "LEVEL SELESAI!"; document.getElementById('res-title').style.color = 'var(--success)';
-            document.getElementById('btn-next-solo').classList.remove('hidden'); saveSoloStats();
+            document.getElementById('btn-next-solo').classList.remove('hidden'); document.getElementById('btn-retry-solo').classList.remove('hidden');
+            
+            if(state.timer > 0 && state.timeLeft > 0) { const bns = state.timeLeft * 5; state.score += bns; document.getElementById('res-score-p1').innerText = state.score; document.getElementById('stat-bonus-row').classList.remove('hidden'); document.getElementById('stat-bonus-val').innerText = `+${bns}`; }
+            if(mode === 'solo_zen' || state.score > 0) triggerConfetti();
+            saveSoloStats();
         } else {
-            let win = false, draw = false; if(mode === 'race') win = state.progress > state.opProgress; else win = state.score > state.opScore;
-            if((mode === 'race' && state.progress === state.opProgress) || (mode !== 'race' && state.score === state.opScore)) draw = true;
-            if(win) { document.getElementById('res-title').innerText = "MENANG!"; document.getElementById('res-title').style.color = 'var(--success)'; state.sessionMyWins++; }
+            let win = false, draw = false; if(mode === 'race' || mode === 'scratch_race') win = state.progress > state.opProgress; else win = state.score > state.opScore;
+            if((mode === 'race' || mode === 'scratch_race') && state.progress === state.opProgress) { if(state.score > state.opScore) win = true; else if (state.score === state.opScore) draw = true; } else if(state.score === state.opScore) draw = true;
+            if(win) { document.getElementById('res-title').innerText = "MENANG!"; document.getElementById('res-title').style.color = 'var(--success)'; state.sessionMyWins++; triggerConfetti(); }
             else if(draw) { document.getElementById('res-title').innerText = "SERI!"; document.getElementById('res-title').style.color = 'var(--text-muted)'; }
             else { document.getElementById('res-title').innerText = "KALAH!"; document.getElementById('res-title').style.color = 'var(--danger)'; state.sessionOpWins++; }
         }
@@ -925,15 +1083,13 @@ function showResultModal() {
 }
 
 function saveSoloStats() {
-    if(state.timer > 0) { let bs = parseInt(localStorage.getItem('syncard_best_score') || '0'); if(state.score > bs) localStorage.setItem('syncard_best_score', state.score); } 
-    else { let bt = parseInt(localStorage.getItem('syncard_best_time_raw') || '999999'); if(state.timeElapsed < bt) { localStorage.setItem('syncard_best_time_raw', state.timeElapsed); localStorage.setItem('syncard_best_time_str', formatTimeStr(state.timeElapsed)); } }
+    const kScore = `syncard_${state.soloSubMode}_score_${state.grid}`; const kTime = `syncard_${state.soloSubMode}_time_${state.grid}`;
+    if(state.timer > 0) { let bs = parseInt(localStorage.getItem(kScore) || '0'); if(state.score > bs) localStorage.setItem(kScore, state.score); } 
+    else if (state.soloSubMode !== 'solo_zen') { let bt = parseInt(localStorage.getItem(`syncard_${state.soloSubMode}_raw_${state.grid}`) || '999999'); if(state.timeElapsed < bt) { localStorage.setItem(`syncard_${state.soloSubMode}_raw_${state.grid}`, state.timeElapsed); localStorage.setItem(kTime, formatTimeStr(state.timeElapsed)); } }
 }
 
-function backToMenuFromRes() { if(state.role==='solo') { switchScreen('screen-menu'); } else { syncLobby(); updateLobbyUI(); switchScreen('screen-lobby'); } }
-
+function backToMenuFromRes() { stopTimer(); if(state.role==='solo') { switchScreen('screen-menu'); } else { syncLobby(); updateLobbyUI(); switchScreen('screen-lobby'); } }
 document.addEventListener('touchmove', function(event) { if (event.scale !== 1) { event.preventDefault(); } }, { passive: false });
 </script>
 </body>
 </html>
-
-
