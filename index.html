@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Poké Match RPG - Auto Env Edition</title>
+    <title>Poké Match RPG - True RPG Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Quicksand:wght@600;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
@@ -12,6 +12,7 @@
         body { font-family: 'Quicksand', sans-serif; background: #e2e8f0; touch-action: none; overflow: hidden; color: #334e68; }
         .pixel-font { font-family: 'Press Start 2P', cursive; text-transform: uppercase; line-height: 1.6; }
         .text-outline { text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
+        .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
         
         .glass-panel { background: rgba(255, 255, 255, 0.95); border: 4px solid #94a3b8; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 8px; }
         .retro-btn { background: #fff; border: 4px solid #94a3b8; box-shadow: 0 4px 0 #64748b; border-radius: 8px; transition: all 0.1s; cursor: pointer; outline: none; }
@@ -103,7 +104,6 @@
 </head>
 <body>
 
-    <!-- AUTHENTICATION / LOGIN SCREEN -->
     <div id="auth-screen" class="fixed inset-0 z-[300] bg-gray-900 flex flex-col justify-center items-center p-4">
         <div class="glass-panel w-full max-w-sm overflow-hidden flex flex-col relative bg-white">
             <div id="auth-loading" class="absolute inset-0 bg-white/90 z-50 flex-col justify-center items-center hidden">
@@ -122,7 +122,6 @@
             </div>
 
             <div class="p-6">
-                <!-- LOGIN FORM -->
                 <div id="form-login">
                     <label class="pixel-font text-[6px] text-gray-500 mb-1 block">USERNAME</label>
                     <input type="text" id="login-user" class="retro-input mb-4" placeholder="NAMA AKUN" maxlength="12">
@@ -131,7 +130,6 @@
                     <button onclick="handleLogin()" class="retro-btn w-full py-3 bg-blue-500 text-white"><span class="pixel-font text-[10px]">MASUK</span></button>
                 </div>
 
-                <!-- REGISTER FORM -->
                 <div id="form-register" class="hidden">
                     <label class="pixel-font text-[6px] text-gray-500 mb-1 block">USERNAME BARU</label>
                     <input type="text" id="reg-user" class="retro-input mb-4" placeholder="NAMA AKUN" maxlength="12">
@@ -143,14 +141,20 @@
         </div>
     </div>
 
-    <!-- INITIAL DATA LOADING SCREEN -->
-    <div id="loading-screen" class="fixed inset-0 z-[200] bg-black flex flex-col justify-center items-center hidden">
-        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" class="w-16 h-16 animate-spin mb-4 api-icon">
-        <p class="pixel-font text-[10px] text-white animate-pulse" id="loading-text">Menyiapkan Data Base Stat...</p>
-        <p class="pixel-font text-[6px] text-gray-400 mt-2 text-center px-4">Sinkronisasi PokeAPI & MongoDB.<br>Harap tunggu maksimal 5 detik.</p>
+    <div id="loading-screen" class="fixed inset-0 z-[200] bg-black flex flex-col justify-center items-center hidden p-4">
+        <img id="loading-spinner" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" class="w-16 h-16 animate-spin mb-4 api-icon">
+        <p class="pixel-font text-[10px] text-white animate-pulse text-center leading-loose" id="loading-text">Menyiapkan Data Base Stat...</p>
+        <p class="pixel-font text-[6px] text-gray-400 mt-2 text-center px-4" id="db-status-text">Sinkronisasi PokeAPI & MongoDB.<br>Harap tunggu maksimal 5 detik.</p>
+        
+        <div id="error-box-container" class="hidden w-full max-w-xs mt-6 flex-col items-center">
+            <textarea id="error-log-box" class="w-full h-32 bg-gray-900 text-red-400 font-mono text-[8px] p-2 rounded border-2 border-red-600 focus:outline-none mb-2 shadow-lg" readonly></textarea>
+            <div class="flex gap-2 w-full mt-2">
+                <button onclick="copyError()" class="flex-1 retro-btn py-3 bg-blue-50 border-blue-400"><span class="pixel-font text-[6px] text-blue-800 mt-1">COPY ERROR</span></button>
+                <button onclick="location.reload()" class="flex-1 retro-btn py-3 bg-red-50 border-red-400"><span class="pixel-font text-[6px] text-red-800 mt-1">RELOAD DB</span></button>
+            </div>
+        </div>
     </div>
 
-    <!-- Top Bar (Coins ONLY) -->
     <div id="top-bar" class="absolute top-4 right-4 z-50 flex items-start pointer-events-none hidden">
         <div class="glass-panel px-3 py-2 flex items-center gap-2 pointer-events-auto shadow-md" style="border-radius: 8px; border-color: #fde047; padding: 6px 10px;">
             <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/nugget.png" class="api-icon w-5 h-5" alt="Koin">
@@ -158,13 +162,11 @@
         </div>
     </div>
 
-    <!-- MP FLOATING INDICATOR -->
     <div id="mp-floating-indicator" class="hidden fixed bottom-6 right-6 z-[150] bg-blue-600 border-4 border-white rounded-full px-4 py-3 items-center gap-3 shadow-xl cursor-pointer hover:scale-105 transition-transform" onclick="switchView('view-prep-room')">
         <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse border border-white"></div>
         <span id="mp-floating-text" class="pixel-font text-[8px] text-white tracking-widest mt-1">PVP: MENUNGGU...</span>
     </div>
 
-    <!-- MAIN MENU VIEW -->
     <div id="view-menu" class="view-section justify-center">
         <div class="text-center mb-6 flex flex-col items-center mt-6">
             <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/International_Pok%C3%A9mon_logo.svg" alt="Pokemon" class="w-64 drop-shadow-xl mb-2">
@@ -199,19 +201,16 @@
         <button onclick="logout()" class="mt-8 pixel-font text-[8px] text-red-500 underline opacity-80 mb-4">LOGOUT AKUN</button>
     </div>
 
-    <!-- ADVENTURE MAP SELECTION VIEW -->
     <div id="view-adventure" class="view-section pt-12 bg-blue-50">
         <button onclick="switchView('view-menu')" class="absolute top-4 left-4 retro-btn px-4 py-2 z-10 bg-white border-blue-400"><span class="pixel-font text-[8px] mt-1 text-blue-800"><< MENU</span></button>
         <h2 class="pixel-font text-lg text-blue-800 mb-6 text-outline text-center mt-4">PETA KANTO</h2>
         
         <div class="w-full max-w-md flex-1 overflow-y-auto no-scrollbar glass-panel p-2 bg-white/50 border-blue-300">
             <div id="route-list" class="flex flex-col gap-3 pb-8">
-                <!-- Routes generated by JS -->
-            </div>
+                </div>
         </div>
     </div>
 
-    <!-- MARKET (SHOP) VIEW -->
     <div id="view-market" class="view-section pt-12 bg-yellow-50">
         <button onclick="switchView('view-menu')" class="absolute top-4 left-4 retro-btn px-4 py-2 z-10 bg-white border-yellow-400"><span class="pixel-font text-[8px] mt-1 text-yellow-800"><< MENU</span></button>
         <h2 class="pixel-font text-lg text-yellow-600 mb-2 text-outline text-center mt-4">POKE MART</h2>
@@ -219,12 +218,10 @@
         
         <div class="w-full max-w-md flex-1 overflow-y-auto no-scrollbar glass-panel p-4 bg-white border-yellow-400">
             <div class="grid grid-cols-2 gap-4" id="market-grid">
-                <!-- Market items generated by JS -->
-            </div>
+                </div>
         </div>
     </div>
 
-    <!-- LOBBY FIND ROOM (BEFORE PREP) -->
     <div id="view-lobby-find" class="view-section justify-center relative bg-red-50">
         <button onclick="switchView('view-menu')" class="absolute top-4 left-4 retro-btn px-4 py-2 z-10"><span class="pixel-font text-[8px] mt-1 text-gray-600"><< MENU</span></button>
         
@@ -249,7 +246,6 @@
         </div>
     </div>
 
-    <!-- PREP ROOM (PVP DRAFT PHASE) -->
     <div id="view-prep-room" class="view-section justify-center relative bg-gradient-to-b from-blue-100 to-white">
         <button onclick="minimizePrepRoom()" class="absolute top-4 left-4 retro-btn px-4 py-2 z-10 bg-white border-blue-400 shadow-sm"><span class="pixel-font text-[8px] mt-1 text-blue-800"><< MENU</span></button>
         <button onclick="disconnectMultiplayer()" class="absolute top-4 right-4 retro-btn px-4 py-2 z-10 bg-red-50 border-red-400 shadow-sm"><span class="pixel-font text-[8px] mt-1 text-red-800">LEAVE X</span></button>
@@ -276,7 +272,6 @@
         </div>
     </div>
 
-    <!-- GAME VIEW (BATTLE RPG) -->
     <div id="view-game" class="view-section pt-2 px-2">
         <div class="w-full max-w-[360px] flex justify-between items-center mb-1 mt-8">
             <button onclick="fleeBattle()" class="retro-btn px-3 py-1 bg-gray-200"><span class="pixel-font text-gray-600 text-[8px] mt-1" id="btn-flee-text">KABUR</span></button>
@@ -303,7 +298,6 @@
                 </div>
             </div>
 
-            <!-- INDIVIDUAL PARTY HUD (RPG Style) -->
             <div id="party-hp-hud" class="w-full flex justify-center gap-1 px-2 mt-2 z-20 h-10"></div>
 
             <div class="flex-1 w-full flex justify-between items-end px-4 pb-14 relative z-10">
@@ -320,7 +314,6 @@
                 <span id="log-cursor" class="pixel-font text-[8px] animate-pulse ml-1">_</span>
             </div>
 
-            <!-- CATCH OVERLAY (MUNCUL SAAT BOS MATI) -->
             <div id="catch-overlay" class="hidden absolute inset-0 z-40 bg-black/60 rounded flex flex-col justify-center items-center">
                 <p class="pixel-font text-[8px] text-white text-outline mb-4 text-center leading-loose" id="catch-msg">WILD POKEMON PINGSAN!<br>TANGKAP?</p>
                 <div class="flex gap-2">
@@ -344,7 +337,6 @@
                 <button onclick="skipCatch()" class="mt-4 pixel-font text-[6px] text-gray-300 underline">Abaikan & Selesai</button>
             </div>
             
-            <!-- THROW BALL ANIMATION LAYER -->
             <img id="thrown-ball" src="" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 z-50" onerror="this.src=''">
         </div>
 
@@ -358,12 +350,10 @@
         </div>
     </div>
 
-    <!-- DECK VIEW (TRADING CARDS & INVENTORY) -->
     <div id="view-deck" class="view-section pt-12">
         <button onclick="switchView('view-menu')" class="absolute top-4 left-4 retro-btn px-4 py-2 z-10"><span class="pixel-font text-[8px] mt-1 text-gray-600"><< MENU</span></button>
         
         <div class="w-full max-w-md flex flex-col items-center mb-2 mt-4">
-            <!-- INVENTORY HUD -->
             <div class="w-full flex justify-center gap-2 mb-4 px-2 overflow-x-auto no-scrollbar">
                 <div class="inv-item"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/potion.png"><span id="inv-potion" class="pixel-font text-[6px] text-gray-600 mt-1">0</span></div>
                 <div class="inv-item"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/rare-candy.png"><span id="inv-candy" class="pixel-font text-[6px] text-gray-600 mt-1">0</span></div>
@@ -388,14 +378,12 @@
         </div>
     </div>
 
-    <!-- OVERLAY DETAIL KARTU, EVOLVE, & MOVE SELECTOR -->
     <div id="card-overlay" class="hidden fixed inset-0 z-[60] bg-black/80 flex-col justify-center items-center p-4 transition-opacity">
         <h2 class="pixel-font text-sm text-yellow-400 mb-4 text-outline">DATA POKEMON</h2>
         <div id="deck-detail-container" class="flex justify-center w-full"></div>
         <button onclick="closeCardOverlay()" class="mt-6 retro-btn px-6 py-3 border-gray-400"><span class="pixel-font text-[8px] text-gray-700 mt-1">TUTUP</span></button>
     </div>
 
-    <!-- OVERLAY ALERT -->
     <div id="alert-modal" class="hidden fixed inset-0 z-[100] bg-black/80 flex justify-center items-center p-4 z-[400]">
         <div class="bg-white border-4 border-blue-500 p-6 rounded max-w-xs w-full text-center shadow-2xl">
             <h3 id="alert-title" class="pixel-font text-sm text-blue-600 mb-4">PERHATIAN</h3>
@@ -406,7 +394,6 @@
 
     <script>
         // --- API & BACKEND CONFIGURATION ---
-        // AUTOMATIC ENVIRONMENT DETECTION: Jika di localhost/file:// pakai MOCK, jika di vercel otomatis pakai API asli
         const isLocal = window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '';
         let USE_MOCK_API = isLocal; 
         const API_BASE_URL = "/api"; 
@@ -490,6 +477,32 @@
         let moveCache = {}; let currentPvERouteId = 0;
         let pvpScores = { p1: 0, p2: 0, p1Name: "", p2Name: "" };
 
+        // --- ERROR HANDLER (DEBUGGER) ---
+        function throwDebugError(e) {
+            console.error(e);
+            document.getElementById('loading-screen').classList.remove('hidden');
+            document.getElementById('loading-screen').classList.add('flex');
+            document.getElementById('loading-spinner').classList.remove('animate-spin');
+            
+            document.getElementById('loading-text').innerText = "FATAL ERROR!";
+            document.getElementById('loading-text').classList.replace('text-white', 'text-red-500');
+            document.getElementById('loading-text').classList.remove('animate-pulse');
+            document.getElementById('db-status-text').innerText = "Mohon copy error di bawah ini:";
+            
+            document.getElementById('error-box-container').classList.remove('hidden');
+            document.getElementById('error-box-container').classList.add('flex');
+            
+            let errMsg = `Error: ${e.name} - ${e.message}\n\nStack Trace:\n${e.stack}\n\nPlayer Data State: ${player ? 'Exists' : 'Null'}`;
+            document.getElementById('error-log-box').value = errMsg;
+        }
+
+        function copyError() {
+            const errorBox = document.getElementById('error-log-box');
+            errorBox.select();
+            document.execCommand('copy');
+            alert('Log error berhasil disalin! Silakan kirim ke Prof.');
+        }
+
         // --- AUTH & BACKEND SYSTEM ---
         function switchAuthTab(tab) {
             initAudio();
@@ -537,7 +550,7 @@
                     if(apiError.message !== "API_NOT_FOUND" && !apiError.message.includes("Failed to fetch")) throw apiError;
                     USE_MOCK_API = true; resData = await MockDB.login(u, p);
                 }
-                player = resData; finalizeLogin();
+                player = resData; await finalizeLogin();
             } catch(e) { showAuthLoading(false); showAlert("Login Gagal", e.message); }
         }
 
@@ -555,7 +568,7 @@
                     if(apiError.message !== "API_NOT_FOUND" && !apiError.message.includes("Failed to fetch")) throw apiError;
                     USE_MOCK_API = true; resData = await MockDB.register(u, p);
                 }
-                player = resData; finalizeLogin();
+                player = resData; await finalizeLogin();
             } catch(e) { showAuthLoading(false); showAlert("Daftar Gagal", e.message); }
         }
 
@@ -568,11 +581,14 @@
         }
 
         async function syncDataToDB() {
-            if(!player.username) return;
+            if(!player || !player.username) return;
             try {
                 if(USE_MOCK_API) { await MockDB.save(player); } 
-                else { await fetch(`${API_BASE_URL}/save`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username: player.username, data: player}) }).catch(e=>console.warn("DB Offline")); }
-            } catch(e) {}
+                else { 
+                    const res = await fetch(`${API_BASE_URL}/save`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username: player.username, data: player}) });
+                    if(!res.ok) { const err = await res.json().catch(()=>({error:"Server Error"})); throw new Error(err.error || res.statusText); }
+                }
+            } catch(e) { console.warn("DB Sync Offline/Gagal:", e.message); }
         }
 
         async function fetchWithTimeout(resource, options = {}) {
@@ -588,60 +604,105 @@
         }
 
         async function finalizeLogin() {
-            showAuthLoading(false); document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('auth-screen').classList.remove('flex');
-            player.pveProgress = player.pveProgress || { routeIndex: 0, battlesWon: 0 };
-            player.inventory = player.inventory || { potion: 5, candy: 2, stone: 0, 'poke-ball': 10, 'great-ball': 0, 'ultra-ball': 0, 'master-ball': 0 };
-            
-            player.inventory['poke-ball'] = player.inventory['poke-ball'] || 0; player.inventory['great-ball'] = player.inventory['great-ball'] || 0; player.inventory['ultra-ball'] = player.inventory['ultra-ball'] || 0; player.inventory['master-ball'] = player.inventory['master-ball'] || 0;
-            player.badges = player.badges || [];
-            
-            if(USE_MOCK_API) document.getElementById('offline-indicator').classList.remove('hidden');
-            
-            let uniqueIds = new Set(); let cleanedUnlocked = [];
-            for (let p of player.unlocked) { 
-                if (!uniqueIds.has(p.id)) { 
-                    uniqueIds.add(p.id);
-                    cleanedUnlocked.push({
-                        ...p, id: Number(p.id),
-                        hp: p.hp || 45, atk: p.atk || 49, def: p.def || 49, spa: p.spa || 65, spd: p.spd || 65, speed: p.speed || 45,
-                        moveClass: p.moveClass || 'physical'
-                    }); 
-                } 
-            }
-            player.unlocked = cleanedUnlocked; 
-            
-            let validDeck = [];
-            for(let id of player.deck) {
-                let found = player.unlocked.find(u => Number(u.id) === Number(id));
-                if(found && !validDeck.includes(found.id)) validDeck.push(found.id);
-            }
-            while(validDeck.length < 6 && validDeck.length < cleanedUnlocked.length) {
-                let nextP = cleanedUnlocked.find(u => !validDeck.includes(u.id));
-                if(nextP) validDeck.push(nextP.id); else break;
-            }
-            player.deck = validDeck;
-
-            if (!player.unlocked || player.unlocked.length < 6) {
-                document.getElementById('loading-screen').classList.remove('hidden');
-                let pulledStarters = []; let pPool = [...RARITY_DB.common.ids]; let apiSuccess = true;
-
-                for(let i=0; i<6; i++) {
-                    const rId = pPool.splice(Math.floor(Math.random() * pPool.length), 1)[0];
-                    try {
-                        let res = await fetchWithTimeout(`${API_URL}${rId}`); let data = await res.json();
-                        let rawMoves = data.moves.filter(m => m.version_group_details[0].move_learn_method.name === 'level-up'); rawMoves.sort((a,b) => a.version_group_details[0].level_learned_at - b.version_group_details[0].level_learned_at);
-                        let mPool = rawMoves.length > 0 ? [{level:1, name:rawMoves[0].move.name}] : [{level:1, name:'tackle'}]; if(rawMoves.length > 5) mPool.push({level:7, name:rawMoves[5].move.name});
-                        
-                        let moveDetails = await fetchMoveDetails(mPool[0].name); const baseStats = extractStats(data);
-                        pulledStarters.push({ id: Number(rId), name: data.name, rarity: 'common', hp: baseStats.hp, atk: baseStats.atk, def: baseStats.def, spa: baseStats.spa, spd: baseStats.spd, speed: baseStats.speed, types: data.types.map(t => t.type.name), animUrl: data.sprites?.other?.showdown?.front_default || `${POKE_URL}${rId}.png`, level: 1, exp: 0, currentMove: mPool[0].name, movePower: moveDetails.power, moveClass: moveDetails.damageClass, moveType: moveDetails.type, movePool: mPool, cryUrl: data.cries?.latest || '' });
-                    } catch(e) { apiSuccess = false; break; }
+            try {
+                showAuthLoading(false); 
+                document.getElementById('auth-screen').classList.add('hidden'); 
+                document.getElementById('auth-screen').classList.remove('flex');
+                
+                // --- PROACTIVE AUTO-PATCHER (Mencegah property undefined) ---
+                player = player || {};
+                player.unlocked = player.unlocked || [];
+                player.deck = player.deck || [];
+                player.pveProgress = player.pveProgress || { routeIndex: 0, battlesWon: 0 };
+                player.inventory = player.inventory || {};
+                player.inventory.potion = player.inventory.potion || 5;
+                player.inventory.candy = player.inventory.candy || 2;
+                player.inventory.stone = player.inventory.stone || 0;
+                player.inventory['poke-ball'] = player.inventory['poke-ball'] || 10;
+                player.inventory['great-ball'] = player.inventory['great-ball'] || 0;
+                player.inventory['ultra-ball'] = player.inventory['ultra-ball'] || 0;
+                player.inventory['master-ball'] = player.inventory['master-ball'] || 0;
+                player.badges = player.badges || [];
+                player.coins = player.coins || 1000;
+                
+                if(USE_MOCK_API) document.getElementById('offline-indicator').classList.remove('hidden');
+                
+                // STRICT CLEANUP & PATCH STATS
+                let uniqueIds = new Set(); let cleanedUnlocked = [];
+                for (let p of player.unlocked) { 
+                    if (p && p.id && !uniqueIds.has(p.id)) { 
+                        uniqueIds.add(p.id);
+                        cleanedUnlocked.push({
+                            ...p, id: Number(p.id),
+                            hp: p.hp || 45, atk: p.atk || 49, def: p.def || 49, spa: p.spa || 65, spd: p.spd || 65, speed: p.speed || 45,
+                            moveClass: p.moveClass || 'physical'
+                        }); 
+                    } 
                 }
-                if(!apiSuccess) { pulledStarters = JSON.parse(JSON.stringify(FALLBACK_STARTERS)); }
-                player.unlocked = pulledStarters; player.deck = pulledStarters.map(p => p.id); await syncDataToDB(); 
+                player.unlocked = cleanedUnlocked; 
+                
+                // Fix Deck Mismatches
+                let validDeck = [];
+                for(let id of player.deck) {
+                    let found = player.unlocked.find(u => Number(u.id) === Number(id));
+                    if(found && !validDeck.includes(found.id)) validDeck.push(found.id);
+                }
+                while(validDeck.length < 6 && validDeck.length < cleanedUnlocked.length) {
+                    let nextP = cleanedUnlocked.find(u => !validDeck.includes(u.id));
+                    if(nextP) validDeck.push(nextP.id); else break;
+                }
+                player.deck = validDeck;
+
+                if (!player.unlocked || player.unlocked.length < 6) {
+                    document.getElementById('loading-screen').classList.remove('hidden');
+                    document.getElementById('loading-screen').classList.add('flex');
+                    document.getElementById('loading-text').innerText = "Menyiapkan Starter POKEMON...";
+
+                    let pulledStarters = []; let pPool = [...RARITY_DB.common.ids]; let apiSuccess = true;
+
+                    for(let i=0; i<6; i++) {
+                        const rId = pPool.splice(Math.floor(Math.random() * pPool.length), 1)[0];
+                        try {
+                            let res = await fetchWithTimeout(`${API_URL}${rId}`); let data = await res.json();
+                            let rawMoves = data.moves.filter(m => m.version_group_details && m.version_group_details.length > 0 && m.version_group_details[0].move_learn_method.name === 'level-up'); 
+                            rawMoves.sort((a,b) => a.version_group_details[0].level_learned_at - b.version_group_details[0].level_learned_at);
+                            let mPool = rawMoves.length > 0 ? [{level:1, name:rawMoves[0].move.name}] : [{level:1, name:'tackle'}]; 
+                            if(rawMoves.length > 5) mPool.push({level:7, name:rawMoves[5].move.name});
+                            
+                            let moveDetails = await fetchMoveDetails(mPool[0].name); const baseStats = extractStats(data);
+                            pulledStarters.push({ id: Number(rId), name: data.name, rarity: 'common', hp: baseStats.hp, atk: baseStats.atk, def: baseStats.def, spa: baseStats.spa, spd: baseStats.spd, speed: baseStats.speed, types: data.types.map(t => t.type.name), animUrl: data.sprites?.other?.showdown?.front_default || `${POKE_URL}${rId}.png`, level: 1, exp: 0, currentMove: mPool[0].name, movePower: moveDetails.power, moveClass: moveDetails.damageClass, moveType: moveDetails.type, movePool: mPool, cryUrl: data.cries?.latest || '' });
+                        } catch(e) { apiSuccess = false; break; }
+                    }
+                    if(!apiSuccess) { 
+                        document.getElementById('db-status-text').innerText = "API Sibuk, memuat Starter Cadangan...";
+                        pulledStarters = JSON.parse(JSON.stringify(FALLBACK_STARTERS)); 
+                        // Jika fallbacknya kurang dari 6, duplicate mereka (Aman karena duplicate dibolehkan sementara di deck)
+                        while(pulledStarters.length < 6) {
+                            let clone = JSON.parse(JSON.stringify(FALLBACK_STARTERS[Math.floor(Math.random() * FALLBACK_STARTERS.length)]));
+                            clone.id = Date.now() + Math.floor(Math.random() * 1000); // Unique ID prevent crash
+                            pulledStarters.push(clone);
+                        }
+                    }
+                    player.unlocked = pulledStarters; player.deck = pulledStarters.map(p => p.id); 
+                    document.getElementById('db-status-text').innerText = "Menyimpan ke DB...";
+                    await syncDataToDB(); 
+                }
+                
+                document.getElementById('loading-screen').classList.add('hidden'); 
+                document.getElementById('loading-screen').classList.remove('flex');
+                
+                const menuUserDisplay = document.getElementById('menu-username-display');
+                if(menuUserDisplay) menuUserDisplay.innerText = player.username; 
+                
+                updatePvEProgressUI(); 
+                updateInventoryUI(); 
+                updateCoinDisplay(); 
+                switchView('view-menu');
+
+            } catch (e) {
+                // KIRIM ERROR KE UI DEBUGGER SCREEN
+                throwDebugError(e);
             }
-            
-            document.getElementById('loading-screen').classList.add('hidden'); document.getElementById('menu-username-display').innerText = player.username; 
-            updatePvEProgressUI(); updateInventoryUI(); updateCoinDisplay(); switchView('view-menu');
         }
 
         // --- MAP SELECTION SYSTEM ---
@@ -681,16 +742,17 @@
         }
 
         function updateInventoryUI() {
-            document.getElementById('inv-potion').innerText = player.inventory.potion || 0; 
-            document.getElementById('inv-candy').innerText = player.inventory.candy || 0; 
-            document.getElementById('inv-stone').innerText = player.inventory.stone || 0;
-            document.getElementById('inv-pokeball').innerText = player.inventory['poke-ball'] || 0;
-            document.getElementById('inv-masterball').innerText = player.inventory['master-ball'] || 0;
+            const items = ['potion', 'candy', 'stone', 'poke-ball', 'great-ball', 'ultra-ball', 'master-ball'];
+            items.forEach(id => {
+                const el1 = document.getElementById(`inv-${id.replace('-','')}`);
+                if(el1) el1.innerText = player.inventory[id] || 0;
+            });
             
-            const pBall = document.getElementById('qty-pokeball'); if(pBall) pBall.innerText = player.inventory['poke-ball'] || 0;
-            const gBall = document.getElementById('qty-greatball'); if(gBall) gBall.innerText = player.inventory['great-ball'] || 0;
-            const uBall = document.getElementById('qty-ultraball'); if(uBall) uBall.innerText = player.inventory['ultra-ball'] || 0;
-            const mBall = document.getElementById('qty-masterball'); if(mBall) mBall.innerText = player.inventory['master-ball'] || 0;
+            const qtyBalls = ['pokeball', 'greatball', 'ultraball', 'masterball'];
+            qtyBalls.forEach(b => {
+                const el = document.getElementById(`qty-${b}`);
+                if(el) el.innerText = player.inventory[b.replace('ball', '-ball')] || 0;
+            });
         }
 
         // --- MARKET SYSTEM ---
@@ -748,6 +810,16 @@
         let typeWriterTimeout = null;
         function updateBattleLog(text) { const logEl = document.getElementById('battle-log'); if(typeWriterTimeout) clearTimeout(typeWriterTimeout); logEl.innerText = ""; let i = 0; function type() { if(i < text.length) { logEl.innerHTML += text.charAt(i); i++; typeWriterTimeout = setTimeout(type, 15); } } type(); }
 
+        async function fetchMoveDetails(moveName) {
+            if(moveCache[moveName]) return moveCache[moveName];
+            try {
+                let res = await fetchWithTimeout(`${MOVE_URL}${moveName}`, {timeout: 3000}); let data = await res.json();
+                let moveObj = { power: data.power || 40, type: data.type.name, damageClass: data.damage_class.name }; moveCache[moveName] = moveObj; return moveObj;
+            } catch(e) { return { power: 40, type: 'normal', damageClass: 'physical' }; } 
+        }
+
+        function updateCoinDisplay() { const coinEl = document.getElementById('global-coins'); coinEl.innerText = player.coins; coinEl.classList.remove('coin-update'); void coinEl.offsetWidth; coinEl.classList.add('coin-update'); }
+
         // --- DECK & INVENTORY MANAGEMENT ---
         function renderDeck() {
             const grid = document.getElementById('deck-grid'); grid.innerHTML = ''; document.getElementById('deck-count').innerText = player.deck.length;
@@ -756,10 +828,10 @@
             updateInventoryUI();
 
             sortedArr.forEach(poke => {
-                const isSelected = player.deck.includes(poke.id); const mainType = poke.types[0]; const isLegendary = poke.rarity === 'legendary';
+                const isSelected = player.deck.includes(poke.id); const mainType = poke.types && poke.types[0] ? poke.types[0] : 'normal'; const isLegendary = poke.rarity === 'legendary';
                 const el = document.createElement('div');
                 el.className = `deck-card p-2 bg-type-${mainType} ${isSelected ? 'in-deck' : ''} ${isLegendary ? 'card-legendary' : ''} flex flex-col justify-between border-gray-300`;
-                let typesHtml = poke.types.map(t => `<span class="type-badge type-${t}">${t}</span>`).join('');
+                let typesHtml = poke.types ? poke.types.map(t => `<span class="type-badge type-${t}">${t}</span>`).join('') : '';
                 const rarityBadge = `<div class="absolute top-0 right-0 pixel-font text-[4px] px-1.5 py-0.5 rounded-bl ${badgeColors[poke.rarity] || badgeColors['common']} shadow-sm z-10 uppercase border-b-2 border-l-2 border-white/50">${poke.rarity}</div>`;
                 let calculatedAtk = calcStat(poke.atk, poke.level, false);
 
@@ -793,10 +865,10 @@
 
         function showCardDetail(id) {
             const poke = player.unlocked.find(p => p.id === id); if(!poke) return;
-            const mainType = poke.types[0]; const maxExp = poke.level * 100;
-            const typesHtml = poke.types.map(t => `<span class="type-badge type-${t}">${t}</span>`).join('');
+            const mainType = poke.types && poke.types[0] ? poke.types[0] : 'normal'; const maxExp = poke.level * 100;
+            const typesHtml = poke.types ? poke.types.map(t => `<span class="type-badge type-${t}">${t}</span>`).join('') : '';
             const imgSrc = poke.animUrl || `${POKE_URL}${poke.id}.png`;
-            let moveOptions = poke.movePool.map(m => `<option value="${m.name}" ${m.name === poke.currentMove ? 'selected' : ''} ${m.level > poke.level ? 'disabled' : ''}>${m.name.replace('-',' ')} (Lv${m.level})</option>`).join('');
+            let moveOptions = poke.movePool ? poke.movePool.map(m => `<option value="${m.name}" ${m.name === poke.currentMove ? 'selected' : ''} ${m.level > poke.level ? 'disabled' : ''}>${m.name.replace('-',' ')} (Lv${m.level})</option>`).join('') : '';
             
             let calculatedHp = calcStat(poke.hp, poke.level, true); let calculatedAtk = calcStat(poke.atk, poke.level, false); let calculatedDef = calcStat(poke.def, poke.level, false); let calculatedSpd = calcStat(poke.speed, poke.level, false);
 
@@ -884,7 +956,6 @@
                 showAlert("EVOLUSI BERHASIL!", `${poke.name.toUpperCase()} berevolusi menjadi ${evolvedPoke.name.toUpperCase()}!`); renderDeck(); playCry(evolvedPoke.cryUrl);
             } catch(e) { showAuthLoading(false); document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('auth-screen').classList.remove('flex'); document.querySelector('.flex.border-b-2').classList.remove('hidden'); showAlert("Error", "Gagal menghubungi PokeAPI untuk evolusi."); }
         }
-
 
         // --- ABLY MULTIPLAYER LOGIC (MINIMIZE & FLOATING INDICATOR) ---
         let realtime = null; let mpChannel = null; let myTurn = false;
@@ -996,7 +1067,6 @@
         function startPvE() {
             if(isMpConnected) return showAlert("PVP AKTIF", "Kamu masih berada di dalam Room PvP! Selesaikan atau Keluar dari room terlebih dahulu.");
             
-            // Validasi safety: Pastikan deck length valid (harusnya selalu valid karna auto-repair saat login)
             if (player.deck.length === 0 || player.unlocked.length === 0) {
                 return showAlert("Data Error", "Party kosong! Coba login ulang untuk auto-repair.");
             }
@@ -1178,7 +1248,7 @@
                     await processMatches(matches, 1); 
                     if(!isMultiplayer && boss.hp > 0 && getAliveCount() > 0) await enemyTurn(); 
                     else if (isMultiplayer && getAliveCount() > 0) { myTurn = false; lockGrid(); updateBattleLog("GILIRAN MUSUH..."); } 
-                } catch(e) { console.log(e); } isAnimating = false; 
+                } catch(e) {} isAnimating = false; 
             } else { swap(idx1, idx2); renderBoard(); isAnimating = false; } 
         }
         function swap(i, j) { const temp = board[i]; board[i] = board[j]; board[j] = temp; }
