@@ -206,8 +206,7 @@
         <h2 class="pixel-font text-lg text-blue-800 mb-6 text-outline text-center mt-4">PETA KANTO</h2>
         
         <div class="w-full max-w-md flex-1 overflow-y-auto no-scrollbar glass-panel p-2 bg-white/50 border-blue-300">
-            <div id="route-list" class="flex flex-col gap-3 pb-8">
-                </div>
+            <div id="route-list" class="flex flex-col gap-3 pb-8"></div>
         </div>
     </div>
 
@@ -217,8 +216,7 @@
         <p class="pixel-font text-[6px] text-gray-500 mb-4 text-center px-4">Beli perlengkapan tangkap dan heal untuk petualanganmu!</p>
         
         <div class="w-full max-w-md flex-1 overflow-y-auto no-scrollbar glass-panel p-4 bg-white border-yellow-400">
-            <div class="grid grid-cols-2 gap-4" id="market-grid">
-                </div>
+            <div class="grid grid-cols-2 gap-4" id="market-grid"></div>
         </div>
     </div>
 
@@ -284,6 +282,11 @@
             <div id="pvp-indicator" class="hidden bg-red-100 border-2 border-red-400 px-2 py-1 rounded"><span class="pixel-font text-[8px] text-red-600 mt-1">⚔️ PVP MODE</span></div>
             <div id="pve-indicator" class="bg-blue-100 border-2 border-blue-400 px-2 py-1 rounded flex flex-col items-center shadow-sm">
                 <span id="route-name-display" class="pixel-font text-[6px] text-blue-800">Route 1</span>
+            </div>
+            
+            <div id="pve-coins-display" class="bg-yellow-100 border-2 border-yellow-400 px-2 py-1 rounded flex items-center gap-1 shadow-sm">
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/nugget.png" class="w-3 h-3">
+                <span id="session-coins" class="pixel-font text-[6px] text-yellow-700 mt-1">0</span>
             </div>
         </div>
 
@@ -384,7 +387,7 @@
         <button onclick="closeCardOverlay()" class="mt-6 retro-btn px-6 py-3 border-gray-400"><span class="pixel-font text-[8px] text-gray-700 mt-1">TUTUP</span></button>
     </div>
 
-    <div id="alert-modal" class="hidden fixed inset-0 z-[100] bg-black/80 flex justify-center items-center p-4 z-[400]">
+    <div id="alert-modal" class="hidden fixed inset-0 z-[100] bg-black/80 flex justify-center items-center p-4">
         <div class="bg-white border-4 border-blue-500 p-6 rounded max-w-xs w-full text-center shadow-2xl">
             <h3 id="alert-title" class="pixel-font text-sm text-blue-600 mb-4">PERHATIAN</h3>
             <p id="alert-msg" class="pixel-font text-[8px] text-gray-700 leading-loose mb-6">Pesan.</p>
@@ -397,27 +400,23 @@
         const isLocal = window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '';
         let USE_MOCK_API = isLocal; 
         const API_BASE_URL = "/api"; 
+        
+        let isMpConnected = false;
+        let isMultiplayer = false; // [FIX 3] Mendeklarasikan state global
 
-        // --- WEB AUDIO API ---
-        const AudioContext = window.AudioContext || window.webkitAudioContext; let audioCtx;
-        function initAudio() { if(!audioCtx) audioCtx = new AudioContext(); if(audioCtx.state === 'suspended') audioCtx.resume(); }
-        function playSound(type) {
-            try {
-                initAudio(); const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination);
-                if(type === 'hit') { osc.type = 'square'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); osc.start(); osc.stop(audioCtx.currentTime + 0.1); } 
-                else if (type === 'supereffective') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(400, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2); osc.start(); osc.stop(audioCtx.currentTime + 0.2); } 
-                else if (type === 'notvery') { osc.type = 'triangle'; osc.frequency.setValueAtTime(100, audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); osc.start(); osc.stop(audioCtx.currentTime + 0.1); } 
-                else if (type === 'coin') { osc.type = 'sine'; osc.frequency.setValueAtTime(900, audioCtx.currentTime); osc.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.05); gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2); osc.start(); osc.stop(audioCtx.currentTime + 0.2); }
-                else if (type === 'heal') { osc.type = 'sine'; osc.frequency.setValueAtTime(400, audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 0.3); gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4); osc.start(); osc.stop(audioCtx.currentTime + 0.4); }
-                else if (type === 'ko') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 0.3); gain.gain.setValueAtTime(0.4, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4); osc.start(); osc.stop(audioCtx.currentTime + 0.4); }
-                else if (type === 'catch') { osc.type = 'square'; osc.frequency.setValueAtTime(800, audioCtx.currentTime); osc.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5); osc.start(); osc.stop(audioCtx.currentTime + 0.5); }
-            } catch(e) {}
-        }
-
+        // --- CONSTANTS & DATABASE ---
         const POKE_URL = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
         const API_URL = 'https://pokeapi.co/api/v2/pokemon/';
         const MOVE_URL = 'https://pokeapi.co/api/v2/move/';
         const BALL_URL = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/';
+
+        // [FIX 1] Menambahkan kembali RARITY_DB yang hilang
+        const RARITY_DB = {
+            common: { ids: [1, 4, 7, 10, 13, 16, 19, 21, 29, 32, 41, 43, 46, 74] },
+            rare: { ids: [25, 35, 39, 63, 81, 86, 90, 100, 102, 104, 111, 115, 116, 128] },
+            epic: { ids: [94, 123, 130, 135, 143] },
+            legendary: { ids: [144, 145, 146, 149, 150] }
+        };
 
         const rarityStyles = { 'common': { color: '#64748b' }, 'rare': { color: '#3b82f6' }, 'epic': { color: '#a855f7' }, 'legendary': { color: '#eab308' }};
         const badgeColors = { 'common': 'bg-slate-500 text-white', 'rare': 'bg-blue-500 text-white', 'epic': 'bg-purple-500 text-white', 'legendary': 'bg-yellow-400 text-yellow-900' };
@@ -430,7 +429,6 @@
         const typeColors = { normal: '#a8a878', fire: '#f08030', water: '#6890f0', electric: '#f8d030', grass: '#78c850', ice: '#98d8d8', fighting: '#c03028', poison: '#a040a0', ground: '#e0c068', flying: '#a890f0', psychic: '#f85888', bug: '#a8b820', rock: '#b8a038', ghost: '#705898', dragon: '#7038f8', dark: '#705848', steel: '#b8b8d0', fairy: '#ee99ac' };
         const typeChart = { normal: { weak: ['fighting'], resist: ['ghost'] }, fire: { weak: ['water', 'ground', 'rock'], resist: ['fire', 'grass', 'bug', 'fairy'] }, water: { weak: ['electric', 'grass'], resist: ['fire', 'water', 'ice'] }, grass: { weak: ['fire', 'ice', 'poison', 'flying', 'bug'], resist: ['water', 'grass', 'electric', 'ground'] }, electric: { weak: ['ground'], resist: ['electric', 'flying'] }, ice: { weak: ['fire', 'fighting', 'rock', 'steel'], resist: ['ice'] }, fighting: { weak: ['flying', 'psychic', 'fairy'], resist: ['bug', 'rock', 'dark'] }, poison: { weak: ['ground', 'psychic'], resist: ['grass', 'fighting', 'poison', 'fairy'] }, ground: { weak: ['water', 'grass', 'ice'], resist: ['poison', 'rock', 'electric'] }, flying: { weak: ['electric', 'ice', 'rock'], resist: ['grass', 'fighting', 'bug', 'ground'] }, psychic: { weak: ['bug', 'ghost', 'dark'], resist: ['fighting', 'psychic'] }, bug: { weak: ['fire', 'flying', 'rock'], resist: ['grass', 'fighting', 'ground'] }, rock: { weak: ['water', 'grass', 'fighting', 'ground', 'steel'], resist: ['normal', 'fire', 'poison', 'flying'] }, ghost: { weak: ['ghost', 'dark'], resist: ['poison', 'bug', 'normal', 'fighting'] }, dragon: { weak: ['ice', 'dragon', 'fairy'], resist: ['fire', 'water', 'grass', 'electric'] }, dark: { weak: ['fighting', 'bug', 'fairy'], resist: ['ghost', 'dark', 'psychic'] }, steel: { weak: ['fire', 'fighting', 'ground'], resist: ['normal', 'grass', 'ice', 'flying', 'psychic', 'bug', 'rock', 'dragon', 'steel', 'fairy', 'poison'] }, fairy: { weak: ['poison', 'steel'], resist: ['fighting', 'bug', 'dark', 'dragon'] } };
 
-        // ADVENTURE REGIONS MAP
         const REGIONS = [
             { id: 0, name: "Route 1", type: "wild", mons: [16, 19], rare: [43], epic: [], legend: [], reqWins: 4 },
             { id: 1, name: "Route 2", type: "wild", mons: [10, 13, 29, 32], rare: [25], epic: [], legend: [], reqWins: 5 },
@@ -452,6 +450,33 @@
             { id: 4, name: "charmander", rarity: 'rare', hp: 39, atk: 52, def: 43, spa: 60, spd: 50, speed: 65, types: ['fire'], animUrl: `${POKE_URL}4.png`, level: 1, exp: 0, currentMove: 'scratch', movePower: 40, moveClass: 'physical', moveType: 'normal', movePool: [{level:1, name:'scratch'}, {level:7, name:'ember'}], cryUrl: ''},
             { id: 7, name: "squirtle", rarity: 'rare', hp: 44, atk: 48, def: 65, spa: 50, spd: 64, speed: 43, types: ['water'], animUrl: `${POKE_URL}7.png`, level: 1, exp: 0, currentMove: 'tackle', movePower: 40, moveClass: 'physical', moveType: 'normal', movePool: [{level:1, name:'tackle'}, {level:7, name:'water-gun'}], cryUrl: ''}
         ];
+
+        // --- AUDIO ENGINE ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext; let audioCtx;
+        function initAudio() { if(!audioCtx) audioCtx = new AudioContext(); if(audioCtx.state === 'suspended') audioCtx.resume(); }
+        
+        function playSound(type) {
+            try {
+                initAudio(); const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination);
+                if(type === 'hit') { osc.type = 'square'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); osc.start(); osc.stop(audioCtx.currentTime + 0.1); } 
+                else if (type === 'supereffective') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(400, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2); osc.start(); osc.stop(audioCtx.currentTime + 0.2); } 
+                else if (type === 'notvery') { osc.type = 'triangle'; osc.frequency.setValueAtTime(100, audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); osc.start(); osc.stop(audioCtx.currentTime + 0.1); } 
+                else if (type === 'coin') { osc.type = 'sine'; osc.frequency.setValueAtTime(900, audioCtx.currentTime); osc.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.05); gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2); osc.start(); osc.stop(audioCtx.currentTime + 0.2); }
+                else if (type === 'heal') { osc.type = 'sine'; osc.frequency.setValueAtTime(400, audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 0.3); gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4); osc.start(); osc.stop(audioCtx.currentTime + 0.4); }
+                else if (type === 'ko') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 0.3); gain.gain.setValueAtTime(0.4, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4); osc.start(); osc.stop(audioCtx.currentTime + 0.4); }
+                else if (type === 'catch') { osc.type = 'square'; osc.frequency.setValueAtTime(800, audioCtx.currentTime); osc.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5); osc.start(); osc.stop(audioCtx.currentTime + 0.5); }
+            } catch(e) {}
+        }
+
+        // [FIX 2] Menambahkan Fungsi playCry yang tidak terdefinisi sebelumnya
+        function playCry(url) {
+            if(!url) return;
+            try {
+                const audio = new Audio(url);
+                audio.volume = 0.3;
+                audio.play().catch(e => console.warn("Audio play blocked", e));
+            } catch(e) {}
+        }
 
         function getMultiplier(atkType, defType) { if (!typeChart[defType]) return 1; if (typeChart[defType].resist.includes(atkType)) return 0.5; if (typeChart[defType].weak.includes(atkType)) return 1.5; return 1; }
         function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
@@ -478,28 +503,35 @@
         let pvpScores = { p1: 0, p2: 0, p1Name: "", p2Name: "" };
 
         // --- ERROR HANDLER (DEBUGGER) ---
+        // [FIX 4] Perbaikan keamanan DOM untuk mencegah infinite-freeze
         function throwDebugError(e) {
-            console.error(e);
-            document.getElementById('loading-screen').classList.remove('hidden');
-            document.getElementById('loading-screen').classList.add('flex');
-            document.getElementById('loading-spinner').classList.remove('animate-spin');
-            
-            document.getElementById('loading-text').innerText = "FATAL ERROR!";
-            document.getElementById('loading-text').classList.replace('text-white', 'text-red-500');
-            document.getElementById('loading-text').classList.remove('animate-pulse');
-            document.getElementById('db-status-text').innerText = "Mohon copy error di bawah ini:";
-            
-            document.getElementById('error-box-container').classList.remove('hidden');
-            document.getElementById('error-box-container').classList.add('flex');
-            
-            let errMsg = `Error: ${e.name} - ${e.message}\n\nStack Trace:\n${e.stack}\n\nPlayer Data State: ${player ? 'Exists' : 'Null'}`;
-            document.getElementById('error-log-box').value = errMsg;
+            console.error("FATAL ERROR CATCHED:", e);
+            try {
+                document.getElementById('loading-screen').classList.remove('hidden');
+                document.getElementById('loading-screen').classList.add('flex');
+                document.getElementById('loading-spinner').classList.remove('animate-spin');
+                
+                const txt = document.getElementById('loading-text');
+                txt.innerText = "FATAL ERROR!";
+                txt.classList.remove('text-white', 'animate-pulse');
+                txt.classList.add('text-red-500');
+                
+                document.getElementById('db-status-text').innerText = "Mohon copy error di bawah ini:";
+                
+                document.getElementById('error-box-container').classList.remove('hidden');
+                document.getElementById('error-box-container').classList.add('flex');
+                
+                let errMsg = `Error: ${e.name} - ${e.message}\n\nStack Trace:\n${e.stack}\n\nPlayer Data: ${player ? 'Exists' : 'Null'}`;
+                document.getElementById('error-log-box').value = errMsg;
+            } catch(err) {
+                // Sebagai fallback keamanan terakhir
+                console.error("DEBUGGER CRASH", err);
+            }
         }
 
         function copyError() {
             const errorBox = document.getElementById('error-log-box');
-            errorBox.select();
-            document.execCommand('copy');
+            errorBox.select(); document.execCommand('copy');
             alert('Log error berhasil disalin! Silakan kirim ke Prof.');
         }
 
@@ -609,7 +641,6 @@
                 document.getElementById('auth-screen').classList.add('hidden'); 
                 document.getElementById('auth-screen').classList.remove('flex');
                 
-                // --- PROACTIVE AUTO-PATCHER (Mencegah property undefined) ---
                 player = player || {};
                 player.unlocked = player.unlocked || [];
                 player.deck = player.deck || [];
@@ -627,7 +658,6 @@
                 
                 if(USE_MOCK_API) document.getElementById('offline-indicator').classList.remove('hidden');
                 
-                // STRICT CLEANUP & PATCH STATS
                 let uniqueIds = new Set(); let cleanedUnlocked = [];
                 for (let p of player.unlocked) { 
                     if (p && p.id && !uniqueIds.has(p.id)) { 
@@ -641,7 +671,6 @@
                 }
                 player.unlocked = cleanedUnlocked; 
                 
-                // Fix Deck Mismatches
                 let validDeck = [];
                 for(let id of player.deck) {
                     let found = player.unlocked.find(u => Number(u.id) === Number(id));
@@ -654,6 +683,7 @@
                 player.deck = validDeck;
 
                 if (!player.unlocked || player.unlocked.length < 6) {
+                    // Tampilkan loading screen dengan aman
                     document.getElementById('loading-screen').classList.remove('hidden');
                     document.getElementById('loading-screen').classList.add('flex');
                     document.getElementById('loading-text').innerText = "Menyiapkan Starter POKEMON...";
@@ -676,10 +706,9 @@
                     if(!apiSuccess) { 
                         document.getElementById('db-status-text').innerText = "API Sibuk, memuat Starter Cadangan...";
                         pulledStarters = JSON.parse(JSON.stringify(FALLBACK_STARTERS)); 
-                        // Jika fallbacknya kurang dari 6, duplicate mereka (Aman karena duplicate dibolehkan sementara di deck)
                         while(pulledStarters.length < 6) {
                             let clone = JSON.parse(JSON.stringify(FALLBACK_STARTERS[Math.floor(Math.random() * FALLBACK_STARTERS.length)]));
-                            clone.id = Date.now() + Math.floor(Math.random() * 1000); // Unique ID prevent crash
+                            clone.id = Date.now() + Math.floor(Math.random() * 1000); 
                             pulledStarters.push(clone);
                         }
                     }
@@ -700,7 +729,6 @@
                 switchView('view-menu');
 
             } catch (e) {
-                // KIRIM ERROR KE UI DEBUGGER SCREEN
                 throwDebugError(e);
             }
         }
@@ -790,8 +818,6 @@
         }
 
         // --- UTILITIES & NAVIGATION ---
-        let isMpConnected = false;
-
         function switchView(viewId) { 
             document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active')); document.getElementById(viewId).classList.add('active'); 
             if (viewId === 'view-game' || viewId === 'view-prep-room') { document.getElementById('top-bar').classList.add('hidden'); document.getElementById('top-bar').classList.remove('flex'); } 
@@ -957,7 +983,7 @@
             } catch(e) { showAuthLoading(false); document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('auth-screen').classList.remove('flex'); document.querySelector('.flex.border-b-2').classList.remove('hidden'); showAlert("Error", "Gagal menghubungi PokeAPI untuk evolusi."); }
         }
 
-        // --- ABLY MULTIPLAYER LOGIC (MINIMIZE & FLOATING INDICATOR) ---
+        // --- ABLY MULTIPLAYER LOGIC ---
         let realtime = null; let mpChannel = null; let myTurn = false;
         let oppData = null; let inPrepRoom = false; let amIReady = false; let isOppReady = false; let amIHost = false; let mpRoomCode = "";
 
@@ -1056,7 +1082,7 @@
             if(amIReady && isOppReady) { document.getElementById('prep-status').innerText = "MEMULAI BATTLE..."; inPrepRoom = false; setTimeout(() => startGame(true), 1000); }
         }
 
-        // --- BATTLE SYSTEM (RPG ADVANCED COMBAT & POKEBALL SYSTEM) ---
+        // --- BATTLE SYSTEM ---
         const width = 6; const grid = document.getElementById('grid');
         let board = [], sessionCoins = 0, isAnimating = false, activeAssets = []; 
         let startX = 0, startY = 0, startIndex = null; let activeSummonId = null;
@@ -1352,7 +1378,6 @@
                 
                 const route = REGIONS[currentPvERouteId];
                 if(route.type === 'boss') {
-                    // GYM LEADER TIDAK BISA DITANGKAP
                     const exp = boss.level * 50; const coinReward = boss.level * 100; 
                     sessionCoins += coinReward; player.coins += coinReward; updateCoinDisplay();
                     if(route.drops.candy) player.inventory.candy += route.drops.candy; if(route.drops.stone) player.inventory.stone += route.drops.stone;
@@ -1364,8 +1389,7 @@
                     if(currentPvERouteId >= player.pveProgress.routeIndex) { player.pveProgress.routeIndex++; player.pveProgress.battlesWon = 0; }
                     syncDataToDB(); await sleep(500); await spawnPvEEnemy();
                 } else {
-                    // WILD POKEMON BISA DITANGKAP
-                    isAnimating = true; // Block actions
+                    isAnimating = true;
                     document.getElementById('catch-overlay').classList.remove('hidden');
                 }
             }
@@ -1381,20 +1405,17 @@
             bImg.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${ballType}.png`;
             bImg.classList.remove('hidden', 'anim-shake-catch'); void bImg.offsetWidth;
             
-            // Throw Animation
             bImg.classList.add('anim-throw'); playSound('hit');
             await sleep(800);
             
-            // Hide enemy
             document.getElementById('boss-img').classList.add('hidden');
             bImg.classList.remove('anim-throw'); bImg.classList.add('anim-shake-catch');
             
-            // Catch Math
             let baseRate = CATCH_RATES[boss.rarity] || 0.5;
             let ballMult = ballType === 'master-ball' ? 100 : ballType === 'ultra-ball' ? 2 : ballType === 'great-ball' ? 1.5 : 1;
             let catchSuccess = Math.random() < (baseRate * ballMult);
             
-            await sleep(1500); // Shake time
+            await sleep(1500); 
             bImg.classList.remove('anim-shake-catch'); bImg.classList.add('hidden');
             
             if(catchSuccess) {
@@ -1429,7 +1450,7 @@
         }
 
         async function finalizePveWin() {
-            document.getElementById('boss-img').classList.remove('hidden'); // Reset for next battle
+            document.getElementById('boss-img').classList.remove('hidden'); 
             const exp = boss.level * 40; const coinReward = boss.level * 60; 
             sessionCoins += coinReward; player.coins += coinReward; updateCoinDisplay();
             
@@ -1442,7 +1463,6 @@
             
             const route = REGIONS[currentPvERouteId];
             
-            // Advance specific route progress
             if(currentPvERouteId === player.pveProgress.routeIndex) {
                 player.pveProgress.battlesWon++;
                 if (player.pveProgress.battlesWon >= route.reqWins) {
