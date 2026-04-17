@@ -503,29 +503,43 @@
         let pvpScores = { p1: 0, p2: 0, p1Name: "", p2Name: "" };
 
         // --- ERROR HANDLER (DEBUGGER) ---
-        // [FIX 4] Perbaikan keamanan DOM untuk mencegah infinite-freeze
         function throwDebugError(e) {
             console.error("FATAL ERROR CATCHED:", e);
             try {
-                document.getElementById('loading-screen').classList.remove('hidden');
-                document.getElementById('loading-screen').classList.add('flex');
-                document.getElementById('loading-spinner').classList.remove('animate-spin');
+                const loadingScreen = document.getElementById('loading-screen');
+                if(loadingScreen) {
+                    loadingScreen.classList.remove('hidden');
+                    loadingScreen.classList.add('flex');
+                }
+                
+                const spinner = document.getElementById('loading-spinner');
+                if(spinner) spinner.classList.remove('animate-spin');
                 
                 const txt = document.getElementById('loading-text');
-                txt.innerText = "FATAL ERROR!";
-                txt.classList.remove('text-white', 'animate-pulse');
-                txt.classList.add('text-red-500');
+                if(txt) {
+                    txt.innerText = "FATAL ERROR!";
+                    txt.classList.remove('text-white', 'animate-pulse');
+                    txt.classList.add('text-red-500');
+                }
                 
-                document.getElementById('db-status-text').innerText = "Mohon copy error di bawah ini:";
+                const statusTxt = document.getElementById('db-status-text');
+                if(statusTxt) statusTxt.innerText = "Mohon copy error di bawah ini dan reload:";
                 
-                document.getElementById('error-box-container').classList.remove('hidden');
-                document.getElementById('error-box-container').classList.add('flex');
+                const errBox = document.getElementById('error-box-container');
+                if(errBox) {
+                    errBox.classList.remove('hidden');
+                    errBox.classList.add('flex');
+                }
                 
-                let errMsg = `Error: ${e.name} - ${e.message}\n\nStack Trace:\n${e.stack}\n\nPlayer Data: ${player ? 'Exists' : 'Null'}`;
-                document.getElementById('error-log-box').value = errMsg;
-            } catch(err) {
-                // Sebagai fallback keamanan terakhir
-                console.error("DEBUGGER CRASH", err);
+                const logBox = document.getElementById('error-log-box');
+                if(logBox) {
+                    let errMsg = `Error: ${e?.name || 'Unknown'} - ${e?.message || 'No message'}\n\nStack:\n${e?.stack || 'No stack'}\n\nPlayer: ${player?.username || 'null'}\nUnlocked: ${player?.unlocked?.length ?? 'null'}`;
+                    logBox.value = errMsg;
+                }
+            } catch(innerErr) {
+                console.error("DEBUGGER CRASH:", innerErr);
+                // Last resort: reload otomatis setelah 3 detik
+                setTimeout(() => location.reload(), 3000);
             }
         }
 
@@ -562,7 +576,14 @@
                 const data = localStorage.getItem('MOCK_DB_' + playerData.username);
                 if(data) {
                     const parsed = JSON.parse(data);
-                    parsed.coins = playerData.coins; parsed.deck = playerData.deck; parsed.unlocked = playerData.unlocked; parsed.pveProgress = playerData.pveProgress; parsed.pvpStats = playerData.pvpStats; parsed.inventory = playerData.inventory; parsed.badges = playerData.badges;
+                    parsed.coins = playerData.coins;
+                    parsed.deck = playerData.deck;
+                    parsed.unlocked = playerData.unlocked;
+                    parsed.pveProgress = playerData.pveProgress;
+                    parsed.pvpStats = playerData.pvpStats || { win: 0, lose: 0 };
+                    parsed.pityCounter = playerData.pityCounter || 0;
+                    parsed.inventory = playerData.inventory;
+                    parsed.badges = playerData.badges || [];
                     localStorage.setItem('MOCK_DB_' + playerData.username, JSON.stringify(parsed));
                 } return true;
             }
@@ -605,11 +626,15 @@
         }
 
         function logout() {
-            initAudio(); player = { username: "", coins: 0, unlocked: [], deck: [], pveProgress: { routeIndex: 0, battlesWon: 0 }, inventory: { potion: 0, candy: 0, stone: 0, 'poke-ball':0, 'great-ball':0, 'ultra-ball':0, 'master-ball':0 }, badges: [] };
+            initAudio(); 
+            player = { username: "", coins: 0, unlocked: [], deck: [], pityCounter: 0,
+                pveProgress: { routeIndex: 0, battlesWon: 0 }, pvpStats: { win: 0, lose: 0 },
+                inventory: { potion: 0, candy: 0, stone: 0, 'poke-ball':0, 'great-ball':0, 'ultra-ball':0, 'master-ball':0 }, badges: [] };
             document.getElementById('top-bar').classList.add('hidden'); document.getElementById('view-menu').classList.remove('active');
             document.getElementById('auth-screen').classList.remove('hidden'); document.getElementById('auth-screen').classList.add('flex');
             document.getElementById('login-pass').value = '';
-            if(mpChannel) forceDisconnect();
+            document.getElementById('offline-indicator').classList.add('hidden');
+            if(typeof mpChannel !== 'undefined' && mpChannel) forceDisconnect();
         }
 
         async function syncDataToDB() {
@@ -636,41 +661,56 @@
         }
 
         async function finalizeLogin() {
+            let loadingShown = false;
             try {
                 showAuthLoading(false); 
                 document.getElementById('auth-screen').classList.add('hidden'); 
                 document.getElementById('auth-screen').classList.remove('flex');
                 
+                // --- Normalisasi & inisialisasi semua field player ---
                 player = player || {};
                 player.unlocked = player.unlocked || [];
                 player.deck = player.deck || [];
                 player.pveProgress = player.pveProgress || { routeIndex: 0, battlesWon: 0 };
+                player.pvpStats = player.pvpStats || { win: 0, lose: 0 };
+                player.pityCounter = player.pityCounter || 0;
+                player.badges = player.badges || [];
+                player.coins = player.coins || 1000;
                 player.inventory = player.inventory || {};
-                player.inventory.potion = player.inventory.potion || 5;
-                player.inventory.candy = player.inventory.candy || 2;
+                player.inventory.potion = (player.inventory.potion !== undefined) ? player.inventory.potion : 5;
+                player.inventory.candy = (player.inventory.candy !== undefined) ? player.inventory.candy : 2;
                 player.inventory.stone = player.inventory.stone || 0;
                 player.inventory['poke-ball'] = player.inventory['poke-ball'] || 10;
                 player.inventory['great-ball'] = player.inventory['great-ball'] || 0;
                 player.inventory['ultra-ball'] = player.inventory['ultra-ball'] || 0;
                 player.inventory['master-ball'] = player.inventory['master-ball'] || 0;
-                player.badges = player.badges || [];
-                player.coins = player.coins || 1000;
                 
                 if(USE_MOCK_API) document.getElementById('offline-indicator').classList.remove('hidden');
                 
+                // --- Bersihkan duplikat & normalisasi unlocked ---
                 let uniqueIds = new Set(); let cleanedUnlocked = [];
                 for (let p of player.unlocked) { 
-                    if (p && p.id && !uniqueIds.has(p.id)) { 
-                        uniqueIds.add(p.id);
+                    if (p && p.id && !uniqueIds.has(Number(p.id))) { 
+                        uniqueIds.add(Number(p.id));
                         cleanedUnlocked.push({
                             ...p, id: Number(p.id),
-                            hp: p.hp || 45, atk: p.atk || 49, def: p.def || 49, spa: p.spa || 65, spd: p.spd || 65, speed: p.speed || 45,
-                            moveClass: p.moveClass || 'physical'
+                            hp: p.hp || 45, atk: p.atk || 49, def: p.def || 49,
+                            spa: p.spa || 65, spd: p.spd || 65, speed: p.speed || 45,
+                            moveClass: p.moveClass || 'physical',
+                            moveType: p.moveType || 'normal',
+                            movePower: p.movePower || 40,
+                            movePool: p.movePool || [{level:1, name: p.currentMove || 'tackle'}],
+                            types: p.types || ['normal'],
+                            rarity: p.rarity || 'common',
+                            level: p.level || 1,
+                            exp: p.exp || 0,
+                            cryUrl: p.cryUrl || ''
                         }); 
                     } 
                 }
                 player.unlocked = cleanedUnlocked; 
                 
+                // --- Validasi deck ---
                 let validDeck = [];
                 for(let id of player.deck) {
                     let found = player.unlocked.find(u => Number(u.id) === Number(id));
@@ -682,46 +722,52 @@
                 }
                 player.deck = validDeck;
 
+                // --- Fetch starter jika Pokemon belum ada ---
                 if (!player.unlocked || player.unlocked.length < 6) {
-                    // Tampilkan loading screen dengan aman
+                    loadingShown = true;
                     document.getElementById('loading-screen').classList.remove('hidden');
                     document.getElementById('loading-screen').classList.add('flex');
+                    document.getElementById('loading-spinner').classList.add('animate-spin');
                     document.getElementById('loading-text').innerText = "Menyiapkan Starter POKEMON...";
+                    document.getElementById('db-status-text').innerText = "Mengambil data dari PokeAPI...";
 
                     let pulledStarters = []; let pPool = [...RARITY_DB.common.ids]; let apiSuccess = true;
 
                     for(let i=0; i<6; i++) {
                         const rId = pPool.splice(Math.floor(Math.random() * pPool.length), 1)[0];
                         try {
-                            let res = await fetchWithTimeout(`${API_URL}${rId}`); let data = await res.json();
+                            let res = await fetchWithTimeout(`${API_URL}${rId}`, {timeout: 5000}); 
+                            let data = await res.json();
                             let rawMoves = data.moves.filter(m => m.version_group_details && m.version_group_details.length > 0 && m.version_group_details[0].move_learn_method.name === 'level-up'); 
                             rawMoves.sort((a,b) => a.version_group_details[0].level_learned_at - b.version_group_details[0].level_learned_at);
                             let mPool = rawMoves.length > 0 ? [{level:1, name:rawMoves[0].move.name}] : [{level:1, name:'tackle'}]; 
                             if(rawMoves.length > 5) mPool.push({level:7, name:rawMoves[5].move.name});
                             
-                            let moveDetails = await fetchMoveDetails(mPool[0].name); const baseStats = extractStats(data);
+                            let moveDetails = await fetchMoveDetails(mPool[0].name); 
+                            const baseStats = extractStats(data);
                             pulledStarters.push({ id: Number(rId), name: data.name, rarity: 'common', hp: baseStats.hp, atk: baseStats.atk, def: baseStats.def, spa: baseStats.spa, spd: baseStats.spd, speed: baseStats.speed, types: data.types.map(t => t.type.name), animUrl: data.sprites?.other?.showdown?.front_default || `${POKE_URL}${rId}.png`, level: 1, exp: 0, currentMove: mPool[0].name, movePower: moveDetails.power, moveClass: moveDetails.damageClass, moveType: moveDetails.type, movePool: mPool, cryUrl: data.cries?.latest || '' });
                         } catch(e) { apiSuccess = false; break; }
                     }
-                    if(!apiSuccess) { 
-                        document.getElementById('db-status-text').innerText = "API Sibuk, memuat Starter Cadangan...";
+
+                    if(!apiSuccess || pulledStarters.length < 6) { 
+                        document.getElementById('db-status-text').innerText = "API Sibuk, memakai Starter Cadangan...";
                         pulledStarters = JSON.parse(JSON.stringify(FALLBACK_STARTERS)); 
                         while(pulledStarters.length < 6) {
-                            let clone = JSON.parse(JSON.stringify(FALLBACK_STARTERS[Math.floor(Math.random() * FALLBACK_STARTERS.length)]));
-                            clone.id = Date.now() + Math.floor(Math.random() * 1000); 
+                            let clone = JSON.parse(JSON.stringify(FALLBACK_STARTERS[pulledStarters.length % FALLBACK_STARTERS.length]));
+                            clone.id = clone.id + (pulledStarters.length * 1000);
                             pulledStarters.push(clone);
                         }
                     }
-                    player.unlocked = pulledStarters; player.deck = pulledStarters.map(p => p.id); 
-                    document.getElementById('db-status-text').innerText = "Menyimpan ke DB...";
+
+                    player.unlocked = pulledStarters; 
+                    player.deck = pulledStarters.map(p => p.id); 
+                    document.getElementById('db-status-text').innerText = "Menyimpan ke database...";
                     await syncDataToDB(); 
                 }
                 
-                document.getElementById('loading-screen').classList.add('hidden'); 
-                document.getElementById('loading-screen').classList.remove('flex');
-                
+                // --- UI update & pindah ke menu ---
                 const menuUserDisplay = document.getElementById('menu-username-display');
-                if(menuUserDisplay) menuUserDisplay.innerText = player.username; 
+                if(menuUserDisplay) menuUserDisplay.innerText = player.username || "PLAYER"; 
                 
                 updatePvEProgressUI(); 
                 updateInventoryUI(); 
@@ -730,6 +776,13 @@
 
             } catch (e) {
                 throwDebugError(e);
+            } finally {
+                // Selalu sembunyikan loading screen, apapun yang terjadi
+                try {
+                    document.getElementById('loading-screen').classList.add('hidden'); 
+                    document.getElementById('loading-screen').classList.remove('flex');
+                } catch(err) {}
+                showAuthLoading(false);
             }
         }
 
@@ -770,17 +823,31 @@
         }
 
         function updateInventoryUI() {
-            const items = ['potion', 'candy', 'stone', 'poke-ball', 'great-ball', 'ultra-ball', 'master-ball'];
-            items.forEach(id => {
-                const el1 = document.getElementById(`inv-${id.replace('-','')}`);
-                if(el1) el1.innerText = player.inventory[id] || 0;
-            });
-            
-            const qtyBalls = ['pokeball', 'greatball', 'ultraball', 'masterball'];
-            qtyBalls.forEach(b => {
-                const el = document.getElementById(`qty-${b}`);
-                if(el) el.innerText = player.inventory[b.replace('ball', '-ball')] || 0;
-            });
+            // Map item ID ke element ID di HTML
+            const itemMap = {
+                'potion': 'inv-potion',
+                'candy': 'inv-candy',
+                'stone': 'inv-stone',
+                'poke-ball': 'inv-pokeball',
+                'great-ball': 'inv-greatball',
+                'ultra-ball': 'inv-ultraball',
+                'master-ball': 'inv-masterball'
+            };
+            for (const [itemId, elId] of Object.entries(itemMap)) {
+                const el = document.getElementById(elId);
+                if(el) el.innerText = player.inventory[itemId] || 0;
+            }
+            // Update qty di catch overlay
+            const qtyMap = {
+                'pokeball': 'poke-ball',
+                'greatball': 'great-ball',
+                'ultraball': 'ultra-ball',
+                'masterball': 'master-ball'
+            };
+            for (const [elSuffix, itemId] of Object.entries(qtyMap)) {
+                const el = document.getElementById(`qty-${elSuffix}`);
+                if(el) el.innerText = player.inventory[itemId] || 0;
+            }
         }
 
         // --- MARKET SYSTEM ---
@@ -1177,13 +1244,15 @@
 
         async function startGame(multiplayerFlag = false) {
             initAudio(); 
-            if (player.deck.length !== 6 || player.unlocked.length < 6) { return showAlert('Gagal', `Harus pas 6 Pokemon! Silakan login ulang untuk auto-repair deck.`); }
+            if (player.deck.length < 3 || player.unlocked.length < 3) { 
+                return showAlert('Gagal', `Butuh minimal 3 Pokemon di Deck! Kamu punya ${player.deck.length}.`); 
+            }
             
             isMultiplayer = multiplayerFlag; switchView('view-game'); 
             initBattleParty();
-            if(battleParty.length === 0) return showAlert('Error', 'Data Party kosong!');
+            if(battleParty.length === 0) return showAlert('Error', 'Data Party kosong! Coba login ulang.');
 
-            sessionPotions = isMultiplayer ? 3 : player.inventory.potion;
+            sessionPotions = isMultiplayer ? 3 : (player.inventory.potion || 0);
 
             activeAssets = battleParty.map(p => ({ id: `poke-${p.id}`, src: `${POKE_URL}${p.id}.png` }));
             
@@ -1247,7 +1316,10 @@
             switchView('view-menu'); 
         }
 
-        function getRandomActivePokemon() { return activeAssets[Math.floor(Math.random() * activeAssets.length)]; }
+        function getRandomActivePokemon() { 
+            if(!activeAssets || activeAssets.length === 0) return { id: 'poke-1', src: `${POKE_URL}1.png` };
+            return activeAssets[Math.floor(Math.random() * activeAssets.length)]; 
+        }
 
         // --- MATCH-3 ENGINE ---
         function renderBoard(animatedIndices = [], animationClass = '') { 
@@ -1427,13 +1499,19 @@
                     player.coins += refund; updateCoinDisplay();
                     showAlert("Duplikat!", `Kamu sudah memiliki ${boss.name}. Dikonversi menjadi +${refund} Koin!`);
                 } else {
-                    let rawMoves = boss.baseStatRaw.moves.filter(m => m.version_group_details[0].move_learn_method.name === 'level-up'); rawMoves.sort((a,b) => a.version_group_details[0].level_learned_at - b.version_group_details[0].level_learned_at);
-                    let mPool = rawMoves.length > 0 ? [{level:1, name:rawMoves[0].move.name}] : [{level:1, name:'tackle'}]; if(rawMoves.length > 5) mPool.push({level:7, name:rawMoves[5].move.name});
+                    let mPool = [{level:1, name:'tackle'}];
+                    if(boss.baseStatRaw && boss.baseStatRaw.moves) {
+                        let rawMoves = boss.baseStatRaw.moves.filter(m => m.version_group_details && m.version_group_details.length > 0 && m.version_group_details[0].move_learn_method.name === 'level-up'); 
+                        rawMoves.sort((a,b) => a.version_group_details[0].level_learned_at - b.version_group_details[0].level_learned_at);
+                        mPool = rawMoves.length > 0 ? [{level:1, name:rawMoves[0].move.name}] : [{level:1, name:'tackle'}]; 
+                        if(rawMoves.length > 5) mPool.push({level:7, name:rawMoves[5].move.name});
+                    }
                     let mData = await fetchMoveDetails(mPool[0].name);
+                    let bossTypes = (boss.baseStatRaw && boss.baseStatRaw.types) ? boss.baseStatRaw.types.map(t=>t.type.name) : [boss.type || 'normal'];
                     
-                    let newPoke = { id: boss.id, name: boss.name.toLowerCase(), rarity: boss.rarity, hp: boss.maxHp, atk: boss.atk, def: boss.def, spa: boss.spa, spd: boss.spd, speed: boss.speed, types: boss.baseStatRaw.types.map(t=>t.type.name), animUrl: boss.img, level: boss.level, exp: 0, currentMove: mPool[0].name, movePower: mData.power, moveClass: mData.damageClass, moveType: mData.type, movePool: mPool, cryUrl: boss.baseStatRaw.cries?.latest || '' };
+                    let newPoke = { id: boss.id, name: boss.name.toLowerCase(), rarity: boss.rarity, hp: boss.maxHp, atk: boss.atk, def: boss.def, spa: boss.spa, spd: boss.spd, speed: boss.speed, types: bossTypes, animUrl: boss.img, level: boss.level, exp: 0, currentMove: mPool[0].name, movePower: mData.power, moveClass: mData.damageClass, moveType: mData.type, movePool: mPool, cryUrl: (boss.baseStatRaw?.cries?.latest) || '' };
                     player.unlocked.push(newPoke);
-                    showAlert("NEW POKEMON!", `${boss.name} berhasil ditambahkan ke Deck-mu!`);
+                    showAlert("NEW POKEMON!", `${boss.name} berhasil ditambahkan ke koleksimu!`);
                 }
             } else {
                 playSound('hit'); document.getElementById('boss-img').classList.remove('hidden');
@@ -1547,10 +1625,23 @@
                 let p = player.unlocked.find(u => u.id === id);
                 if(p) {
                     p.exp += amount; let max = p.level * 100;
-                    while(p.exp >= max) { p.level++; p.exp -= max; p.atk += 2; p.hp += 5; max = p.level * 100; lvlUp = true; }
+                    while(p.exp >= max) { 
+                        p.level++; p.exp -= max; 
+                        p.atk += 2; p.def += 1; p.hp += 5; p.spa += 1; p.spd += 1; p.speed += 1;
+                        max = p.level * 100; lvlUp = true; 
+                    }
                 }
             });
-            if(lvlUp) { updateBattleLog("PARTI NAIK LEVEL!"); const floater = document.createElement('div'); floater.className = 'dmg-floater text-yellow-300'; floater.innerText = `LEVEL UP!`; document.getElementById('arena-container').appendChild(floater); }
+            if(lvlUp) { 
+                updateBattleLog("PARTI NAIK LEVEL!"); 
+                const floater = document.createElement('div'); 
+                floater.className = 'dmg-floater text-yellow-300'; 
+                floater.style.left = '50%'; floater.style.top = '120px';
+                floater.innerText = `LEVEL UP!`; 
+                const arena = document.getElementById('arena-container');
+                if(arena) arena.appendChild(floater); 
+                setTimeout(() => floater.remove(), 900);
+            }
         }
 
         switchAuthTab('login');
