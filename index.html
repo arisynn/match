@@ -91,15 +91,16 @@
         .inv-item { display: flex; flex-direction: column; align-items: center; background: #fff; border: 2px solid #cbd5e1; padding: 4px; border-radius: 8px; width: 60px; }
         .inv-item img { width: 24px; height: 24px; image-rendering: pixelated; }
 
-        /* CATCHING UI */
-        #catch-overlay { backdrop-filter: blur(2px); }
-        .ball-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; border: 4px solid #cbd5e1; border-radius: 8px; background: white; padding: 8px; transition: 0.2s; }
-        .ball-btn:active { transform: scale(0.9); }
-        .ball-btn img { width: 32px; height: 32px; margin: 0 auto; image-rendering: pixelated;}
-        @keyframes ballThrow { 0% { transform: translate(0, 200px) scale(2); opacity: 1; } 50% { transform: translate(0, -50px) scale(1.5); } 100% { transform: translate(0, 0) scale(1); } }
-        @keyframes ballShakeCatch { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-20deg); } 75% { transform: rotate(20deg); } }
-        .anim-throw { animation: ballThrow 0.8s ease-out forwards; }
-        .anim-shake-catch { animation: ballShakeCatch 0.5s ease-in-out infinite; }
+        /* GACHA ANIMATIONS */
+        @keyframes ballDrop { 0% { transform: translateY(-300px) rotate(-45deg); opacity: 0; } 50% { transform: translateY(20px) rotate(15deg); opacity: 1; } 100% { transform: translateY(0) rotate(0deg); opacity: 1; } }
+        @keyframes ballShake { 0%, 100% { transform: translateX(0) rotate(0deg); } 25% { transform: translateX(-10px) rotate(-15deg); } 75% { transform: translateX(10px) rotate(15deg); } }
+        @keyframes whiteFlash { 0% { opacity: 0; background: white; } 50% { opacity: 1; background: white; } 100% { opacity: 0; background: transparent; } }
+        @keyframes popReveal { 0% { transform: scale(0.1); opacity: 0; } 80% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+        
+        .gacha-drop { animation: ballDrop 0.6s ease-out forwards; }
+        .gacha-shake { animation: ballShake 0.4s ease-in-out infinite; }
+        .gacha-flash-fx { animation: whiteFlash 0.8s ease-out forwards; pointer-events: none; }
+        .gacha-reveal { animation: popReveal 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     </style>
 </head>
 <body>
@@ -141,10 +142,11 @@
         </div>
     </div>
 
+    <!-- Error Screen diubah menjadi fatal error saja -->
     <div id="loading-screen" class="fixed inset-0 z-[200] bg-black flex flex-col justify-center items-center hidden p-4">
         <img id="loading-spinner" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" class="w-16 h-16 animate-spin mb-4 api-icon">
-        <p class="pixel-font text-[10px] text-white animate-pulse text-center leading-loose" id="loading-text">Menyiapkan Data Base Stat...</p>
-        <p class="pixel-font text-[6px] text-gray-400 mt-2 text-center px-4" id="db-status-text">Sinkronisasi PokeAPI & MongoDB.<br>Harap tunggu maksimal 5 detik.</p>
+        <p class="pixel-font text-[10px] text-white animate-pulse text-center leading-loose" id="loading-text">Memuat Data...</p>
+        <p class="pixel-font text-[6px] text-gray-400 mt-2 text-center px-4" id="db-status-text">Sinkronisasi Database</p>
         
         <div id="error-box-container" class="hidden w-full max-w-xs mt-6 flex-col items-center">
             <textarea id="error-log-box" class="w-full h-32 bg-gray-900 text-red-400 font-mono text-[8px] p-2 rounded border-2 border-red-600 focus:outline-none mb-2 shadow-lg" readonly></textarea>
@@ -168,7 +170,7 @@
     </div>
 
     <div id="view-menu" class="view-section justify-center">
-        <div class="text-center mb-6 flex flex-col items-center mt-6">
+        <div class="text-center mb-4 flex flex-col items-center mt-6">
             <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/International_Pok%C3%A9mon_logo.svg" alt="Pokemon" class="w-64 drop-shadow-xl mb-2">
             <div class="bg-blue-100 border-2 border-blue-400 px-4 py-1.5 rounded-full shadow-sm mt-2 flex items-center gap-2">
                 <span class="pixel-font text-[6px] text-blue-500">USER:</span>
@@ -177,28 +179,93 @@
             <div id="offline-indicator" class="hidden mt-1"><span class="pixel-font text-[5px] text-red-500 bg-white px-2 py-0.5 rounded border border-red-300">Mode Offline (Local Storage)</span></div>
         </div>
 
-        <div class="flex flex-col gap-3 w-full max-w-xs">
-            <button onclick="openAdventureMap()" class="retro-btn py-4 flex flex-col items-center justify-center bg-blue-50 mt-2 border-blue-400">
+        <div class="flex flex-col gap-2 w-full max-w-xs">
+            <button onclick="openAdventureMap()" class="retro-btn py-4 flex flex-col items-center justify-center bg-blue-50 border-blue-400">
                 <div class="flex items-center gap-2">
                     <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/vs-seeker.png" class="api-icon"> 
                     <span class="pixel-font text-[9px] mt-1 text-blue-700 font-bold">PVE ADVENTURE</span>
                 </div>
-                <span id="menu-pve-progress" class="pixel-font text-[5px] text-gray-500 mt-2 text-center px-2">PILIH REGION & TANGKAP POKEMON!</span>
+                <span id="menu-pve-progress" class="pixel-font text-[5px] text-gray-500 mt-2 text-center px-2">PILIH REGION & BATTLE!</span>
             </button>
-            <button onclick="switchView('view-lobby-find');" class="retro-btn py-4 flex items-center justify-center gap-3 bg-red-50 border-red-400">
+            <button onclick="switchView('view-gacha'); renderGachaUI();" class="retro-btn py-4 flex items-center justify-center gap-3 bg-purple-50 border-purple-400 shadow-md">
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png" class="api-icon"> 
+                <span class="pixel-font text-[9px] mt-1 text-purple-700 font-bold">GACHA CENTER</span>
+            </button>
+            <button onclick="switchView('view-lobby-find');" class="retro-btn py-3 flex items-center justify-center gap-3 bg-red-50 border-red-400">
                 <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/town-map.png" class="api-icon"> 
-                <span class="pixel-font text-[9px] mt-1 text-red-700 font-bold">PVP MULTIPLAYER</span>
+                <span class="pixel-font text-[8px] mt-1 text-red-700 font-bold">PVP MULTIPLAYER</span>
             </button>
-            <button onclick="switchView('view-deck'); renderDeck();" class="retro-btn py-4 flex items-center justify-center gap-3 bg-green-50 border-green-400">
-                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" class="api-icon"> 
-                <span class="pixel-font text-[9px] mt-1 text-green-700 font-bold">DECK POKEMON</span>
-            </button>
-            <button onclick="switchView('view-market'); renderMarket();" class="retro-btn py-4 flex items-center justify-center gap-3 bg-yellow-50 border-yellow-400">
-                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/potion.png" class="api-icon"> 
-                <span class="pixel-font text-[9px] mt-1 text-yellow-700 font-bold">POKE MART</span>
-            </button>
+            <div class="flex gap-2">
+                <button onclick="switchView('view-deck'); renderDeck();" class="flex-1 retro-btn py-3 flex flex-col items-center justify-center bg-green-50 border-green-400">
+                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" class="api-icon mb-1"> 
+                    <span class="pixel-font text-[7px] mt-1 text-green-700 font-bold">DECK</span>
+                </button>
+                <button onclick="switchView('view-market'); renderMarket();" class="flex-1 retro-btn py-3 flex flex-col items-center justify-center bg-yellow-50 border-yellow-400">
+                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/potion.png" class="api-icon mb-1"> 
+                    <span class="pixel-font text-[7px] mt-1 text-yellow-700 font-bold">MART</span>
+                </button>
+            </div>
         </div>
-        <button onclick="logout()" class="mt-8 pixel-font text-[8px] text-red-500 underline opacity-80 mb-4">LOGOUT AKUN</button>
+        <button onclick="logout()" class="mt-6 pixel-font text-[8px] text-red-500 underline opacity-80 mb-4">LOGOUT AKUN</button>
+    </div>
+
+    <!-- VIEW GACHA CENTER -->
+    <div id="view-gacha" class="view-section pt-12 bg-purple-50 relative">
+        <button onclick="switchView('view-menu')" class="absolute top-4 left-4 retro-btn px-4 py-2 z-10 bg-white border-purple-400"><span class="pixel-font text-[8px] mt-1 text-purple-800"><< MENU</span></button>
+        <h2 class="pixel-font text-lg text-purple-800 mb-2 text-outline text-center mt-4">GACHA CENTER</h2>
+        
+        <div class="glass-panel w-full max-w-sm p-4 text-center border-purple-400 bg-white">
+            <p class="pixel-font text-[8px] text-gray-600 mb-2 leading-loose">Dapatkan Pokemon baru dengan Koin!</p>
+            
+            <div class="bg-gray-100 p-2 rounded border-2 border-gray-300 mb-4 inline-block">
+                <span class="pixel-font text-[6px] text-gray-500 block mb-1">PITY COUNTER (Garansi Epic/Legend)</span>
+                <span class="pixel-font text-[10px] text-blue-600 font-bold" id="gacha-pity-text">0 / 50</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-left mb-6 mx-auto w-3/4">
+                <span class="pixel-font text-[6px] text-gray-500">Common: 70%</span>
+                <span class="pixel-font text-[6px] text-blue-500">Rare: 20%</span>
+                <span class="pixel-font text-[6px] text-purple-500">Epic: 8%</span>
+                <span class="pixel-font text-[6px] text-yellow-600">Legend: 2%</span>
+            </div>
+
+            <div class="flex gap-3 justify-center w-full">
+                <button onclick="executeGacha(1)" class="flex-1 retro-btn py-4 bg-blue-500 flex flex-col items-center border-blue-700 hover:bg-blue-600 transition">
+                    <span class="pixel-font text-[10px] text-white mt-1">PULL 1X</span>
+                    <div class="flex items-center gap-1 mt-2 bg-black/20 px-2 py-1 rounded">
+                        <span class="pixel-font text-[8px] text-yellow-300 mt-1">500</span>
+                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/nugget.png" class="w-3 h-3">
+                    </div>
+                </button>
+                <button onclick="executeGacha(5)" class="flex-1 retro-btn py-4 bg-purple-500 flex flex-col items-center border-purple-700 hover:bg-purple-600 transition relative overflow-hidden">
+                    <div class="absolute -top-1 -right-4 bg-yellow-400 text-yellow-900 pixel-font text-[5px] px-4 py-1 rotate-45 shadow-sm border border-yellow-200">BEST</div>
+                    <span class="pixel-font text-[10px] text-white mt-1">PULL 5X</span>
+                    <div class="flex items-center gap-1 mt-2 bg-black/20 px-2 py-1 rounded">
+                        <span class="pixel-font text-[8px] text-yellow-300 mt-1">2500</span>
+                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/nugget.png" class="w-3 h-3">
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GACHA ANIMATION OVERLAY -->
+    <div id="gacha-anim-overlay" class="hidden fixed inset-0 z-[250] bg-black/90 flex-col justify-center items-center overflow-hidden">
+        <div id="gacha-flash" class="absolute inset-0 z-[251] hidden"></div>
+        
+        <!-- Mode 1x Pull Animasi Pokeball -->
+        <div id="gacha-single-anim" class="hidden flex-col items-center z-[252]">
+            <img id="gacha-anim-ball" src="" class="w-24 h-24 object-contain filter drop-shadow-xl">
+        </div>
+
+        <!-- Mode Hasil Grid/Single -->
+        <div id="gacha-result-container" class="hidden flex-col items-center w-full max-w-sm px-4 z-[253]">
+            <h3 class="pixel-font text-yellow-400 text-sm mb-6 text-outline text-center animate-pulse">GOTCHA!</h3>
+            <div id="gacha-result-grid" class="flex flex-wrap justify-center gap-3 w-full">
+                <!-- Card Hasil akan di-generate di sini -->
+            </div>
+            <button onclick="closeGachaResult()" class="mt-8 retro-btn px-6 py-3 bg-white border-gray-400"><span class="pixel-font text-[8px] text-gray-800 mt-1">SELESAI</span></button>
+        </div>
     </div>
 
     <div id="view-adventure" class="view-section pt-12 bg-blue-50">
@@ -213,7 +280,7 @@
     <div id="view-market" class="view-section pt-12 bg-yellow-50">
         <button onclick="switchView('view-menu')" class="absolute top-4 left-4 retro-btn px-4 py-2 z-10 bg-white border-yellow-400"><span class="pixel-font text-[8px] mt-1 text-yellow-800"><< MENU</span></button>
         <h2 class="pixel-font text-lg text-yellow-600 mb-2 text-outline text-center mt-4">POKE MART</h2>
-        <p class="pixel-font text-[6px] text-gray-500 mb-4 text-center px-4">Beli perlengkapan tangkap dan heal untuk petualanganmu!</p>
+        <p class="pixel-font text-[6px] text-gray-500 mb-4 text-center px-4">Beli perlengkapan heal dan evolusi untuk petualanganmu!</p>
         
         <div class="w-full max-w-md flex-1 overflow-y-auto no-scrollbar glass-panel p-4 bg-white border-yellow-400">
             <div class="grid grid-cols-2 gap-4" id="market-grid"></div>
@@ -316,31 +383,6 @@
                 <span id="battle-log" class="pixel-font text-[8px] text-gray-800 leading-relaxed ml-2 pt-1">MUNCUL!</span>
                 <span id="log-cursor" class="pixel-font text-[8px] animate-pulse ml-1">_</span>
             </div>
-
-            <div id="catch-overlay" class="hidden absolute inset-0 z-40 bg-black/60 rounded flex flex-col justify-center items-center">
-                <p class="pixel-font text-[8px] text-white text-outline mb-4 text-center leading-loose" id="catch-msg">WILD POKEMON PINGSAN!<br>TANGKAP?</p>
-                <div class="flex gap-2">
-                    <button onclick="attemptCatch('poke-ball')" class="ball-btn border-red-400 relative">
-                        <span class="absolute top-0 right-0 bg-gray-200 text-gray-800 pixel-font text-[4px] px-1 rounded-bl" id="qty-pokeball">0</span>
-                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" onerror="this.src=''">
-                    </button>
-                    <button onclick="attemptCatch('great-ball')" class="ball-btn border-blue-400 relative">
-                        <span class="absolute top-0 right-0 bg-gray-200 text-gray-800 pixel-font text-[4px] px-1 rounded-bl" id="qty-greatball">0</span>
-                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png" onerror="this.src=''">
-                    </button>
-                    <button onclick="attemptCatch('ultra-ball')" class="ball-btn border-yellow-400 relative">
-                        <span class="absolute top-0 right-0 bg-gray-200 text-gray-800 pixel-font text-[4px] px-1 rounded-bl" id="qty-ultraball">0</span>
-                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png" onerror="this.src=''">
-                    </button>
-                    <button onclick="attemptCatch('master-ball')" class="ball-btn border-purple-500 relative">
-                        <span class="absolute top-0 right-0 bg-gray-200 text-gray-800 pixel-font text-[4px] px-1 rounded-bl" id="qty-masterball">0</span>
-                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png" onerror="this.src=''">
-                    </button>
-                </div>
-                <button onclick="skipCatch()" class="mt-4 pixel-font text-[6px] text-gray-300 underline">Abaikan & Selesai</button>
-            </div>
-            
-            <img id="thrown-ball" src="" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 z-50" onerror="this.src=''">
         </div>
 
         <div class="relative flex justify-center w-full max-w-[360px] mt-1">
@@ -357,12 +399,10 @@
         <button onclick="switchView('view-menu')" class="absolute top-4 left-4 retro-btn px-4 py-2 z-10"><span class="pixel-font text-[8px] mt-1 text-gray-600"><< MENU</span></button>
         
         <div class="w-full max-w-md flex flex-col items-center mb-2 mt-4">
-            <div class="w-full flex justify-center gap-2 mb-4 px-2 overflow-x-auto no-scrollbar">
+            <div class="w-full flex justify-center gap-4 mb-4 px-2">
                 <div class="inv-item"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/potion.png"><span id="inv-potion" class="pixel-font text-[6px] text-gray-600 mt-1">0</span></div>
                 <div class="inv-item"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/rare-candy.png"><span id="inv-candy" class="pixel-font text-[6px] text-gray-600 mt-1">0</span></div>
                 <div class="inv-item"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/thunder-stone.png"><span id="inv-stone" class="pixel-font text-[6px] text-gray-600 mt-1">0</span></div>
-                <div class="inv-item"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png"><span id="inv-pokeball" class="pixel-font text-[6px] text-gray-600 mt-1">0</span></div>
-                <div class="inv-item"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png"><span id="inv-masterball" class="pixel-font text-[6px] text-gray-600 mt-1">0</span></div>
             </div>
 
             <div class="flex w-full justify-between items-center px-2 gap-2">
@@ -402,15 +442,13 @@
         const API_BASE_URL = "/api"; 
         
         let isMpConnected = false;
-        let isMultiplayer = false; // [FIX 3] Mendeklarasikan state global
+        let isMultiplayer = false; 
 
         // --- CONSTANTS & DATABASE ---
         const POKE_URL = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
         const API_URL = 'https://pokeapi.co/api/v2/pokemon/';
         const MOVE_URL = 'https://pokeapi.co/api/v2/move/';
-        const BALL_URL = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/';
 
-        // [FIX 1] Menambahkan kembali RARITY_DB yang hilang
         const RARITY_DB = {
             common: { ids: [1, 4, 7, 10, 13, 16, 19, 21, 29, 32, 41, 43, 46, 74] },
             rare: { ids: [25, 35, 39, 63, 81, 86, 90, 100, 102, 104, 111, 115, 116, 128] },
@@ -420,7 +458,6 @@
 
         const rarityStyles = { 'common': { color: '#64748b' }, 'rare': { color: '#3b82f6' }, 'epic': { color: '#a855f7' }, 'legendary': { color: '#eab308' }};
         const badgeColors = { 'common': 'bg-slate-500 text-white', 'rare': 'bg-blue-500 text-white', 'epic': 'bg-purple-500 text-white', 'legendary': 'bg-yellow-400 text-yellow-900' };
-        const CATCH_RATES = { 'common': 0.5, 'rare': 0.3, 'epic': 0.1, 'legendary': 0.03 };
 
         const EVO_DB = {
             1: { target: 2, reqLvl: 16 }, 2: { target: 3, reqLvl: 32 }, 4: { target: 5, reqLvl: 16 }, 5: { target: 6, reqLvl: 36 }, 7: { target: 8, reqLvl: 16 }, 8: { target: 9, reqLvl: 36 }, 10: { target: 11, reqLvl: 7 }, 11: { target: 12, reqLvl: 10 }, 13: { target: 14, reqLvl: 7 }, 14: { target: 15, reqLvl: 10 }, 16: { target: 17, reqLvl: 18 }, 17: { target: 18, reqLvl: 36 }, 19: { target: 20, reqLvl: 20 }, 25: { target: 26, reqItem: 'stone' }, 129: { target: 130, reqLvl: 20 }, 133: { target: 135, reqItem: 'stone' }, 41: {target: 42, reqLvl: 22}, 74: {target: 75, reqLvl: 25}, 92:{target:93, reqLvl:25}
@@ -445,10 +482,11 @@
             { id: 12, name: "ELITE FOUR", type: "boss", bossName: "CHAMPION", mons: [149, 150], badge: "Champion", drops: { coins: 2000, candy: 5, stone: 2 } } 
         ];
 
+        // Fallback Starters untuk mempercepat proses login/register (bypass API Call di awal)
         const FALLBACK_STARTERS = [
             { id: 1, name: "bulbasaur", rarity: 'common', hp: 45, atk: 49, def: 49, spa: 65, spd: 65, speed: 45, types: ['grass', 'poison'], animUrl: `${POKE_URL}1.png`, level: 1, exp: 0, currentMove: 'tackle', movePower: 40, moveClass: 'physical', moveType: 'normal', movePool: [{level:1, name:'tackle'}, {level:7, name:'vine-whip'}], cryUrl: ''},
-            { id: 4, name: "charmander", rarity: 'rare', hp: 39, atk: 52, def: 43, spa: 60, spd: 50, speed: 65, types: ['fire'], animUrl: `${POKE_URL}4.png`, level: 1, exp: 0, currentMove: 'scratch', movePower: 40, moveClass: 'physical', moveType: 'normal', movePool: [{level:1, name:'scratch'}, {level:7, name:'ember'}], cryUrl: ''},
-            { id: 7, name: "squirtle", rarity: 'rare', hp: 44, atk: 48, def: 65, spa: 50, spd: 64, speed: 43, types: ['water'], animUrl: `${POKE_URL}7.png`, level: 1, exp: 0, currentMove: 'tackle', movePower: 40, moveClass: 'physical', moveType: 'normal', movePool: [{level:1, name:'tackle'}, {level:7, name:'water-gun'}], cryUrl: ''}
+            { id: 4, name: "charmander", rarity: 'common', hp: 39, atk: 52, def: 43, spa: 60, spd: 50, speed: 65, types: ['fire'], animUrl: `${POKE_URL}4.png`, level: 1, exp: 0, currentMove: 'scratch', movePower: 40, moveClass: 'physical', moveType: 'normal', movePool: [{level:1, name:'scratch'}, {level:7, name:'ember'}], cryUrl: ''},
+            { id: 7, name: "squirtle", rarity: 'common', hp: 44, atk: 48, def: 65, spa: 50, spd: 64, speed: 43, types: ['water'], animUrl: `${POKE_URL}7.png`, level: 1, exp: 0, currentMove: 'tackle', movePower: 40, moveClass: 'physical', moveType: 'normal', movePool: [{level:1, name:'tackle'}, {level:7, name:'water-gun'}], cryUrl: ''}
         ];
 
         // --- AUDIO ENGINE ---
@@ -468,7 +506,6 @@
             } catch(e) {}
         }
 
-        // [FIX 2] Menambahkan Fungsi playCry yang tidak terdefinisi sebelumnya
         function playCry(url) {
             if(!url) return;
             try {
@@ -497,12 +534,12 @@
         let player = { 
             username: "", coins: 1000, unlocked: [], deck: [], pityCounter: 0, 
             pveProgress: { routeIndex: 0, battlesWon: 0 }, pvpStats: { win: 0, lose: 0 },
-            inventory: { potion: 5, candy: 2, stone: 0, 'poke-ball': 10, 'great-ball': 0, 'ultra-ball': 0, 'master-ball': 0 }, badges: []
+            inventory: { potion: 5, candy: 2, stone: 0 }, badges: []
         };
         let moveCache = {}; let currentPvERouteId = 0;
         let pvpScores = { p1: 0, p2: 0, p1Name: "", p2Name: "" };
 
-        // --- ERROR HANDLER (DEBUGGER) ---
+        // --- ERROR HANDLER ---
         function throwDebugError(e) {
             console.error("FATAL ERROR CATCHED:", e);
             try {
@@ -511,7 +548,6 @@
                     loadingScreen.classList.remove('hidden');
                     loadingScreen.classList.add('flex');
                 }
-                
                 const spinner = document.getElementById('loading-spinner');
                 if(spinner) spinner.classList.remove('animate-spin');
                 
@@ -521,7 +557,6 @@
                     txt.classList.remove('text-white', 'animate-pulse');
                     txt.classList.add('text-red-500');
                 }
-                
                 const statusTxt = document.getElementById('db-status-text');
                 if(statusTxt) statusTxt.innerText = "Mohon copy error di bawah ini dan reload:";
                 
@@ -530,15 +565,12 @@
                     errBox.classList.remove('hidden');
                     errBox.classList.add('flex');
                 }
-                
                 const logBox = document.getElementById('error-log-box');
                 if(logBox) {
-                    let errMsg = `Error: ${e?.name || 'Unknown'} - ${e?.message || 'No message'}\n\nStack:\n${e?.stack || 'No stack'}\n\nPlayer: ${player?.username || 'null'}\nUnlocked: ${player?.unlocked?.length ?? 'null'}`;
+                    let errMsg = `Error: ${e?.name || 'Unknown'} - ${e?.message || 'No message'}\n\nStack:\n${e?.stack || 'No stack'}\n\nPlayer: ${player?.username || 'null'}`;
                     logBox.value = errMsg;
                 }
             } catch(innerErr) {
-                console.error("DEBUGGER CRASH:", innerErr);
-                // Last resort: reload otomatis setelah 3 detik
                 setTimeout(() => location.reload(), 3000);
             }
         }
@@ -569,7 +601,7 @@
             },
             register: async (username, password) => {
                 await sleep(800); if(localStorage.getItem('MOCK_DB_' + username)) throw new Error("Username sudah dipakai!");
-                const newPlayer = { username: username, password: btoa(password), coins: 1000, unlocked: [], deck: [], pveProgress: { routeIndex: 0, battlesWon: 0 }, pvpStats: { win:0, lose:0 }, inventory: { potion: 5, candy: 2, stone: 0, 'poke-ball': 10, 'great-ball': 0, 'ultra-ball': 0, 'master-ball': 0 }, badges: [] };
+                const newPlayer = { username: username, password: btoa(password), coins: 1500, unlocked: [], deck: [], pveProgress: { routeIndex: 0, battlesWon: 0 }, pvpStats: { win:0, lose:0 }, inventory: { potion: 5, candy: 2, stone: 0 }, badges: [], pityCounter: 0 };
                 localStorage.setItem('MOCK_DB_' + username, JSON.stringify(newPlayer)); return newPlayer;
             },
             save: async (playerData) => {
@@ -629,7 +661,7 @@
             initAudio(); 
             player = { username: "", coins: 0, unlocked: [], deck: [], pityCounter: 0,
                 pveProgress: { routeIndex: 0, battlesWon: 0 }, pvpStats: { win: 0, lose: 0 },
-                inventory: { potion: 0, candy: 0, stone: 0, 'poke-ball':0, 'great-ball':0, 'ultra-ball':0, 'master-ball':0 }, badges: [] };
+                inventory: { potion: 0, candy: 0, stone: 0 }, badges: [] };
             document.getElementById('top-bar').classList.add('hidden'); document.getElementById('view-menu').classList.remove('active');
             document.getElementById('auth-screen').classList.remove('hidden'); document.getElementById('auth-screen').classList.add('flex');
             document.getElementById('login-pass').value = '';
@@ -649,7 +681,7 @@
         }
 
         async function fetchWithTimeout(resource, options = {}) {
-            const { timeout = 4000 } = options; const controller = new AbortController(); const id = setTimeout(() => controller.abort(), timeout);
+            const { timeout = 5000 } = options; const controller = new AbortController(); const id = setTimeout(() => controller.abort(), timeout);
             const response = await fetch(resource, { ...options, signal: controller.signal }); clearTimeout(id); return response;
         }
 
@@ -661,13 +693,12 @@
         }
 
         async function finalizeLogin() {
-            let loadingShown = false;
             try {
                 showAuthLoading(false); 
                 document.getElementById('auth-screen').classList.add('hidden'); 
                 document.getElementById('auth-screen').classList.remove('flex');
                 
-                // --- Normalisasi & inisialisasi semua field player ---
+                // --- Normalisasi Field Player ---
                 player = player || {};
                 player.unlocked = player.unlocked || [];
                 player.deck = player.deck || [];
@@ -675,19 +706,18 @@
                 player.pvpStats = player.pvpStats || { win: 0, lose: 0 };
                 player.pityCounter = player.pityCounter || 0;
                 player.badges = player.badges || [];
-                player.coins = player.coins || 1000;
+                player.coins = player.coins !== undefined ? player.coins : 1500;
                 player.inventory = player.inventory || {};
-                player.inventory.potion = (player.inventory.potion !== undefined) ? player.inventory.potion : 5;
-                player.inventory.candy = (player.inventory.candy !== undefined) ? player.inventory.candy : 2;
+                player.inventory.potion = player.inventory.potion !== undefined ? player.inventory.potion : 5;
+                player.inventory.candy = player.inventory.candy !== undefined ? player.inventory.candy : 2;
                 player.inventory.stone = player.inventory.stone || 0;
-                player.inventory['poke-ball'] = player.inventory['poke-ball'] || 10;
-                player.inventory['great-ball'] = player.inventory['great-ball'] || 0;
-                player.inventory['ultra-ball'] = player.inventory['ultra-ball'] || 0;
-                player.inventory['master-ball'] = player.inventory['master-ball'] || 0;
+                
+                // Menghapus pokeball usang dari inventory jika masih ada
+                delete player.inventory['poke-ball']; delete player.inventory['great-ball']; delete player.inventory['ultra-ball']; delete player.inventory['master-ball'];
                 
                 if(USE_MOCK_API) document.getElementById('offline-indicator').classList.remove('hidden');
                 
-                // --- Bersihkan duplikat & normalisasi unlocked ---
+                // --- Membersihkan duplikat / format ulang Unlocked ---
                 let uniqueIds = new Set(); let cleanedUnlocked = [];
                 for (let p of player.unlocked) { 
                     if (p && p.id && !uniqueIds.has(Number(p.id))) { 
@@ -696,74 +726,40 @@
                             ...p, id: Number(p.id),
                             hp: p.hp || 45, atk: p.atk || 49, def: p.def || 49,
                             spa: p.spa || 65, spd: p.spd || 65, speed: p.speed || 45,
-                            moveClass: p.moveClass || 'physical',
-                            moveType: p.moveType || 'normal',
-                            movePower: p.movePower || 40,
+                            moveClass: p.moveClass || 'physical', moveType: p.moveType || 'normal', movePower: p.movePower || 40,
                             movePool: p.movePool || [{level:1, name: p.currentMove || 'tackle'}],
-                            types: p.types || ['normal'],
-                            rarity: p.rarity || 'common',
-                            level: p.level || 1,
-                            exp: p.exp || 0,
-                            cryUrl: p.cryUrl || ''
+                            types: p.types || ['normal'], rarity: p.rarity || 'common', level: p.level || 1, exp: p.exp || 0, cryUrl: p.cryUrl || ''
                         }); 
                     } 
                 }
                 player.unlocked = cleanedUnlocked; 
-                
+
+                // --- BYPASS API: Memberi Starter Instan Jika Akun Baru (Memperbaiki Infinite Loading) ---
+                if (!player.unlocked || player.unlocked.length < 3) {
+                    // Beri 6 starter bawaan agar party langsung penuh tanpa loading api
+                    player.unlocked = [
+                        JSON.parse(JSON.stringify(FALLBACK_STARTERS[0])),
+                        JSON.parse(JSON.stringify(FALLBACK_STARTERS[1])),
+                        JSON.parse(JSON.stringify(FALLBACK_STARTERS[2])),
+                        {...JSON.parse(JSON.stringify(FALLBACK_STARTERS[0])), id: 1001, rarity: 'common'}, // Clone Bulba
+                        {...JSON.parse(JSON.stringify(FALLBACK_STARTERS[1])), id: 1004, rarity: 'common'}, // Clone Charm
+                        {...JSON.parse(JSON.stringify(FALLBACK_STARTERS[2])), id: 1007, rarity: 'common'}  // Clone Squirt
+                    ];
+                    player.deck = player.unlocked.map(p => p.id);
+                    await syncDataToDB(); 
+                }
+
                 // --- Validasi deck ---
                 let validDeck = [];
                 for(let id of player.deck) {
                     let found = player.unlocked.find(u => Number(u.id) === Number(id));
                     if(found && !validDeck.includes(found.id)) validDeck.push(found.id);
                 }
-                while(validDeck.length < 6 && validDeck.length < cleanedUnlocked.length) {
-                    let nextP = cleanedUnlocked.find(u => !validDeck.includes(u.id));
+                while(validDeck.length < 6 && validDeck.length < player.unlocked.length) {
+                    let nextP = player.unlocked.find(u => !validDeck.includes(u.id));
                     if(nextP) validDeck.push(nextP.id); else break;
                 }
                 player.deck = validDeck;
-
-                // --- Fetch starter jika Pokemon belum ada ---
-                if (!player.unlocked || player.unlocked.length < 6) {
-                    loadingShown = true;
-                    document.getElementById('loading-screen').classList.remove('hidden');
-                    document.getElementById('loading-screen').classList.add('flex');
-                    document.getElementById('loading-spinner').classList.add('animate-spin');
-                    document.getElementById('loading-text').innerText = "Menyiapkan Starter POKEMON...";
-                    document.getElementById('db-status-text').innerText = "Mengambil data dari PokeAPI...";
-
-                    let pulledStarters = []; let pPool = [...RARITY_DB.common.ids]; let apiSuccess = true;
-
-                    for(let i=0; i<6; i++) {
-                        const rId = pPool.splice(Math.floor(Math.random() * pPool.length), 1)[0];
-                        try {
-                            let res = await fetchWithTimeout(`${API_URL}${rId}`, {timeout: 5000}); 
-                            let data = await res.json();
-                            let rawMoves = data.moves.filter(m => m.version_group_details && m.version_group_details.length > 0 && m.version_group_details[0].move_learn_method.name === 'level-up'); 
-                            rawMoves.sort((a,b) => a.version_group_details[0].level_learned_at - b.version_group_details[0].level_learned_at);
-                            let mPool = rawMoves.length > 0 ? [{level:1, name:rawMoves[0].move.name}] : [{level:1, name:'tackle'}]; 
-                            if(rawMoves.length > 5) mPool.push({level:7, name:rawMoves[5].move.name});
-                            
-                            let moveDetails = await fetchMoveDetails(mPool[0].name); 
-                            const baseStats = extractStats(data);
-                            pulledStarters.push({ id: Number(rId), name: data.name, rarity: 'common', hp: baseStats.hp, atk: baseStats.atk, def: baseStats.def, spa: baseStats.spa, spd: baseStats.spd, speed: baseStats.speed, types: data.types.map(t => t.type.name), animUrl: data.sprites?.other?.showdown?.front_default || `${POKE_URL}${rId}.png`, level: 1, exp: 0, currentMove: mPool[0].name, movePower: moveDetails.power, moveClass: moveDetails.damageClass, moveType: moveDetails.type, movePool: mPool, cryUrl: data.cries?.latest || '' });
-                        } catch(e) { apiSuccess = false; break; }
-                    }
-
-                    if(!apiSuccess || pulledStarters.length < 6) { 
-                        document.getElementById('db-status-text').innerText = "API Sibuk, memakai Starter Cadangan...";
-                        pulledStarters = JSON.parse(JSON.stringify(FALLBACK_STARTERS)); 
-                        while(pulledStarters.length < 6) {
-                            let clone = JSON.parse(JSON.stringify(FALLBACK_STARTERS[pulledStarters.length % FALLBACK_STARTERS.length]));
-                            clone.id = clone.id + (pulledStarters.length * 1000);
-                            pulledStarters.push(clone);
-                        }
-                    }
-
-                    player.unlocked = pulledStarters; 
-                    player.deck = pulledStarters.map(p => p.id); 
-                    document.getElementById('db-status-text').innerText = "Menyimpan ke database...";
-                    await syncDataToDB(); 
-                }
                 
                 // --- UI update & pindah ke menu ---
                 const menuUserDisplay = document.getElementById('menu-username-display');
@@ -777,7 +773,6 @@
             } catch (e) {
                 throwDebugError(e);
             } finally {
-                // Selalu sembunyikan loading screen, apapun yang terjadi
                 try {
                     document.getElementById('loading-screen').classList.add('hidden'); 
                     document.getElementById('loading-screen').classList.remove('flex');
@@ -823,39 +818,13 @@
         }
 
         function updateInventoryUI() {
-            // Map item ID ke element ID di HTML
-            const itemMap = {
-                'potion': 'inv-potion',
-                'candy': 'inv-candy',
-                'stone': 'inv-stone',
-                'poke-ball': 'inv-pokeball',
-                'great-ball': 'inv-greatball',
-                'ultra-ball': 'inv-ultraball',
-                'master-ball': 'inv-masterball'
-            };
-            for (const [itemId, elId] of Object.entries(itemMap)) {
-                const el = document.getElementById(elId);
-                if(el) el.innerText = player.inventory[itemId] || 0;
-            }
-            // Update qty di catch overlay
-            const qtyMap = {
-                'pokeball': 'poke-ball',
-                'greatball': 'great-ball',
-                'ultraball': 'ultra-ball',
-                'masterball': 'master-ball'
-            };
-            for (const [elSuffix, itemId] of Object.entries(qtyMap)) {
-                const el = document.getElementById(`qty-${elSuffix}`);
-                if(el) el.innerText = player.inventory[itemId] || 0;
-            }
+            document.getElementById('inv-potion').innerText = player.inventory.potion || 0;
+            document.getElementById('inv-candy').innerText = player.inventory.candy || 0;
+            document.getElementById('inv-stone').innerText = player.inventory.stone || 0;
         }
 
-        // --- MARKET SYSTEM ---
+        // --- MARKET SYSTEM (REVISED - NO POKEBALLS) ---
         const MARKET_ITEMS = [
-            { id: 'poke-ball', name: 'Pokeball', price: 50, desc: 'Rate 1x' },
-            { id: 'great-ball', name: 'Greatball', price: 150, desc: 'Rate 1.5x' },
-            { id: 'ultra-ball', name: 'Ultraball', price: 400, desc: 'Rate 2x' },
-            { id: 'master-ball', name: 'Masterball', price: 2000, desc: 'Pasti Dapat' },
             { id: 'potion', name: 'Potion', price: 100, desc: 'Heal 50% HP' },
             { id: 'candy', name: 'Rare Candy', price: 300, desc: 'Level Up' },
             { id: 'stone', name: 'Evo Stone', price: 1000, desc: 'Evolusi' }
@@ -884,10 +853,167 @@
             updateCoinDisplay(); updateInventoryUI(); syncDataToDB(); playSound('coin');
         }
 
+        // --- GACHA SYSTEM ---
+        function renderGachaUI() {
+            document.getElementById('gacha-pity-text').innerText = `${player.pityCounter} / 50`;
+        }
+
+        async function rollSingleGacha() {
+            player.pityCounter++;
+            let roll = Math.random() * 100;
+            let rarity = 'common';
+
+            // Pity System
+            if (player.pityCounter >= 50) {
+                rarity = Math.random() < 0.2 ? 'legendary' : 'epic';
+                player.pityCounter = 0; // Reset
+            } else {
+                if (roll < 2) rarity = 'legendary';
+                else if (roll < 10) rarity = 'epic';
+                else if (roll < 30) rarity = 'rare';
+                else rarity = 'common';
+
+                if(rarity === 'legendary' || rarity === 'epic') player.pityCounter = 0; // Reset on lucky pull
+            }
+
+            const pool = RARITY_DB[rarity].ids;
+            const chosenId = pool[Math.floor(Math.random() * pool.length)];
+            return { rarity, id: chosenId };
+        }
+
+        async function fetchNewPokemon(pId, rarity) {
+            try {
+                let res = await fetchWithTimeout(`${API_URL}${pId}`, {timeout: 4000});
+                let data = await res.json();
+                let rawMoves = data.moves.filter(m => m.version_group_details && m.version_group_details.length > 0 && m.version_group_details[0].move_learn_method.name === 'level-up'); 
+                rawMoves.sort((a,b) => a.version_group_details[0].level_learned_at - b.version_group_details[0].level_learned_at);
+                let mPool = rawMoves.length > 0 ? [{level:1, name:rawMoves[0].move.name}] : [{level:1, name:'tackle'}]; 
+                if(rawMoves.length > 5) mPool.push({level:7, name:rawMoves[5].move.name});
+                
+                let moveDetails = await fetchMoveDetails(mPool[0].name); 
+                const baseStats = extractStats(data);
+                
+                return {
+                    id: Number(pId), name: data.name.toLowerCase(), rarity: rarity, hp: baseStats.hp, atk: baseStats.atk, def: baseStats.def, spa: baseStats.spa, spd: baseStats.spd, speed: baseStats.speed, types: data.types.map(t => t.type.name), animUrl: data.sprites?.other?.showdown?.front_default || `${POKE_URL}${pId}.png`, level: 1, exp: 0, currentMove: mPool[0].name, movePower: moveDetails.power, moveClass: moveDetails.damageClass, moveType: moveDetails.type, movePool: mPool, cryUrl: data.cries?.latest || ''
+                };
+            } catch (e) {
+                // Fallback jika API gagal
+                const fb = FALLBACK_STARTERS[Math.floor(Math.random()*FALLBACK_STARTERS.length)];
+                return { ...JSON.parse(JSON.stringify(fb)), id: Number(pId), rarity: rarity, level: 1, exp: 0 };
+            }
+        }
+
+        async function executeGacha(times) {
+            initAudio();
+            const cost = times * 500;
+            if (player.coins < cost) return showAlert("Koin Tidak Cukup!", `Kamu butuh ${cost} Koin untuk Gacha ini.`);
+            
+            player.coins -= cost;
+            updateCoinDisplay();
+
+            // Setup Overlay
+            const overlay = document.getElementById('gacha-anim-overlay');
+            const singleAnimBox = document.getElementById('gacha-single-anim');
+            const ballImg = document.getElementById('gacha-anim-ball');
+            const flash = document.getElementById('gacha-flash');
+            const resultBox = document.getElementById('gacha-result-container');
+            const resultGrid = document.getElementById('gacha-result-grid');
+            
+            overlay.classList.remove('hidden'); overlay.classList.add('flex');
+            singleAnimBox.classList.add('hidden'); singleAnimBox.classList.remove('flex');
+            resultBox.classList.add('hidden'); resultBox.classList.remove('flex');
+            flash.classList.add('hidden');
+            resultGrid.innerHTML = '';
+
+            // Tentukan hasil dan highest rarity ball
+            let results = [];
+            let highestRarity = 'common';
+            const rarityWeight = { 'common': 1, 'rare': 2, 'epic': 3, 'legendary': 4 };
+
+            // Tampilkan animasi loading singkat
+            document.getElementById('loading-screen').classList.remove('hidden'); document.getElementById('loading-screen').classList.add('flex');
+            document.getElementById('loading-text').innerText = "Mengambil Pokemon...";
+
+            for(let i=0; i<times; i++) {
+                const roll = await rollSingleGacha();
+                const pokeData = await fetchNewPokemon(roll.id, roll.rarity);
+                results.push(pokeData);
+                if (rarityWeight[roll.rarity] > rarityWeight[highestRarity]) highestRarity = roll.rarity;
+                
+                // Tambahkan ke DB
+                const isDup = player.unlocked.some(u => u.id === pokeData.id);
+                if(isDup) {
+                    let refund = pokeData.rarity === 'legendary' ? 150 : pokeData.rarity === 'epic' ? 60 : pokeData.rarity === 'rare' ? 30 : 10;
+                    player.coins += refund; // Otomatis convert duplikat ke koin
+                    pokeData.isDup = true;
+                    pokeData.refund = refund;
+                } else {
+                    player.unlocked.push(pokeData);
+                    pokeData.isDup = false;
+                }
+            }
+
+            syncDataToDB();
+            renderGachaUI(); updateCoinDisplay();
+            document.getElementById('loading-screen').classList.add('hidden'); document.getElementById('loading-screen').classList.remove('flex');
+
+            // Set jenis bola berdasarkan rarity tertinggi
+            let ballUrl = 'poke-ball.png';
+            if (highestRarity === 'rare') ballUrl = 'great-ball.png';
+            else if (highestRarity === 'epic') ballUrl = 'ultra-ball.png';
+            else if (highestRarity === 'legendary') ballUrl = 'master-ball.png';
+
+            // Mainkan Animasi Bola
+            singleAnimBox.classList.remove('hidden'); singleAnimBox.classList.add('flex');
+            ballImg.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${ballUrl}`;
+            
+            playSound('hit');
+            ballImg.className = "w-24 h-24 object-contain filter drop-shadow-xl gacha-drop";
+            await sleep(600);
+            
+            ballImg.className = "w-24 h-24 object-contain filter drop-shadow-xl gacha-shake";
+            await sleep(1200);
+
+            // Flash Putih
+            playSound('catch');
+            flash.classList.remove('hidden');
+            flash.className = "absolute inset-0 z-[251] gacha-flash-fx";
+            await sleep(200);
+            
+            singleAnimBox.classList.add('hidden'); singleAnimBox.classList.remove('flex');
+
+            // Render Kartu Hasil
+            results.forEach(p => {
+                const card = document.createElement('div');
+                card.className = `w-24 h-32 p-1 rounded-lg flex flex-col items-center justify-between relative bg-type-${p.types[0]} border-2 ${p.rarity === 'legendary' ? 'card-legendary' : 'border-gray-300'} gacha-reveal`;
+                
+                const rarityBadge = `<div class="absolute top-0 right-0 pixel-font text-[4px] px-1 py-0.5 rounded-bl ${badgeColors[p.rarity]} shadow-sm z-10 uppercase">${p.rarity}</div>`;
+                const dupLabel = p.isDup ? `<div class="absolute bottom-1 left-0 right-0 text-center bg-black/70 text-white pixel-font text-[4px] py-1 z-20 shadow">DUP! +${p.refund} KOIN</div>` : `<div class="absolute bottom-1 left-0 right-0 text-center bg-green-500/90 text-white pixel-font text-[4px] py-1 z-20 shadow">NEW!</div>`;
+                
+                card.innerHTML = `
+                    ${rarityBadge}
+                    <span class="pixel-font text-[5px] text-white text-shadow-sm capitalize mt-1 z-10 truncate w-full text-center px-1">${p.name}</span>
+                    <img src="${POKE_URL}${p.id}.png" class="w-16 h-16 object-contain z-10 filter drop-shadow-md">
+                    ${dupLabel}
+                `;
+                resultGrid.appendChild(card);
+            });
+
+            resultBox.classList.remove('hidden'); resultBox.classList.add('flex');
+            // Play cry yang pertama
+            if(results.length > 0) playCry(results[0].cryUrl);
+        }
+
+        function closeGachaResult() {
+            initAudio();
+            document.getElementById('gacha-anim-overlay').classList.add('hidden');
+            document.getElementById('gacha-anim-overlay').classList.remove('flex');
+        }
+
         // --- UTILITIES & NAVIGATION ---
         function switchView(viewId) { 
             document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active')); document.getElementById(viewId).classList.add('active'); 
-            if (viewId === 'view-game' || viewId === 'view-prep-room') { document.getElementById('top-bar').classList.add('hidden'); document.getElementById('top-bar').classList.remove('flex'); } 
+            if (viewId === 'view-game' || viewId === 'view-prep-room' || viewId === 'view-gacha') { document.getElementById('top-bar').classList.add('hidden'); document.getElementById('top-bar').classList.remove('flex'); } 
             else { document.getElementById('top-bar').classList.remove('hidden'); document.getElementById('top-bar').classList.add('flex'); }
             
             const floatingPill = document.getElementById('mp-floating-indicator');
@@ -1156,16 +1282,6 @@
 
         let battleParty = []; let sessionPotions = 0;
         let boss = { id: 1, name: "BOSS", rarity: "common", hp: 1000, maxHp: 1000, level: 1, atk: 50, def: 50, spa: 50, spd: 50, speed: 50, img: "", type: "normal", baseStatRaw: null };
-
-        function startPvE() {
-            if(isMpConnected) return showAlert("PVP AKTIF", "Kamu masih berada di dalam Room PvP! Selesaikan atau Keluar dari room terlebih dahulu.");
-            
-            if (player.deck.length === 0 || player.unlocked.length === 0) {
-                return showAlert("Data Error", "Party kosong! Coba login ulang untuk auto-repair.");
-            }
-            
-            openAdventureMap();
-        }
 
         function initBattleParty() {
             battleParty = [];
@@ -1443,14 +1559,14 @@
             if(!isMultiplayer) await checkWinCondition();
         }
 
-        // --- CATCHING SYSTEM ---
+        // --- WIN SYSTEM (REVISED - NO CATCHING) ---
         async function checkWinCondition() {
             if(boss.hp <= 0 && !isMultiplayer) {
                 playSound('coin'); updateBattleLog(`WILD ${boss.name} PINGSAN!`); await sleep(1000);
                 
                 const route = REGIONS[currentPvERouteId];
                 if(route.type === 'boss') {
-                    const exp = boss.level * 50; const coinReward = boss.level * 100; 
+                    const exp = boss.level * 50; const coinReward = boss.level * 200; 
                     sessionCoins += coinReward; player.coins += coinReward; updateCoinDisplay();
                     if(route.drops.candy) player.inventory.candy += route.drops.candy; if(route.drops.stone) player.inventory.stone += route.drops.stone;
                     player.coins += route.drops.coins; updateCoinDisplay(); player.badges.push(route.badge);
@@ -1462,74 +1578,14 @@
                     syncDataToDB(); await sleep(500); await spawnPvEEnemy();
                 } else {
                     isAnimating = true;
-                    document.getElementById('catch-overlay').classList.remove('hidden');
+                    await finalizePveWin(); // Langsung ke loot
                 }
             }
-        }
-
-        async function attemptCatch(ballType) {
-            initAudio();
-            if(player.inventory[ballType] <= 0) return showAlert("Bola Habis", "Kamu tidak punya bola ini! Silakan beli di Poke Mart.");
-            player.inventory[ballType]--; updateInventoryUI();
-            
-            document.getElementById('catch-overlay').classList.add('hidden');
-            const bImg = document.getElementById('thrown-ball');
-            bImg.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${ballType}.png`;
-            bImg.classList.remove('hidden', 'anim-shake-catch'); void bImg.offsetWidth;
-            
-            bImg.classList.add('anim-throw'); playSound('hit');
-            await sleep(800);
-            
-            document.getElementById('boss-img').classList.add('hidden');
-            bImg.classList.remove('anim-throw'); bImg.classList.add('anim-shake-catch');
-            
-            let baseRate = CATCH_RATES[boss.rarity] || 0.5;
-            let ballMult = ballType === 'master-ball' ? 100 : ballType === 'ultra-ball' ? 2 : ballType === 'great-ball' ? 1.5 : 1;
-            let catchSuccess = Math.random() < (baseRate * ballMult);
-            
-            await sleep(1500); 
-            bImg.classList.remove('anim-shake-catch'); bImg.classList.add('hidden');
-            
-            if(catchSuccess) {
-                playSound('catch'); updateBattleLog(`GOTCHA! ${boss.name} TERTANGKAP!`); await sleep(1500);
-                
-                const isDup = player.unlocked.some(u => u.id === boss.id);
-                if(isDup) {
-                    let refund = boss.rarity === 'legendary' ? 150 : boss.rarity === 'epic' ? 60 : boss.rarity === 'rare' ? 30 : 10;
-                    player.coins += refund; updateCoinDisplay();
-                    showAlert("Duplikat!", `Kamu sudah memiliki ${boss.name}. Dikonversi menjadi +${refund} Koin!`);
-                } else {
-                    let mPool = [{level:1, name:'tackle'}];
-                    if(boss.baseStatRaw && boss.baseStatRaw.moves) {
-                        let rawMoves = boss.baseStatRaw.moves.filter(m => m.version_group_details && m.version_group_details.length > 0 && m.version_group_details[0].move_learn_method.name === 'level-up'); 
-                        rawMoves.sort((a,b) => a.version_group_details[0].level_learned_at - b.version_group_details[0].level_learned_at);
-                        mPool = rawMoves.length > 0 ? [{level:1, name:rawMoves[0].move.name}] : [{level:1, name:'tackle'}]; 
-                        if(rawMoves.length > 5) mPool.push({level:7, name:rawMoves[5].move.name});
-                    }
-                    let mData = await fetchMoveDetails(mPool[0].name);
-                    let bossTypes = (boss.baseStatRaw && boss.baseStatRaw.types) ? boss.baseStatRaw.types.map(t=>t.type.name) : [boss.type || 'normal'];
-                    
-                    let newPoke = { id: boss.id, name: boss.name.toLowerCase(), rarity: boss.rarity, hp: boss.maxHp, atk: boss.atk, def: boss.def, spa: boss.spa, spd: boss.spd, speed: boss.speed, types: bossTypes, animUrl: boss.img, level: boss.level, exp: 0, currentMove: mPool[0].name, movePower: mData.power, moveClass: mData.damageClass, moveType: mData.type, movePool: mPool, cryUrl: (boss.baseStatRaw?.cries?.latest) || '' };
-                    player.unlocked.push(newPoke);
-                    showAlert("NEW POKEMON!", `${boss.name} berhasil ditambahkan ke koleksimu!`);
-                }
-            } else {
-                playSound('hit'); document.getElementById('boss-img').classList.remove('hidden');
-                updateBattleLog(`YAAHH! ${boss.name} LEPAS DAN KABUR!`); await sleep(1500);
-            }
-            
-            finalizePveWin();
-        }
-
-        async function skipCatch() {
-            initAudio(); document.getElementById('catch-overlay').classList.add('hidden');
-            updateBattleLog(`KAMU MENINGGALKAN ${boss.name}.`); await sleep(1000);
-            finalizePveWin();
         }
 
         async function finalizePveWin() {
             document.getElementById('boss-img').classList.remove('hidden'); 
-            const exp = boss.level * 40; const coinReward = boss.level * 60; 
+            const exp = boss.level * 40; const coinReward = boss.level * 100; // Reward coin dinaikkan karena untuk gacha
             sessionCoins += coinReward; player.coins += coinReward; updateCoinDisplay();
             
             let lootMsg = "";
@@ -1549,7 +1605,7 @@
                 }
             }
             
-            syncDataToDB(); await sleep(500); isAnimating = false; await spawnPvEEnemy();
+            syncDataToDB(); await sleep(1000); isAnimating = false; await spawnPvEEnemy();
         }
 
         async function handleOpponentAttack(msg) {
@@ -1582,8 +1638,8 @@
             if(getAliveCount() <= 0) {
                 updateBattleLog("SELURUH PARTY PINGSAN..."); await sleep(1500);
                 if(amIHost) pvpScores.p2++; else pvpScores.p1++;
-                player.coins += 20; player.pvpStats.lose++; updateCoinDisplay(); syncDataToDB(); 
-                showAlert("DEFEAT", `Kamu kalah dari musuh. (+20 Koin)`); enterPrepRoom(mpRoomCode);
+                player.coins += 50; player.pvpStats.lose++; updateCoinDisplay(); syncDataToDB(); 
+                showAlert("DEFEAT", `Kamu kalah dari musuh. (+50 Koin)`); enterPrepRoom(mpRoomCode);
             } else { 
                 updateBattleLog("GILIRANMU! SWIPE POKEMON."); myTurn = true; 
                 if(!hasPossibleMoves()) { await shuffleBoard(); } else { unlockGrid(); }
