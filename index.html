@@ -98,36 +98,54 @@
         .type-dark     { background-color:#374151; } .type-steel    { background-color:#9ca3af; }
 
         /* ── PUZZLE GRID ── */
+        /* ── PUZZLE TILES: Pastel kotak rounded ── */
         .orb-container {
             width: 100%; height: 100%;
-            border-radius: 50%;
+            border-radius: 10px;
             display: flex; justify-content: center; align-items: center;
             position: absolute; top: 0; left: 0;
             transition: transform 0.15s;
             user-select: none; touch-action: none;
-            background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.9), rgba(200,200,220,0.6));
-            border: 2px solid rgba(255,255,255,0.8);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.25), inset 0 1px 2px rgba(255,255,255,0.6);
+            background: linear-gradient(145deg, #f8faff 0%, #eef2ff 60%, #e0e7ff 100%);
+            border: 2px solid #c7d2fe;
+            box-shadow: 0 2px 4px rgba(99,102,241,0.12), 0 1px 0 rgba(255,255,255,0.9) inset;
         }
-        /* Rarity ring per tile */
-        .orb-common   { border-color: #94a3b8; }
-        .orb-rare     { border-color: #60a5fa; box-shadow: 0 0 8px #3b82f680, inset 0 1px 2px rgba(255,255,255,0.6); }
-        .orb-epic     { border-color: #a78bfa; box-shadow: 0 0 10px #8b5cf680, inset 0 1px 2px rgba(255,255,255,0.6); }
-        .orb-legendary{ border-color: #fbbf24; box-shadow: 0 0 14px #f59e0b90, inset 0 1px 2px rgba(255,255,255,0.6); animation: orbLegGlow 1.5s infinite; }
-        @keyframes orbLegGlow { 0%,100%{box-shadow:0 0 8px #fbbf2480;} 50%{box-shadow:0 0 18px #f59e0bcc;} }
+        /* Rarity tint per tile */
+        .orb-common   {
+            background: linear-gradient(145deg, #f8faff, #e8edf8);
+            border-color: #b0bbda;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.10), inset 0 1px 0 #fff;
+        }
+        .orb-rare     {
+            background: linear-gradient(145deg, #eff6ff, #dbeafe, #bfdbfe);
+            border-color: #93c5fd;
+            box-shadow: 0 2px 8px #93c5fd60, inset 0 1px 0 #fff;
+        }
+        .orb-epic     {
+            background: linear-gradient(145deg, #f5f3ff, #ede9fe, #ddd6fe);
+            border-color: #c4b5fd;
+            box-shadow: 0 2px 8px #a78bfa60, inset 0 1px 0 #fff;
+        }
+        .orb-legendary{
+            background: linear-gradient(145deg, #fffbeb, #fef3c7, #fde68a);
+            border-color: #fbbf24;
+            box-shadow: 0 2px 10px #fbbf2470, inset 0 1px 0 #fff;
+            animation: orbLegGlow 1.5s infinite;
+        }
+        @keyframes orbLegGlow { 0%,100%{box-shadow:0 2px 8px #fbbf2460;} 50%{box-shadow:0 2px 16px #f59e0baa;} }
 
-        .orb-container img { width: 80%; height: 80%; object-fit: contain; pointer-events: none; image-rendering: pixelated; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4)); }
-        .orb-container:active { transform: scale(0.83); z-index: 20; }
-        .swiping { transform: scale(1.12) !important; z-index: 30 !important; filter: brightness(1.25); }
+        .orb-container img { width: 76%; height: 76%; object-fit: contain; pointer-events: none; image-rendering: pixelated; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35)); }
+        .orb-container:active { transform: scale(0.86); z-index: 20; }
+        .swiping { transform: scale(1.10) !important; z-index: 30 !important; filter: brightness(1.3) drop-shadow(0 0 4px #6366f1aa); }
         .ko-tile { filter: grayscale(100%) brightness(0.55); opacity: 0.7; }
 
         #grid {
-            background: rgba(255,255,255,0.3);
-            border-radius: 12px;
-            padding: 4px;
-            border: 3px solid rgba(255,255,255,0.4);
+            background: linear-gradient(135deg, #e0e7ff 0%, #ede9fe 50%, #dbeafe 100%);
+            border-radius: 16px;
+            padding: 5px;
+            border: 3px solid #c7d2fe;
             position: relative;
-            backdrop-filter: blur(4px);
+            box-shadow: 0 4px 16px rgba(99,102,241,0.15), inset 0 1px 0 rgba(255,255,255,0.7);
         }
         .grid-locked { pointer-events: none; filter: grayscale(50%) brightness(0.8); }
         .candy-cell { position: relative; width: 100%; aspect-ratio: 1; }
@@ -156,9 +174,9 @@
         .anim-hit { animation: hitBlink 0.4s; }
         @keyframes screenShake { 0%{transform:translate(1px,1px)} 20%{transform:translate(-3px,0)} 40%{transform:translate(1px,-1px)} 60%{transform:translate(-3px,1px)} 80%{transform:translate(-1px,-1px)} 100%{transform:translate(1px,-2px)} }
         .anim-shake { animation: screenShake 0.3s; }
-        @keyframes attackSlideR { 0%,100%{transform:scaleX(-1) translate(0,0)} 30%{transform:scaleX(-1) translate(14px,0)} 50%{transform:scaleX(-1) translate(-45px,8px);filter:brightness(1.3)} 80%{transform:scaleX(-1) translate(-45px,8px)} }
+        @keyframes attackSlideR { 0%,100%{transform:translate(0,0)} 30%{transform:translate(-10px,0)} 50%{transform:translate(55px,-8px);filter:brightness(1.3)} 80%{transform:translate(55px,-8px)} }
         .anim-atk-player { animation: attackSlideR 0.6s ease-in-out; }
-        @keyframes attackSlideL { 0%,100%{transform:translate(0,0)} 30%{transform:translate(14px,0)} 50%{transform:translate(-45px,8px);filter:brightness(1.3)} 80%{transform:translate(-45px,8px)} }
+        @keyframes attackSlideL { 0%,100%{transform:scaleX(-1) translate(0,0)} 30%{transform:scaleX(-1) translate(-10px,0)} 50%{transform:scaleX(-1) translate(55px,-8px);filter:brightness(1.3)} 80%{transform:scaleX(-1) translate(55px,-8px)} }
         .anim-atk-boss { animation: attackSlideL 0.6s ease-in-out; }
 
         @keyframes skillBurst { 0%{opacity:0;transform:scale(0.2) rotate(0deg)} 40%{opacity:1;transform:scale(1.5) rotate(90deg);filter:brightness(1.5)} 100%{opacity:0;transform:scale(2.5) rotate(180deg)} }
@@ -453,7 +471,7 @@
 
         <!-- Arena -->
         <div class="w-full battle-arena-bg relative flex flex-col flex-shrink-0 shadow-lg overflow-hidden" style="height:200px;" id="arena-container">
-            <!-- Boss HUD -->
+            <!-- Boss HUD: top-right — jauh dari sprite boss -->
             <div class="absolute top-2 right-2 w-[48%] hp-bar-container bg-red-900 z-20" id="boss-hud-container">
                 <div class="flex justify-between items-center mb-1 px-1">
                     <span id="boss-name" class="pixel-font text-[6px] text-white truncate w-16">BOSS</span>
@@ -461,21 +479,21 @@
                 </div>
                 <div class="w-full bg-gray-800 rounded-sm p-0.5"><div id="boss-hp-bar" class="hp-bar-fill bg-green-400" style="width:100%"></div></div>
             </div>
-            <!-- Boss sprite (animated GIF front) -->
-            <div class="absolute top-8 right-3 w-20 h-20 z-10 flex justify-center items-end" id="boss-sprite-area">
+            <!-- Boss sprite: kanan, FACING LEFT (scaleX -1) seperti Pokemon game asli -->
+            <div class="absolute top-6 right-3 w-20 h-20 z-10 flex justify-center items-end" id="boss-sprite-area" style="transform:scaleX(-1);">
                 <img id="boss-img" src="" class="max-w-full max-h-full object-contain" style="image-rendering:pixelated;" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'">
             </div>
-            <!-- Player HUD -->
-            <div class="absolute bottom-14 left-2 w-[52%] hp-bar-container bg-blue-900 z-20" id="player-hud-container">
+            <!-- Player sprite: kiri bawah, FACING RIGHT (front sprite normal) -->
+            <div class="absolute bottom-14 left-3 w-18 h-18 z-10 flex justify-center items-end" id="player-sprite-area">
+                <img id="player-img" src="" class="max-w-full max-h-full object-contain" style="width:72px;height:72px;image-rendering:pixelated;" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'">
+            </div>
+            <!-- Player HUD: bottom-left, DI BAWAH sprite, tidak overlap -->
+            <div class="absolute bottom-1 left-2 w-[52%] hp-bar-container bg-blue-900 z-20" id="player-hud-container">
                 <div class="flex justify-between items-center mb-1 px-1">
                     <span id="player-hud-name" class="pixel-font text-[6px] text-white truncate w-16">PLAYER</span>
                     <span id="player-hud-lvl" class="pixel-font text-[6px] text-yellow-300">Lv1</span>
                 </div>
                 <div class="w-full bg-gray-800 rounded-sm p-0.5"><div id="player-hp-bar" class="hp-bar-fill bg-green-400" style="width:100%"></div></div>
-            </div>
-            <!-- Player sprite (animated back, flipped) -->
-            <div class="absolute bottom-16 left-3 w-18 h-18 z-10 flex justify-center items-end transform scale-x-[-1]" id="player-sprite-area">
-                <img id="player-img" src="" class="max-w-full max-h-full object-contain" style="width:72px;height:72px;image-rendering:pixelated;" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'">
             </div>
 
             <!-- Battle Log -->
@@ -1231,7 +1249,7 @@ async function startGame(multiplayerFlag=false) {
         mpChannel.subscribe('attack',handleOpponentAttack);
         mpChannel.subscribe('surrender',handleOpponentSurrender);
         await switchSummon(activeSummonId);
-        for(let i=0;i<width*width;i++) board.push(getRandomActivePokemon());
+        board = buildBalancedBoard();
         resolveInitialMatches(board, getRandomActivePokemon); renderBoard();
     } else {
         document.getElementById('pvp-indicator').classList.add('hidden');
@@ -1242,14 +1260,47 @@ async function startGame(multiplayerFlag=false) {
         await spawnPvEEnemy();
         myTurn=true; unlockGrid();
         await switchSummon(activeSummonId);
-        for(let i=0;i<width*width;i++) board.push(getRandomActivePokemon());
+        board = buildBalancedBoard();
         resolveInitialMatches(board, getRandomActivePokemon); renderBoard();
     }
 }
 
 function getRandomActivePokemon() {
-    if(!activeAssets||!activeAssets.length) return {uid:'err',src:getSpriteUrl(1),rarity:'common'};
-    return activeAssets[Math.floor(Math.random()*activeAssets.length)];
+    if(!activeAssets||!activeAssets.length) return {uid:"err",src:getSpriteUrl(1),rarity:"common"};
+    // Shallow copy tiap call — fix bug semua tile jadi pokemon yg sama (reference issue)
+    const a = activeAssets[Math.floor(Math.random()*activeAssets.length)];
+    return { uid: a.uid, src: a.src, rarity: a.rarity };
+}
+
+// Buat board dengan distribusi tile MERATA antar semua pokemon (fix all-same-pokemon bug)
+// Strategi: isi slot dengan round-robin shuffled, lalu shuffle posisinya
+function buildBalancedBoard() {
+    if(!activeAssets||!activeAssets.length) return [];
+    const total = width * width; // 36
+    const n = activeAssets.length;
+    // Kalau cuma 1 pokemon di deck, tetap pakai random biasa (resolveInitialMatches handle)
+    if(n === 1) {
+        const arr = [];
+        for(let i=0;i<total;i++) arr.push(getRandomActivePokemon());
+        return arr;
+    }
+    // Pastiin setiap pokemon muncul minimal floor(total/n) kali, sisa diisi random
+    const perPoke = Math.floor(total / n);
+    const tiles = [];
+    for(let i=0;i<n;i++) {
+        for(let j=0;j<perPoke;j++) {
+            const a = activeAssets[i];
+            tiles.push({ uid: a.uid, src: a.src, rarity: a.rarity });
+        }
+    }
+    // Isi sisa dengan random
+    while(tiles.length < total) tiles.push(getRandomActivePokemon());
+    // Fisher-Yates shuffle
+    for(let i=tiles.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [tiles[i],tiles[j]]=[tiles[j],tiles[i]];
+    }
+    return tiles;
 }
 
 // ── PvE ENEMY ─────────────────────────────────────────────
@@ -1579,13 +1630,13 @@ async function switchSummon(uid) {
     const img=document.getElementById('player-img');
     document.getElementById('player-hud-name').innerText=pData.name.toUpperCase();
     document.getElementById('player-hud-lvl').innerText='Lv'+pData.level;
-    // Use animated back sprite for player (showdown back)
-    const backUrl=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/back/${pData.id}.gif`;
-    const fallback=pData.animUrl||getAnimUrl(pData.id);
-    if(img.src!==backUrl){
+    // Gunakan animated front sprite (facing right natural, sudah sesuai layout baru)
+    const frontUrl = pData.animUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${pData.id}.gif`;
+    const fallback = getSpriteUrl(pData.id);
+    if(img.src !== frontUrl){
         container.classList.add('opacity-0'); await sleep(80);
-        img.src=backUrl;
-        img.onerror=()=>{img.src=fallback; img.onerror=()=>{img.src=getSpriteUrl(pData.id);};};
+        img.src = frontUrl;
+        img.onerror = () => { img.src = fallback; img.onerror = null; };
         await sleep(130); container.classList.remove('opacity-0');
     }
     if(pData.isKo) img.classList.add('grayscale','opacity-50');
