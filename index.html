@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Poké Match RPG</title>
+    <title>Poké Match RPG - Pastel Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
-    <!-- ════ LOGIC FILE ════ -->
-    <script src="pokemon_logic.js"></script>
 
     <style>
         :root {
@@ -18,30 +16,29 @@
         * { box-sizing: border-box; }
         body {
             font-family: 'Nunito', sans-serif;
-            background: #1a1a2e;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
             touch-action: none;
             overflow: hidden;
-            color: #334e68;
+            color: #475569;
             height: 100dvh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
         }
-        .pixel-font { font-family: 'Press Start 2P', cursive; text-transform: uppercase; line-height: 1.6; }
-        .text-outline { text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
-        .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        .bubbly-font { font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
 
         /* ── LAYOUT ── */
         #app-shell {
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
             height: 100dvh;
             display: flex;
             flex-direction: column;
             position: relative;
             overflow: hidden;
-            background: #f0f4ff;
+            background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%);
+            box-shadow: 0 0 40px rgba(0,0,0,0.05);
         }
 
         .view-section {
@@ -57,149 +54,139 @@
         .view-section.active { display: flex; }
 
         /* ── PANELS & BUTTONS ── */
-        .glass-panel { background: rgba(255,255,255,0.97); border: 3px solid #94a3b8; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 10px; }
-        .retro-btn { background: #fff; border: 3px solid #94a3b8; box-shadow: 0 4px 0 #64748b; border-radius: 8px; transition: all 0.1s; cursor: pointer; outline: none; user-select: none; }
-        .retro-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #64748b; }
-        .retro-btn:disabled { filter: grayscale(100%); opacity: 0.6; pointer-events: none; }
-        .retro-input { border: 3px solid #cbd5e1; border-radius: 8px; outline: none; transition: border-color 0.2s; padding: 10px; width: 100%; font-family: 'Press Start 2P', cursive; font-size: 10px; text-align: center; background: #fff; }
-        .retro-input:focus { border-color: #3b82f6; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(125, 211, 252, 0.15);
+        }
+        
+        .pastel-btn {
+            background: #fff; border: 3px solid #fff;
+            box-shadow: 0 6px 0 rgba(186, 230, 253, 0.8), 0 10px 15px rgba(0,0,0,0.05);
+            border-radius: 20px; transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer; outline: none; user-select: none; font-weight: 900;
+        }
+        .pastel-btn:active { transform: translateY(6px); box-shadow: 0 0 0 rgba(186, 230, 253, 0.8), 0 2px 4px rgba(0,0,0,0.05); }
+        .pastel-btn:disabled { filter: grayscale(100%); opacity: 0.6; pointer-events: none; transform: none; box-shadow: 0 6px 0 #cbd5e1; }
+        
+        .pastel-input {
+            border: 3px solid rgba(255, 255, 255, 0.9); border-radius: 16px; outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s; padding: 14px; width: 100%;
+            font-weight: 800; text-align: center; background: rgba(255, 255, 255, 0.8);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); color: #0369a1; text-transform: uppercase;
+        }
+        .pastel-input:focus { border-color: #7dd3fc; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02), 0 0 0 4px rgba(125, 211, 252, 0.3); }
+        
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* ── TYPE BACKGROUNDS ── */
-        .bg-type-normal   { background: linear-gradient(135deg,#e5e5e5,#a8a878); border-color:#7a7a58; }
-        .bg-type-fire     { background: linear-gradient(135deg,#fca5a5,#ef4444); border-color:#b91c1c; }
-        .bg-type-water    { background: linear-gradient(135deg,#93c5fd,#3b82f6); border-color:#1d4ed8; }
-        .bg-type-grass    { background: linear-gradient(135deg,#bbf7d0,#22c55e); border-color:#15803d; }
-        .bg-type-electric { background: linear-gradient(135deg,#fef08a,#eab308); border-color:#a16207; }
-        .bg-type-ice      { background: linear-gradient(135deg,#cffafe,#06b6d4); border-color:#0e7490; }
-        .bg-type-fighting { background: linear-gradient(135deg,#fca5a5,#dc2626); border-color:#991b1b; }
-        .bg-type-poison   { background: linear-gradient(135deg,#e9d5ff,#a855f7); border-color:#7e22ce; }
-        .bg-type-ground   { background: linear-gradient(135deg,#fde68a,#d97706); border-color:#b45309; }
-        .bg-type-flying   { background: linear-gradient(135deg,#e0f2fe,#7dd3fc); border-color:#0369a1; }
-        .bg-type-psychic  { background: linear-gradient(135deg,#fbcfe8,#ec4899); border-color:#be185d; }
-        .bg-type-bug      { background: linear-gradient(135deg,#d9f99d,#84cc16); border-color:#4d7c0f; }
-        .bg-type-rock     { background: linear-gradient(135deg,#fef08a,#ca8a04); border-color:#854d0e; }
-        .bg-type-ghost    { background: linear-gradient(135deg,#c4b5fd,#7c3aed); border-color:#5b21b6; }
-        .bg-type-dragon   { background: linear-gradient(135deg,#818cf8,#4f46e5); border-color:#312e81; }
-        .bg-type-dark     { background: linear-gradient(135deg,#9ca3af,#374151); border-color:#1f2937; }
-        .bg-type-steel    { background: linear-gradient(135deg,#e5e7eb,#9ca3af); border-color:#4b5563; }
-        .bg-type-fairy    { background: linear-gradient(135deg,#fce7f3,#f43f5e); border-color:#be123c; }
+        /* Button Colors */
+        .btn-sky { background: #bae6fd; color: #0369a1; box-shadow: 0 6px 0 #7dd3fc, 0 10px 15px rgba(0,0,0,0.05); }
+        .btn-sky:active { box-shadow: 0 0 0 #7dd3fc; }
+        .btn-pink { background: #fbcfe8; color: #be185d; box-shadow: 0 6px 0 #f9a8d4, 0 10px 15px rgba(0,0,0,0.05); }
+        .btn-pink:active { box-shadow: 0 0 0 #f9a8d4; }
+        .btn-emerald { background: #a7f3d0; color: #047857; box-shadow: 0 6px 0 #6ee7b7, 0 10px 15px rgba(0,0,0,0.05); }
+        .btn-emerald:active { box-shadow: 0 0 0 #6ee7b7; }
+        .btn-rose { background: #fecdd3; color: #e11d48; box-shadow: 0 6px 0 #fda4af, 0 10px 15px rgba(0,0,0,0.05); }
+        .btn-rose:active { box-shadow: 0 0 0 #fda4af; }
+        .btn-yellow { background: #fef08a; color: #a16207; box-shadow: 0 6px 0 #fde047, 0 10px 15px rgba(0,0,0,0.05); }
+        .btn-yellow:active { box-shadow: 0 0 0 #fde047; }
+        .btn-white { background: #ffffff; color: #475569; box-shadow: 0 6px 0 #e2e8f0, 0 10px 15px rgba(0,0,0,0.05); }
+        .btn-white:active { box-shadow: 0 0 0 #e2e8f0; }
 
-        .type-badge { font-size: 0.44rem; font-family: 'Press Start 2P', cursive; padding: 3px 5px; border-radius: 4px; color: white; border: 1px solid rgba(0,0,0,0.2); display: inline-block; text-shadow: 1px 1px 0 #000; }
-        .type-fire     { background-color:#ef4444; } .type-water    { background-color:#3b82f6; }
-        .type-grass    { background-color:#22c55e; } .type-electric { background-color:#eab308; }
-        .type-normal   { background-color:#9ca3af; } .type-bug      { background-color:#84cc16; }
-        .type-poison   { background-color:#a855f7; } .type-flying   { background-color:#7dd3fc; color:#1e3a8a; }
-        .type-psychic  { background-color:#ec4899; } .type-ground   { background-color:#d97706; }
-        .type-fairy    { background-color:#f43f5e; } .type-ice      { background-color:#06b6d4; }
-        .type-fighting { background-color:#dc2626; } .type-rock     { background-color:#ca8a04; }
-        .type-ghost    { background-color:#7c3aed; } .type-dragon   { background-color:#4f46e5; }
-        .type-dark     { background-color:#374151; } .type-steel    { background-color:#9ca3af; }
+        /* ── TYPE BACKGROUNDS (Pastel) ── */
+        .bg-type-normal   { background: linear-gradient(135deg,#f1f5f9,#cbd5e1); }
+        .bg-type-fire     { background: linear-gradient(135deg,#fee2e2,#fca5a5); }
+        .bg-type-water    { background: linear-gradient(135deg,#e0f2fe,#bae6fd); }
+        .bg-type-grass    { background: linear-gradient(135deg,#dcfce7,#bbf7d0); }
+        .bg-type-electric { background: linear-gradient(135deg,#fef9c3,#fef08a); }
+        .bg-type-ice      { background: linear-gradient(135deg,#e0f2fe,#7dd3fc); }
+        .bg-type-fighting { background: linear-gradient(135deg,#ffedd5,#fdba74); }
+        .bg-type-poison   { background: linear-gradient(135deg,#f3e8ff,#d8b4fe); }
+        .bg-type-ground   { background: linear-gradient(135deg,#fef3c7,#fde68a); }
+        .bg-type-flying   { background: linear-gradient(135deg,#f0f9ff,#bae6fd); }
+        .bg-type-psychic  { background: linear-gradient(135deg,#fce7f3,#fbcfe8); }
+        .bg-type-bug      { background: linear-gradient(135deg,#ecfccb,#d9f99d); }
+        .bg-type-rock     { background: linear-gradient(135deg,#ffedd5,#fed7aa); }
+        .bg-type-ghost    { background: linear-gradient(135deg,#ede9fe,#c4b5fd); }
+        .bg-type-dragon   { background: linear-gradient(135deg,#e0e7ff,#a5b4fc); }
+        .bg-type-dark     { background: linear-gradient(135deg,#f3f4f6,#d1d5db); }
+        .bg-type-steel    { background: linear-gradient(135deg,#f8fafc,#e2e8f0); }
+        .bg-type-fairy    { background: linear-gradient(135deg,#fdf2f8,#f9a8d4); }
 
-        /* ── PUZZLE GRID ── */
-        /* ── PUZZLE TILES: Pastel kotak rounded ── */
+        .type-badge { font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 12px; color: white; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .type-fire     { background-color:#f87171; } .type-water    { background-color:#60a5fa; }
+        .type-grass    { background-color:#4ade80; } .type-electric { background-color:#fbbf24; }
+        .type-normal   { background-color:#94a3b8; } .type-bug      { background-color:#a3e635; }
+        .type-poison   { background-color:#c084fc; } .type-flying   { background-color:#7dd3fc; color:#0369a1; }
+        .type-psychic  { background-color:#f472b6; } .type-ground   { background-color:#fb923c; }
+        .type-fairy    { background-color:#fb7185; } .type-ice      { background-color:#22d3ee; }
+        .type-fighting { background-color:#fb7185; } .type-rock     { background-color:#f59e0b; }
+        .type-ghost    { background-color:#a78bfa; } .type-dragon   { background-color:#818cf8; }
+        .type-dark     { background-color:#475569; } .type-steel    { background-color:#94a3b8; }
+
+        /* ── PUZZLE TILES (Pastel Squircles) ── */
         .orb-container {
             width: 100%; height: 100%;
-            border-radius: 10px;
+            border-radius: 18px;
             display: flex; justify-content: center; align-items: center;
             position: absolute; top: 0; left: 0;
-            transition: transform 0.15s;
+            transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
             user-select: none; touch-action: none;
-            background: linear-gradient(145deg, #f8faff 0%, #eef2ff 60%, #e0e7ff 100%);
-            border: 2px solid #c7d2fe;
-            box-shadow: 0 2px 4px rgba(99,102,241,0.12), 0 1px 0 rgba(255,255,255,0.9) inset;
+            border: 3px solid rgba(255,255,255,0.9);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.06);
         }
-        /* Rarity tint per tile */
-        .orb-common   {
-            background: linear-gradient(145deg, #f8faff, #e8edf8);
-            border-color: #b0bbda;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.10), inset 0 1px 0 #fff;
-        }
-        .orb-rare     {
-            background: linear-gradient(145deg, #eff6ff, #dbeafe, #bfdbfe);
-            border-color: #93c5fd;
-            box-shadow: 0 2px 8px #93c5fd60, inset 0 1px 0 #fff;
-        }
-        .orb-epic     {
-            background: linear-gradient(145deg, #f5f3ff, #ede9fe, #ddd6fe);
-            border-color: #c4b5fd;
-            box-shadow: 0 2px 8px #a78bfa60, inset 0 1px 0 #fff;
-        }
-        .orb-legendary{
-            background: linear-gradient(145deg, #fffbeb, #fef3c7, #fde68a);
-            border-color: #fbbf24;
-            box-shadow: 0 2px 10px #fbbf2470, inset 0 1px 0 #fff;
-            animation: orbLegGlow 1.5s infinite;
-        }
-        @keyframes orbLegGlow { 0%,100%{box-shadow:0 2px 8px #fbbf2460;} 50%{box-shadow:0 2px 16px #f59e0baa;} }
+        .orb-common   { background: linear-gradient(145deg, #f8fafc, #e2e8f0); }
+        .orb-rare     { background: linear-gradient(145deg, #eff6ff, #bfdbfe); border-color: #dbeafe; }
+        .orb-epic     { background: linear-gradient(145deg, #faf5ff, #e9d5ff); border-color: #f3e8ff; }
+        .orb-legendary{ background: linear-gradient(145deg, #fefce8, #fef08a); border-color:#facc15; animation: orbLegGlow 2s infinite alternate;}
+        @keyframes orbLegGlow { 0%{box-shadow: 0 4px 12px rgba(250, 204, 21, 0.3);} 100%{box-shadow: 0 4px 20px rgba(250, 204, 21, 0.6);} }
 
-        .orb-container img { width: 76%; height: 76%; object-fit: contain; pointer-events: none; image-rendering: pixelated; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35)); }
-        .orb-container:active { transform: scale(0.86); z-index: 20; }
-        .swiping { transform: scale(1.10) !important; z-index: 30 !important; filter: brightness(1.3) drop-shadow(0 0 4px #6366f1aa); }
-        .ko-tile { filter: grayscale(100%) brightness(0.55); opacity: 0.7; }
+        .orb-container img { width: 75%; height: 75%; object-fit: contain; pointer-events: none; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.25)); image-rendering: pixelated;}
+        .orb-container:active { transform: scale(0.85); z-index: 20; }
+        .swiping { transform: scale(1.15) !important; z-index: 30 !important; box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important; filter: brightness(1.1); }
+        .ko-tile { filter: grayscale(100%) opacity(0.5); }
 
-        #grid {
-            background: linear-gradient(135deg, #e0e7ff 0%, #ede9fe 50%, #dbeafe 100%);
-            border-radius: 16px;
-            padding: 5px;
-            border: 3px solid #c7d2fe;
-            position: relative;
-            box-shadow: 0 4px 16px rgba(99,102,241,0.15), inset 0 1px 0 rgba(255,255,255,0.7);
-        }
-        .grid-locked { pointer-events: none; filter: grayscale(50%) brightness(0.8); }
         .candy-cell { position: relative; width: 100%; aspect-ratio: 1; }
+        .grid-locked { pointer-events: none; filter: grayscale(30%) brightness(0.9); }
 
-        @keyframes pop     { 0%{transform:scale(1);opacity:1} 40%{transform:scale(1.35);filter:brightness(1.6)} 100%{transform:scale(0);opacity:0} }
+        @keyframes pop { 0%{transform:scale(1);opacity:1} 40%{transform:scale(1.3);opacity:0.8} 100%{transform:scale(0);opacity:0} }
         .popping { animation: pop 0.22s forwards; z-index: 5; }
-        @keyframes dropIn  { 0%{transform:translateY(-160%)} 100%{transform:translateY(0)} }
+        @keyframes dropIn { 0%{transform:translateY(-160%)} 100%{transform:translateY(0)} }
         .dropping { animation: dropIn 0.28s cubic-bezier(0.2,0.8,0.2,1); }
 
-        /* ── BATTLE ARENA ── */
-        .battle-arena-bg { background: linear-gradient(to bottom, #bae6fd 0%, #e0f2fe 45%, #bbf7d0 45%, #86efac 100%); border: 3px solid #475569; border-radius: 10px; transition: background 0.5s; overflow: hidden; }
-        .hp-bar-container { background: #1e293b; padding: 3px; border: 2px solid #f8fafc; border-radius: 6px; box-shadow: 2px 2px 0 rgba(0,0,0,0.25); }
-        .hp-bar-fill { height: 7px; border-radius: 3px; transition: width 0.35s, background-color 0.35s; }
+        /* ── BATTLE ANIMATIONS & HUD ── */
+        .party-hud-slot {
+            width: 44px; height: 44px; border: 3px solid #fff; border-radius: 14px;
+            background: rgba(255,255,255,0.8); position: relative; display: flex; justify-content: center; align-items: center;
+            transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer;
+        }
+        .party-hud-slot img { width: 85%; height: 85%; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2)); image-rendering: pixelated; }
+        .party-hud-slot.ko-hud  { filter: grayscale(100%) opacity(0.6); }
+        .party-hud-slot.active-hud { border-color: #7dd3fc; background: #f0f9ff; box-shadow: 0 0 15px rgba(125,211,252,0.6); transform: translateY(-4px); }
 
-        /* ── Battle sprites  ──────────────── */
-        /* Player uses back sprite from showdown (animated), Boss uses front */
-        #player-img { image-rendering: pixelated; }
-        #boss-img   { image-rendering: pixelated; }
-
-        .party-hud-slot { width: 36px; height: 36px; border: 2px solid #94a3b8; border-radius: 6px; background: rgba(255,255,255,0.85); position: relative; display: flex; justify-content: center; align-items: center; transition: all 0.2s; }
-        .party-hud-slot img { width: 82%; height: 82%; object-fit: contain; image-rendering: pixelated; }
-        .party-hud-slot.ko-hud  { filter: grayscale(100%); border-color: #ef4444; background: #fee2e2; opacity: 0.65; }
-        .party-hud-slot.active-hud { border-color: #3b82f6; box-shadow: 0 0 10px #3b82f6; transform: translateY(-3px); }
-
-        @keyframes hitBlink { 0%,100%{filter:brightness(1)} 25%{filter:brightness(2.2) opacity(0.5)} 75%{filter:brightness(2.2) opacity(0.5)} }
+        @keyframes hitBlink { 0%,100%{filter:brightness(1)} 25%,75%{filter:brightness(2.2) opacity(0.5)} }
         .anim-hit { animation: hitBlink 0.4s; }
-        @keyframes screenShake { 0%{transform:translate(1px,1px)} 20%{transform:translate(-3px,0)} 40%{transform:translate(1px,-1px)} 60%{transform:translate(-3px,1px)} 80%{transform:translate(-1px,-1px)} 100%{transform:translate(1px,-2px)} }
+        @keyframes screenShake { 0%{transform:translate(2px,2px)} 20%{transform:translate(-4px,0)} 40%{transform:translate(2px,-2px)} 60%{transform:translate(-4px,2px)} 80%{transform:translate(-2px,-2px)} 100%{transform:translate(2px,-4px)} }
         .anim-shake { animation: screenShake 0.3s; }
-        @keyframes attackSlideR { 0%,100%{transform:translate(0,0)} 30%{transform:translate(-10px,0)} 50%{transform:translate(55px,-8px);filter:brightness(1.3)} 80%{transform:translate(55px,-8px)} }
+        
+        /* Attack Slides */
+        @keyframes attackSlideR { 0%,100%{transform:scaleX(-1) translate(0,0)} 30%{transform:scaleX(-1) translate(-15px,0)} 50%{transform:scaleX(-1) translate(60px,-10px);filter:brightness(1.3)} 80%{transform:scaleX(-1) translate(60px,-10px)} }
         .anim-atk-player { animation: attackSlideR 0.6s ease-in-out; }
-        @keyframes attackSlideL { 0%,100%{transform:scaleX(-1) translate(0,0)} 30%{transform:scaleX(-1) translate(-10px,0)} 50%{transform:scaleX(-1) translate(55px,-8px);filter:brightness(1.3)} 80%{transform:scaleX(-1) translate(55px,-8px)} }
+        
+        @keyframes attackSlideL { 0%,100%{transform:scaleX(1) translate(0,0)} 30%{transform:scaleX(1) translate(-15px,0)} 50%{transform:scaleX(1) translate(60px,-10px);filter:brightness(1.3)} 80%{transform:scaleX(1) translate(60px,-10px)} }
         .anim-atk-boss { animation: attackSlideL 0.6s ease-in-out; }
 
         @keyframes skillBurst { 0%{opacity:0;transform:scale(0.2) rotate(0deg)} 40%{opacity:1;transform:scale(1.5) rotate(90deg);filter:brightness(1.5)} 100%{opacity:0;transform:scale(2.5) rotate(180deg)} }
-        .skill-fx { position:absolute; width:48px; height:48px; z-index:40; pointer-events:none; background:radial-gradient(circle,currentColor 20%,transparent 60%); animation:skillBurst 0.5s ease-out forwards; }
-        @keyframes floatDmg { 0%{transform:translateY(0) scale(1);opacity:1} 100%{transform:translateY(-44px) scale(1.5);opacity:0} }
-        .dmg-floater { position:absolute; z-index:50; font-family:'Press Start 2P',cursive; text-shadow:1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000; animation:floatDmg 0.8s forwards; pointer-events:none; font-size:0.9rem; color:#fff; }
+        .skill-fx { position:absolute; width:56px; height:56px; z-index:40; pointer-events:none; background:radial-gradient(circle,currentColor 20%,transparent 60%); animation:skillBurst 0.5s ease-out forwards; }
+        
+        @keyframes floatDmg { 0%{transform:translateY(0) scale(1);opacity:1} 100%{transform:translateY(-50px) scale(1.4);opacity:0} }
+        .dmg-floater { position:absolute; z-index:50; font-family:'Nunito',sans-serif; font-weight:900; -webkit-text-stroke: 1px black; animation:floatDmg 0.8s forwards; pointer-events:none; font-size:1.5rem; color:#fff; }
 
-        @keyframes coinBounce { 0%,100%{transform:scale(1);color:#ca8a04} 50%{transform:scale(1.3);color:#facc15} }
+        @keyframes coinBounce { 0%,100%{transform:scale(1);color:#eab308} 50%{transform:scale(1.3);color:#facc15} }
         .coin-update { animation: coinBounce 0.5s ease; }
-
-        /* ── CARD STYLES ── */
-        .deck-card { transition: transform 0.2s; border-width: 3px; border-radius: 14px; position: relative; overflow: hidden; }
-        .deck-card.in-deck { border-color: #fce7f3 !important; box-shadow: 0 0 18px rgba(255,255,255,0.9); transform: scale(1.03); }
-        .deck-card:active { transform: scale(0.94); }
-
-        @keyframes legendGlow { 0%{box-shadow:0 0 6px #eab308;border-color:#fef08a} 50%{box-shadow:0 0 22px #eab308;border-color:#ca8a04} 100%{box-shadow:0 0 6px #eab308;border-color:#fef08a} }
-        .card-legendary { animation: legendGlow 2s infinite; }
-        @keyframes legendCardBg { 0%{background:linear-gradient(135deg,#fef08a,#fbbf24,#f59e0b)} 50%{background:linear-gradient(135deg,#fbbf24,#f59e0b,#fef08a)} 100%{background:linear-gradient(135deg,#fef08a,#fbbf24,#f59e0b)} }
-        .legendary-bg-anim { animation: legendCardBg 2s infinite; }
-        .rarity-common-card    { box-shadow: 0 0 8px rgba(148,163,184,0.5); }
-        .rarity-rare-card      { box-shadow: 0 0 14px rgba(59,130,246,0.7); }
-        .rarity-epic-card      { box-shadow: 0 0 18px rgba(168,85,247,0.8); }
-        .rarity-legendary-card { animation: legendGlow 1.5s infinite; box-shadow: 0 0 28px rgba(234,179,8,0.9); }
 
         /* ── GACHA ANIMATIONS ── */
         @keyframes ballDrop { 0%{transform:translateY(-320px) rotate(-45deg);opacity:0} 55%{transform:translateY(18px) rotate(12deg);opacity:1} 72%{transform:translateY(-8px) rotate(-4deg)} 100%{transform:translateY(0) rotate(0deg);opacity:1} }
@@ -207,144 +194,143 @@
         @keyframes whiteFlash { 0%{opacity:0} 30%{opacity:1} 100%{opacity:0} }
         @keyframes popReveal { 0%{transform:scale(0.08) rotate(-12deg);opacity:0} 62%{transform:scale(1.18) rotate(3deg);opacity:1} 82%{transform:scale(0.94) rotate(-1deg)} 100%{transform:scale(1) rotate(0deg);opacity:1} }
         @keyframes cardFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
-        @keyframes rayExpand { 0%{transform:scale(0) rotate(0);opacity:0.8} 100%{transform:scale(3.5) rotate(45deg);opacity:0} }
-        @keyframes bgCycle { 0%{background:radial-gradient(ellipse at center,#1a0533 0%,#000 70%)} 33%{background:radial-gradient(ellipse at center,#33100a 0%,#000 70%)} 66%{background:radial-gradient(ellipse at center,#0a1a33 0%,#000 70%)} 100%{background:radial-gradient(ellipse at center,#1a0533 0%,#000 70%)} }
 
         .gacha-drop   { animation: ballDrop  0.7s cubic-bezier(0.34,1.56,0.64,1) forwards; }
         .gacha-shake  { animation: ballShake 0.5s ease-in-out; }
         .gacha-flash-fx { animation: whiteFlash 0.6s ease-out forwards; pointer-events: none; }
         .gacha-reveal { animation: popReveal  0.7s cubic-bezier(0.175,0.885,0.32,1.275) forwards; }
         .gacha-card-float { animation: cardFloat 2s ease-in-out infinite; }
-        .gacha-ray { position:absolute; width:100%; height:100%; top:0; left:0; background:conic-gradient(transparent 0deg,rgba(255,255,255,0.1) 10deg,transparent 20deg,transparent 30deg,rgba(255,255,255,0.08) 40deg,transparent 50deg,transparent 60deg,rgba(255,255,255,0.1) 70deg,transparent 80deg,transparent 90deg,rgba(255,255,255,0.08) 100deg,transparent 110deg,transparent 120deg,rgba(255,255,255,0.1) 130deg,transparent 140deg,transparent 150deg,rgba(255,255,255,0.08) 160deg,transparent 170deg,transparent 180deg,rgba(255,255,255,0.1) 190deg,transparent 200deg,transparent 210deg,rgba(255,255,255,0.08) 220deg,transparent 230deg,transparent 240deg,rgba(255,255,255,0.1) 250deg,transparent 260deg,transparent 270deg,rgba(255,255,255,0.08) 280deg,transparent 290deg,transparent 300deg,rgba(255,255,255,0.1) 310deg,transparent 320deg,transparent 330deg,rgba(255,255,255,0.08) 340deg,transparent 350deg,transparent 360deg); animation:rayExpand 1.5s ease-out forwards; transform-origin:center; }
-
-        /* ── MISC ── */
-        .inv-item { display:flex; flex-direction:column; align-items:center; background:#fff; border:2px solid #cbd5e1; padding:4px; border-radius:8px; position:relative; }
-        .api-icon { width:22px; height:22px; object-fit:contain; image-rendering:pixelated; }
+        
+        .api-icon { width:26px; height:26px; object-fit:contain; image-rendering:pixelated; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1)); }
     </style>
 </head>
 <body>
 <div id="app-shell">
 
     <!-- ════ LOADING SCREEN ════ -->
-    <div id="loading-screen" class="fixed inset-0 z-[200] bg-black flex flex-col justify-center items-center p-4">
-        <img id="loading-spinner" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" class="w-16 h-16 animate-spin mb-4 api-icon" style="image-rendering:pixelated;">
-        <p class="pixel-font text-[10px] text-white animate-pulse text-center leading-loose" id="loading-text">Memuat Data...</p>
+    <div id="loading-screen" class="fixed inset-0 z-[200] bg-white/90 backdrop-blur-md flex flex-col justify-center items-center p-4">
+        <img id="loading-spinner" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" class="w-20 h-20 animate-spin mb-6 drop-shadow-lg" style="image-rendering:pixelated;">
+        <p class="bubbly-font text-lg text-sky-500 animate-pulse text-center" id="loading-text">Memuat Data...</p>
         <div id="error-box-container" class="hidden w-full max-w-xs mt-6 flex-col items-center">
-            <textarea id="error-log-box" class="w-full h-32 bg-gray-900 text-red-400 font-mono text-[8px] p-2 rounded border-2 border-red-600 focus:outline-none mb-2" readonly></textarea>
+            <textarea id="error-log-box" class="w-full h-32 bg-slate-100 text-rose-500 font-mono text-xs p-3 rounded-xl border-4 border-rose-300 focus:outline-none mb-3" readonly></textarea>
             <div class="flex gap-2 w-full mt-2">
-                <button onclick="copyError()" class="flex-1 retro-btn py-3 bg-blue-50 border-blue-400"><span class="pixel-font text-[6px] text-blue-800 mt-1">COPY ERROR</span></button>
-                <button onclick="location.reload()" class="flex-1 retro-btn py-3 bg-red-50 border-red-400"><span class="pixel-font text-[6px] text-red-800 mt-1">RELOAD</span></button>
+                <button onclick="copyError()" class="flex-1 pastel-btn btn-white py-3"><span class="bubbly-font text-sm text-slate-700">COPY ERROR</span></button>
+                <button onclick="location.reload()" class="flex-1 pastel-btn btn-rose py-3"><span class="bubbly-font text-sm">RELOAD</span></button>
             </div>
         </div>
     </div>
 
     <!-- ════ NAME INPUT ════ -->
-    <div id="view-name-input" class="view-section justify-center bg-gradient-to-b from-blue-900 to-blue-600">
-        <div class="flex flex-col items-center w-full max-w-xs px-4 py-8">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/International_Pok%C3%A9mon_logo.svg" alt="Pokemon" class="w-56 drop-shadow-xl mb-6">
-            <div class="glass-panel p-6 w-full flex flex-col items-center gap-4 border-blue-400 bg-white/97">
-                <p class="pixel-font text-[8px] text-blue-800 leading-loose text-center">MASUKKAN NAMA<br>TRAINER KAMU!</p>
-                <input type="text" id="trainer-name-input" maxlength="12" placeholder="NAMA TRAINER" class="retro-input uppercase"
+    <div id="view-name-input" class="view-section justify-center relative">
+        <div class="flex flex-col items-center w-full max-w-xs px-4 py-8 z-10">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/International_Pok%C3%A9mon_logo.svg" alt="Pokemon" class="w-64 drop-shadow-xl mb-8">
+            <div class="glass-panel p-6 w-full flex flex-col items-center gap-5">
+                <p class="bubbly-font text-lg text-sky-700 text-center leading-snug">SIAPAKAH NAMA<br>TRAINER-MU?</p>
+                <input type="text" id="trainer-name-input" maxlength="12" placeholder="NAMA KAMU" class="pastel-input"
                     oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9_]/g,'')">
-                <p class="pixel-font text-[5px] text-gray-400 text-center">Maks 12 karakter.</p>
-                <button onclick="confirmTrainerName()" class="w-full retro-btn py-4 bg-blue-500 border-blue-700">
-                    <span class="pixel-font text-[10px] text-white mt-1">MULAI PETUALANGAN!</span>
+                <p class="font-bold text-xs text-slate-400 text-center">Maksimal 12 karakter.</p>
+                <button onclick="confirmTrainerName()" class="w-full pastel-btn btn-sky py-4 mt-2">
+                    <span class="bubbly-font text-base">MULAI PETUALANGAN!</span>
                 </button>
             </div>
         </div>
     </div>
 
     <!-- ════ GLOBAL COIN BAR ════ -->
-    <div id="top-bar" class="absolute top-3 right-3 z-50 flex pointer-events-none hidden">
-        <div class="glass-panel px-3 py-1.5 flex items-center gap-2 pointer-events-auto shadow-md border-yellow-300">
-            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/nugget.png" class="api-icon w-5 h-5">
-            <span id="global-coins" class="pixel-font text-xs text-yellow-600 mt-1">0</span>
+    <div id="top-bar" class="absolute top-4 right-4 z-50 flex pointer-events-none hidden">
+        <div class="glass-panel px-4 py-2 flex items-center gap-2 pointer-events-auto border-2 border-white">
+            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/nugget.png" class="api-icon w-6 h-6">
+            <span id="global-coins" class="bubbly-font text-base text-yellow-600">0</span>
         </div>
     </div>
 
     <!-- floating MP pill -->
-    <div id="mp-floating-indicator" class="hidden fixed bottom-5 right-3 z-[150] bg-blue-600 border-4 border-white rounded-full px-3 py-2 items-center gap-2 shadow-xl cursor-pointer active:scale-95 transition-transform" onclick="switchView('view-prep-room')">
-        <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse border border-white"></div>
-        <span id="mp-floating-text" class="pixel-font text-[7px] text-white tracking-widest mt-1">PVP</span>
+    <div id="mp-floating-indicator" class="hidden fixed bottom-6 right-4 z-[150] bg-sky-400 border-4 border-white rounded-full px-4 py-2 flex items-center gap-2 shadow-xl cursor-pointer active:scale-95 transition-transform" onclick="switchView('view-prep-room')">
+        <div class="w-3 h-3 bg-emerald-300 rounded-full animate-pulse border border-white"></div>
+        <span id="mp-floating-text" class="bubbly-font text-sm text-white">PVP</span>
     </div>
 
     <!-- ════ MAIN MENU ════ -->
     <div id="view-menu" class="view-section justify-center">
-        <div class="flex flex-col items-center w-full max-w-xs px-3 py-6 gap-3">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/International_Pok%C3%A9mon_logo.svg" alt="Pokemon" class="w-60 drop-shadow-xl">
-            <div class="bg-blue-100 border-2 border-blue-400 px-4 py-1.5 rounded-full shadow-sm flex items-center gap-2 mt-1">
-                <span class="pixel-font text-[6px] text-blue-500">TRAINER:</span>
-                <span id="menu-username-display" class="pixel-font text-[10px] text-blue-800">PLAYER</span>
-                <button onclick="promptRename()" class="pixel-font text-[5px] text-gray-400 ml-1 underline cursor-pointer">GANTI</button>
+        <div class="flex flex-col items-center w-full max-w-xs px-4 py-6 gap-4">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/International_Pok%C3%A9mon_logo.svg" alt="Pokemon" class="w-64 drop-shadow-xl mb-2">
+            
+            <div class="glass-panel px-5 py-2 rounded-full flex items-center gap-2 border-2 border-white">
+                <span class="bubbly-font text-xs text-slate-500">TRAINER:</span>
+                <span id="menu-username-display" class="bubbly-font text-base text-sky-600">PLAYER</span>
+                <button onclick="promptRename()" class="bubbly-font text-xs text-pink-400 underline cursor-pointer ml-1">GANTI</button>
             </div>
-            <div class="grid grid-cols-2 gap-3 w-full mt-2">
-                <button onclick="startGame(false)" class="col-span-2 retro-btn py-5 flex flex-col items-center bg-blue-50 border-blue-400">
-                    <div class="flex items-center gap-2">
-                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/vs-seeker.png" class="api-icon">
-                        <span class="pixel-font text-[10px] mt-1 text-blue-700 font-bold">PVE ADVENTURE</span>
+            
+            <div class="grid grid-cols-2 gap-4 w-full mt-4">
+                <button onclick="startGame(false)" class="col-span-2 pastel-btn btn-sky py-6 flex flex-col items-center">
+                    <div class="flex items-center gap-3">
+                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/vs-seeker.png" class="api-icon w-8 h-8">
+                        <span class="bubbly-font text-xl mt-1">PVE ADVENTURE</span>
                     </div>
-                    <span class="pixel-font text-[6px] text-gray-500 mt-2">RANDOM WILD ENCOUNTER!</span>
+                    <span class="bubbly-font text-xs text-sky-700/70 mt-2">RANDOM WILD ENCOUNTER!</span>
                 </button>
-                <button onclick="switchView('view-gacha'); renderGachaUI();" class="col-span-2 retro-btn py-4 flex items-center justify-center gap-3 bg-purple-50 border-purple-400">
-                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png" class="api-icon w-6 h-6">
-                    <span class="pixel-font text-[10px] mt-1 text-purple-700 font-bold">GACHA CENTER</span>
+                <button onclick="switchView('view-gacha'); renderGachaUI();" class="col-span-2 pastel-btn btn-pink py-5 flex items-center justify-center gap-3">
+                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png" class="api-icon w-8 h-8">
+                    <span class="bubbly-font text-lg mt-1">GACHA CENTER</span>
                 </button>
-                <button onclick="switchView('view-bag'); renderBag('pokemon');" class="retro-btn py-4 flex flex-col items-center bg-green-50 border-green-400">
-                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/potion.png" class="api-icon mb-1 w-6 h-6">
-                    <span class="pixel-font text-[8px] mt-1 text-green-700 font-bold">TAS & DECK</span>
+                <button onclick="switchView('view-bag'); renderBag('pokemon');" class="pastel-btn btn-emerald py-5 flex flex-col items-center">
+                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/potion.png" class="api-icon mb-2 w-8 h-8">
+                    <span class="bubbly-font text-sm mt-1">TAS & DECK</span>
                 </button>
-                <button onclick="switchView('view-lobby-find');" class="retro-btn py-4 flex flex-col items-center bg-red-50 border-red-400">
-                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/town-map.png" class="api-icon mb-1 w-6 h-6">
-                    <span class="pixel-font text-[8px] mt-1 text-red-700 font-bold">PVP LOBBY</span>
+                <button onclick="switchView('view-lobby-find');" class="pastel-btn btn-rose py-5 flex flex-col items-center">
+                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/town-map.png" class="api-icon mb-2 w-8 h-8">
+                    <span class="bubbly-font text-sm mt-1">PVP LOBBY</span>
                 </button>
             </div>
-            <button onclick="resetData()" class="mt-4 pixel-font text-[7px] text-red-500 underline opacity-75 mb-2">HAPUS SAVE DATA</button>
+            
+            <button onclick="resetData()" class="mt-6 bubbly-font text-xs text-slate-400 underline hover:text-rose-400">HAPUS SAVE DATA</button>
         </div>
     </div>
 
     <!-- ════ GACHA CENTER ════ -->
-    <div id="view-gacha" class="view-section pt-12 bg-purple-50 relative">
-        <button onclick="switchView('view-menu')" class="absolute top-3 left-3 retro-btn px-3 py-2 z-10 bg-white border-purple-400"><span class="pixel-font text-[8px] mt-1 text-purple-800">&lt;&lt; MENU</span></button>
-        <h2 class="pixel-font text-lg text-purple-800 mb-2 text-outline text-center mt-2">GACHA CENTER</h2>
+    <div id="view-gacha" class="view-section pt-16 relative">
+        <button onclick="switchView('view-menu')" class="absolute top-4 left-4 pastel-btn btn-white px-4 py-2 z-10"><span class="bubbly-font text-sm">&lt;&lt; MENU</span></button>
+        <h2 class="bubbly-font text-3xl text-pink-500 mb-4 drop-shadow-md text-center mt-4">GACHA CENTER</h2>
 
-        <div class="glass-panel w-full max-w-sm mx-3 p-4 text-center border-purple-400 bg-white">
-            <p class="pixel-font text-[7px] text-gray-600 mb-2 leading-loose">Dapatkan Pokemon atau Item baru!</p>
-            <div class="bg-gray-100 p-2 rounded border-2 border-gray-300 mb-4 inline-block">
-                <span class="pixel-font text-[6px] text-gray-500 block mb-1">PITY COUNTER</span>
-                <span class="pixel-font text-[10px] text-blue-600 font-bold" id="gacha-pity-text">0 / 50</span>
+        <div class="glass-panel w-full max-w-sm mx-4 p-6 text-center">
+            <p class="font-bold text-sm text-slate-600 mb-4">Dapatkan Pokemon atau Item baru!</p>
+            
+            <div class="bg-white/60 p-3 rounded-2xl border-2 border-white mb-6 inline-block shadow-sm">
+                <span class="bubbly-font text-xs text-slate-500 block mb-1">PITY COUNTER</span>
+                <span class="bubbly-font text-lg text-pink-500" id="gacha-pity-text">0 / 50</span>
             </div>
 
-            <div class="flex justify-around w-full gap-2 text-left mb-5 px-1">
-                <div>
-                    <p class="pixel-font text-[6px] text-gray-800 mb-1 border-b pb-1">POKEMON (60%)</p>
-                    <p class="pixel-font text-[5px] text-gray-500">Common: 65%</p>
-                    <p class="pixel-font text-[5px] text-blue-500">Rare: 25%</p>
-                    <p class="pixel-font text-[5px] text-purple-500">Epic: 8%</p>
-                    <p class="pixel-font text-[5px] text-yellow-600">Legend: 2%</p>
+            <div class="flex justify-around w-full gap-4 text-left mb-8 px-2">
+                <div class="bg-white/50 p-3 rounded-xl flex-1 border-2 border-white">
+                    <p class="bubbly-font text-xs text-sky-600 mb-2 border-b-2 border-sky-200 pb-1">POKEMON (60%)</p>
+                    <p class="font-bold text-xs text-slate-500">Common: 65%</p>
+                    <p class="font-bold text-xs text-sky-500">Rare: 25%</p>
+                    <p class="font-bold text-xs text-purple-500">Epic: 8%</p>
+                    <p class="font-bold text-xs text-yellow-600">Legend: 2%</p>
                 </div>
-                <div>
-                    <p class="pixel-font text-[6px] text-gray-800 mb-1 border-b pb-1">ITEMS (40%)</p>
-                    <p class="pixel-font text-[5px] text-gray-500">Junk: 55%</p>
-                    <p class="pixel-font text-[5px] text-green-600">Common: 25%</p>
-                    <p class="pixel-font text-[5px] text-blue-500">Rare: 15%</p>
-                    <p class="pixel-font text-[5px] text-purple-500">Epic: 5%</p>
+                <div class="bg-white/50 p-3 rounded-xl flex-1 border-2 border-white">
+                    <p class="bubbly-font text-xs text-emerald-600 mb-2 border-b-2 border-emerald-200 pb-1">ITEMS (40%)</p>
+                    <p class="font-bold text-xs text-slate-500">Junk: 55%</p>
+                    <p class="font-bold text-xs text-emerald-500">Common: 25%</p>
+                    <p class="font-bold text-xs text-sky-500">Rare: 15%</p>
+                    <p class="font-bold text-xs text-purple-500">Epic: 5%</p>
                 </div>
             </div>
 
-            <div class="flex gap-3 justify-center w-full">
-                <button onclick="executeGacha(1)" class="flex-1 retro-btn py-4 bg-blue-500 flex flex-col items-center border-blue-700">
-                    <span class="pixel-font text-[10px] text-white mt-1">PULL 1X</span>
-                    <div class="flex items-center gap-1 mt-2 bg-black/20 px-2 py-1 rounded">
-                        <span class="pixel-font text-[8px] text-yellow-300 mt-1">500</span>
-                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/nugget.png" class="w-3 h-3">
+            <div class="flex gap-4 justify-center w-full">
+                <button onclick="executeGacha(1)" class="flex-1 pastel-btn btn-sky py-5 flex flex-col items-center">
+                    <span class="bubbly-font text-base mt-1">PULL 1X</span>
+                    <div class="flex items-center gap-1 mt-2 bg-white/60 px-3 py-1 rounded-full border border-sky-200">
+                        <span class="bubbly-font text-sm text-yellow-600">500</span>
+                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/nugget.png" class="w-4 h-4">
                     </div>
                 </button>
-                <button onclick="executeGacha(5)" class="flex-1 retro-btn py-4 bg-purple-500 flex flex-col items-center border-purple-700 relative overflow-hidden">
-                    <div class="absolute -top-1 -right-4 bg-yellow-400 text-yellow-900 pixel-font text-[5px] px-4 py-1 rotate-45 shadow-sm border border-yellow-200">BEST</div>
-                    <span class="pixel-font text-[10px] text-white mt-1">PULL 5X</span>
-                    <div class="flex items-center gap-1 mt-2 bg-black/20 px-2 py-1 rounded">
-                        <span class="pixel-font text-[8px] text-yellow-300 mt-1">2500</span>
-                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/nugget.png" class="w-3 h-3">
+                <button onclick="executeGacha(5)" class="flex-1 pastel-btn btn-pink py-5 flex flex-col items-center relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-yellow-300 text-yellow-800 bubbly-font text-[10px] px-4 py-1 rounded-bl-xl shadow-sm">BEST</div>
+                    <span class="bubbly-font text-base mt-1">PULL 5X</span>
+                    <div class="flex items-center gap-1 mt-2 bg-white/60 px-3 py-1 rounded-full border border-pink-200">
+                        <span class="bubbly-font text-sm text-yellow-600">2500</span>
+                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/nugget.png" class="w-4 h-4">
                     </div>
                 </button>
             </div>
@@ -352,252 +338,253 @@
     </div>
 
     <!-- GACHA ANIMATION OVERLAY -->
-    <div id="gacha-anim-overlay" class="hidden fixed inset-0 z-[250] flex-col justify-center items-center overflow-hidden" style="background:radial-gradient(ellipse at center,#1a0533 0%,#000 70%);">
-        <div id="gacha-rays" class="hidden absolute inset-0 overflow-hidden flex items-center justify-center">
-            <div class="gacha-ray"></div>
-        </div>
+    <div id="gacha-anim-overlay" class="hidden fixed inset-0 z-[250] flex-col justify-center items-center overflow-hidden bg-slate-900/80 backdrop-blur-sm">
         <div id="gacha-flash" class="absolute inset-0 z-[251] hidden bg-white pointer-events-none"></div>
 
-        <!-- Ball phase -->
         <div id="gacha-single-anim" class="hidden flex-col items-center z-[252] relative">
             <div class="relative">
-                <img id="gacha-anim-ball" src="" class="w-28 h-28 object-contain filter drop-shadow-2xl" style="image-rendering:pixelated;">
-                <div id="gacha-sparkles" class="hidden absolute inset-0 pointer-events-none">
-                    <div class="absolute top-0 left-1/2 w-2 h-2 bg-yellow-300 rounded-full" style="transform:translate(-50%,-12px)"></div>
-                    <div class="absolute top-1/4 right-0 w-1.5 h-1.5 bg-white rounded-full" style="transform:translate(12px,0)"></div>
-                    <div class="absolute bottom-0 left-1/2 w-2 h-2 bg-yellow-300 rounded-full" style="transform:translate(-50%,12px)"></div>
-                    <div class="absolute top-1/2 left-0 w-1.5 h-1.5 bg-white rounded-full" style="transform:translate(-12px,-50%)"></div>
-                </div>
+                <img id="gacha-anim-ball" src="" class="w-32 h-32 object-contain filter drop-shadow-2xl" style="image-rendering:pixelated;">
             </div>
-            <p class="pixel-font text-[8px] text-white mt-6 animate-pulse" id="gacha-loading-hint">Mengambil Pokemon...</p>
+            <p class="bubbly-font text-lg text-white mt-8 animate-pulse drop-shadow-md" id="gacha-loading-hint">Mengambil Pokemon...</p>
         </div>
 
-        <!-- Result phase -->
-        <div id="gacha-result-container" class="hidden flex-col items-center w-full px-3 z-[253]">
-            <h3 class="pixel-font text-yellow-400 text-sm mb-3 text-outline text-center" id="gacha-gotcha-text">GOTCHA!</h3>
-            <!-- Result cards grid: 3 per row, scrollable -->
-            <div id="gacha-result-grid" class="flex flex-wrap justify-center gap-2 w-full max-h-[55vh] overflow-y-auto no-scrollbar pb-2"></div>
-            <button onclick="closeGachaResult()" class="mt-4 retro-btn px-8 py-3 bg-white border-gray-400 flex-shrink-0">
-                <span class="pixel-font text-[8px] text-gray-800 mt-1">SELESAI</span>
+        <div id="gacha-result-container" class="hidden flex-col items-center w-full px-4 z-[253]">
+            <h3 class="bubbly-font text-yellow-300 text-3xl mb-6 drop-shadow-lg text-center" id="gacha-gotcha-text">GOTCHA!</h3>
+            <div id="gacha-result-grid" class="flex flex-wrap justify-center gap-3 w-full max-h-[60vh] overflow-y-auto no-scrollbar pb-4"></div>
+            <button onclick="closeGachaResult()" class="mt-6 pastel-btn btn-white px-10 py-4 flex-shrink-0">
+                <span class="bubbly-font text-base">SELESAI</span>
             </button>
         </div>
     </div>
 
     <!-- ════ PVP LOBBY ════ -->
-    <div id="view-lobby-find" class="view-section justify-center relative bg-red-50">
-        <button onclick="switchView('view-menu')" class="absolute top-3 left-3 retro-btn px-3 py-2 z-10"><span class="pixel-font text-[8px] mt-1 text-gray-600">&lt;&lt; MENU</span></button>
-        <h2 class="pixel-font text-lg text-red-600 mb-4 text-outline text-center mt-12">PVP LOBBY</h2>
+    <div id="view-lobby-find" class="view-section justify-center relative">
+        <button onclick="switchView('view-menu')" class="absolute top-4 left-4 pastel-btn btn-white px-4 py-2 z-10"><span class="bubbly-font text-sm">&lt;&lt; MENU</span></button>
+        <h2 class="bubbly-font text-3xl text-rose-500 mb-6 drop-shadow-md text-center mt-12">PVP LOBBY</h2>
 
-        <div class="glass-panel p-5 w-full max-w-xs mx-3 flex flex-col gap-5 bg-white">
+        <div class="glass-panel p-6 w-full max-w-xs mx-4 flex flex-col gap-6">
             <!-- Host -->
-            <div class="border-3 border-blue-400 p-4 rounded-lg bg-blue-50">
-                <p class="pixel-font text-[8px] text-blue-800 mb-3 text-center">BUAT ROOM BARU</p>
-                <button onclick="hostMultiplayer()" class="retro-btn w-full py-3 bg-blue-500 border-blue-700">
-                    <span class="pixel-font text-[8px] text-white mt-1">JADI HOST</span>
+            <div class="border-4 border-sky-200 p-5 rounded-2xl bg-sky-50">
+                <p class="bubbly-font text-sm text-sky-700 mb-4 text-center">BUAT ROOM BARU</p>
+                <button onclick="hostMultiplayer()" class="pastel-btn btn-sky w-full py-4">
+                    <span class="bubbly-font text-sm">JADI HOST</span>
                 </button>
-                <div id="host-code-display" class="hidden mt-3 text-center">
-                    <p class="pixel-font text-[6px] text-gray-500 mb-1">KODE ROOM KAMU:</p>
-                    <p id="room-code-text" class="pixel-font text-2xl text-blue-700 tracking-widest">1234</p>
-                    <p class="pixel-font text-[6px] text-gray-500 mt-2 animate-pulse">Menunggu lawan...</p>
+                <div id="host-code-display" class="hidden mt-4 text-center">
+                    <p class="font-bold text-xs text-sky-600 mb-1">KODE ROOM KAMU:</p>
+                    <p id="room-code-text" class="bubbly-font text-4xl text-sky-600 tracking-widest drop-shadow-sm">1234</p>
+                    <p class="font-bold text-xs text-sky-500 mt-2 animate-pulse">Menunggu lawan...</p>
                 </div>
             </div>
             <!-- Join -->
-            <div class="border-3 border-red-400 p-4 rounded-lg bg-red-50">
-                <p class="pixel-font text-[8px] text-red-800 mb-3 text-center">GABUNG ROOM</p>
-                <input type="text" id="join-code-input" placeholder="KODE 4 DIGIT" class="w-full mb-3 retro-input uppercase" maxlength="4">
-                <button onclick="joinMultiplayer()" class="retro-btn w-full py-3 bg-red-500 border-red-700">
-                    <span class="pixel-font text-[8px] text-white mt-1">GABUNG</span>
+            <div class="border-4 border-rose-200 p-5 rounded-2xl bg-rose-50">
+                <p class="bubbly-font text-sm text-rose-700 mb-4 text-center">GABUNG ROOM</p>
+                <input type="text" id="join-code-input" placeholder="KODE 4 DIGIT" class="pastel-input mb-4" maxlength="4">
+                <button onclick="joinMultiplayer()" class="pastel-btn btn-rose w-full py-4">
+                    <span class="bubbly-font text-sm">GABUNG</span>
                 </button>
             </div>
             <!-- PVP Stats -->
-            <div class="bg-gray-50 border-2 border-gray-300 p-3 rounded-lg text-center">
-                <p class="pixel-font text-[6px] text-gray-500 mb-2">STATISTIK PVP</p>
+            <div class="bg-white/80 p-4 rounded-2xl text-center shadow-sm">
+                <p class="bubbly-font text-xs text-slate-500 mb-3">STATISTIK PVP</p>
                 <div class="flex justify-around">
-                    <div><p class="pixel-font text-[5px] text-gray-400">MENANG</p><p class="pixel-font text-[12px] text-green-600" id="pvp-stat-win">0</p></div>
-                    <div><p class="pixel-font text-[5px] text-gray-400">KALAH</p><p class="pixel-font text-[12px] text-red-500" id="pvp-stat-lose">0</p></div>
-                    <div><p class="pixel-font text-[5px] text-gray-400">WIN%</p><p class="pixel-font text-[12px] text-blue-600" id="pvp-stat-rate">0%</p></div>
+                    <div><p class="font-bold text-xs text-slate-400">MENANG</p><p class="bubbly-font text-xl text-emerald-500" id="pvp-stat-win">0</p></div>
+                    <div><p class="font-bold text-xs text-slate-400">KALAH</p><p class="bubbly-font text-xl text-rose-500" id="pvp-stat-lose">0</p></div>
+                    <div><p class="font-bold text-xs text-slate-400">WIN%</p><p class="bubbly-font text-xl text-sky-500" id="pvp-stat-rate">0%</p></div>
                 </div>
             </div>
-            <p id="lobby-status" class="pixel-font text-[7px] text-center text-gray-500"></p>
+            <p id="lobby-status" class="font-bold text-sm text-center text-slate-500"></p>
         </div>
     </div>
 
     <!-- ════ PREP ROOM ════ -->
-    <div id="view-prep-room" class="view-section justify-center relative bg-gradient-to-b from-blue-100 to-white">
-        <button onclick="minimizePrepRoom()" class="absolute top-3 left-3 retro-btn px-3 py-2 z-10 bg-white border-blue-400"><span class="pixel-font text-[8px] mt-1 text-blue-800">&lt;&lt; MENU</span></button>
-        <button onclick="disconnectMultiplayer()" class="absolute top-3 right-3 retro-btn px-3 py-2 z-10 bg-red-50 border-red-400"><span class="pixel-font text-[8px] mt-1 text-red-800">LEAVE X</span></button>
+    <div id="view-prep-room" class="view-section justify-center relative">
+        <button onclick="minimizePrepRoom()" class="absolute top-4 left-4 pastel-btn btn-white px-4 py-2 z-10"><span class="bubbly-font text-sm">&lt;&lt; MENU</span></button>
+        <button onclick="disconnectMultiplayer()" class="absolute top-4 right-4 pastel-btn btn-rose px-4 py-2 z-10"><span class="bubbly-font text-sm">LEAVE X</span></button>
 
-        <h2 class="pixel-font text-base text-blue-800 mb-2 text-outline text-center mt-14">BATTLE PREP</h2>
-        <div class="w-full max-w-xs mx-3 flex flex-col gap-4 pb-6">
+        <h2 class="bubbly-font text-2xl text-sky-600 mb-4 drop-shadow-md text-center mt-16">BATTLE PREP</h2>
+        <div class="w-full max-w-xs mx-4 flex flex-col gap-5 pb-6">
             <!-- P1 Deck -->
-            <div class="glass-panel p-3 border-blue-400 bg-blue-50 relative">
-                <span class="absolute -top-3 left-3 bg-blue-500 text-white pixel-font text-[6px] px-2 py-1 rounded border-2 border-white shadow-sm" id="prep-p1-name">P1</span>
-                <div class="grid grid-cols-6 gap-1" id="prep-p1-deck"></div>
+            <div class="glass-panel p-4 border-sky-300 bg-sky-50 relative">
+                <span class="absolute -top-4 left-4 bg-sky-400 text-white bubbly-font text-xs px-3 py-1 rounded-full border-2 border-white shadow-sm" id="prep-p1-name">P1</span>
+                <div class="grid grid-cols-6 gap-2" id="prep-p1-deck"></div>
             </div>
-            <div class="pixel-font text-xl text-red-500 text-center text-shadow-sm">VS</div>
+            
+            <div class="bubbly-font text-4xl text-rose-400 text-center drop-shadow-md">VS</div>
+            
             <!-- P2 Deck -->
-            <div class="glass-panel p-3 border-red-400 bg-red-50 relative">
-                <span class="absolute -top-3 right-3 bg-red-500 text-white pixel-font text-[6px] px-2 py-1 rounded border-2 border-white shadow-sm" id="prep-p2-name">MENUNGGU...</span>
-                <div class="grid grid-cols-6 gap-1" id="prep-p2-deck">
-                    <div class="w-10 h-10 bg-black/10 rounded animate-pulse"></div><div class="w-10 h-10 bg-black/10 rounded animate-pulse"></div><div class="w-10 h-10 bg-black/10 rounded animate-pulse"></div><div class="w-10 h-10 bg-black/10 rounded animate-pulse"></div><div class="w-10 h-10 bg-black/10 rounded animate-pulse"></div><div class="w-10 h-10 bg-black/10 rounded animate-pulse"></div>
+            <div class="glass-panel p-4 border-rose-300 bg-rose-50 relative">
+                <span class="absolute -top-4 right-4 bg-rose-400 text-white bubbly-font text-xs px-3 py-1 rounded-full border-2 border-white shadow-sm" id="prep-p2-name">MENUNGGU...</span>
+                <div class="grid grid-cols-6 gap-2" id="prep-p2-deck">
+                    <div class="w-10 h-10 bg-black/5 rounded-xl animate-pulse"></div><div class="w-10 h-10 bg-black/5 rounded-xl animate-pulse"></div><div class="w-10 h-10 bg-black/5 rounded-xl animate-pulse"></div><div class="w-10 h-10 bg-black/5 rounded-xl animate-pulse"></div><div class="w-10 h-10 bg-black/5 rounded-xl animate-pulse"></div><div class="w-10 h-10 bg-black/5 rounded-xl animate-pulse"></div>
                 </div>
             </div>
             <!-- Ready button -->
-            <button id="btn-ready-pvp" onclick="toggleReadyPvp()" class="retro-btn py-4 mt-4 bg-gray-200 border-gray-400 shadow-md">
-                <span id="txt-ready-pvp" class="pixel-font text-[10px] mt-1 text-gray-600">KLIK UNTUK READY</span>
+            <button id="btn-ready-pvp" onclick="toggleReadyPvp()" class="pastel-btn btn-white py-5 mt-4">
+                <span id="txt-ready-pvp" class="bubbly-font text-base text-slate-500">KLIK UNTUK READY</span>
             </button>
-            <p id="prep-status" class="pixel-font text-[6px] text-blue-600 text-center animate-pulse">Menunggu persetujuan pemain...</p>
+            <p id="prep-status" class="font-bold text-sm text-sky-500 text-center animate-pulse">Menunggu persetujuan pemain...</p>
         </div>
     </div>
 
     <!-- ════ BATTLE VIEW ════ -->
-    <div id="view-game" class="view-section pt-0 px-1.5 pb-1 bg-slate-800 justify-start overflow-hidden">
+    <div id="view-game" class="view-section pt-0 bg-transparent justify-start overflow-hidden h-full flex flex-col">
         <!-- Top bar -->
-        <div class="w-full flex justify-between items-center px-1 pt-2 pb-1 flex-shrink-0">
-            <button onclick="fleeBattle()" class="retro-btn px-3 py-1.5 bg-gray-200 border-gray-400">
-                <span class="pixel-font text-gray-600 text-[8px] mt-1" id="btn-flee-text">KABUR</span>
+        <div class="w-[calc(100%-16px)] flex justify-between items-center px-4 py-2 flex-shrink-0 z-10 glass-panel mt-3 mx-2">
+            <button onclick="fleeBattle()" class="pastel-btn btn-white px-4 py-2">
+                <span class="bubbly-font text-slate-600 text-xs" id="btn-flee-text">KABUR</span>
             </button>
-            <div id="pvp-indicator"  class="hidden bg-red-100 border-2 border-red-400 px-2 py-1 rounded"><span class="pixel-font text-[7px] text-red-600 mt-1">⚔️ PVP</span></div>
-            <div id="pve-indicator"  class="bg-blue-100 border-2 border-blue-400 px-2 py-1 rounded"><span id="route-name-display" class="pixel-font text-[6px] text-blue-800">WILD AREA</span></div>
-            <div id="pve-coins-display" class="bg-yellow-100 border-2 border-yellow-400 px-2 py-1 rounded flex items-center gap-1">
-                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/nugget.png" class="w-3 h-3">
-                <span id="session-coins" class="pixel-font text-[6px] text-yellow-700 mt-1">0</span>
+            <div id="pvp-indicator" class="hidden bg-rose-100 border-2 border-rose-300 px-3 py-1 rounded-full"><span class="bubbly-font text-xs text-rose-600 mt-1">⚔️ PVP</span></div>
+            <div id="pve-indicator" class="bg-sky-100 border-2 border-sky-300 px-3 py-1 rounded-full"><span id="route-name-display" class="bubbly-font text-xs text-sky-700">WILD AREA</span></div>
+            <div id="pve-coins-display" class="bg-yellow-100 border-2 border-yellow-300 px-3 py-1 rounded-full flex items-center gap-1">
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/nugget.png" class="w-4 h-4">
+                <span id="session-coins" class="bubbly-font text-xs text-yellow-700">0</span>
             </div>
-            <button onclick="openBattleBag()" id="btn-battle-bag" class="retro-btn px-3 py-1.5 bg-green-50 flex items-center gap-1 border-green-400">
-                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/bag.png" class="w-3 h-3 api-icon" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/potion.png'">
-                <span class="pixel-font text-green-700 text-[8px] mt-1">TAS</span>
+            <button onclick="openBattleBag()" id="btn-battle-bag" class="pastel-btn btn-emerald px-4 py-2 flex items-center gap-1">
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/bag.png" class="w-4 h-4 api-icon">
+                <span class="bubbly-font text-emerald-800 text-xs mt-1">TAS</span>
             </button>
         </div>
 
         <!-- Arena -->
-        <div class="w-full battle-arena-bg relative flex flex-col flex-shrink-0 shadow-lg overflow-hidden" style="height:200px;" id="arena-container">
-            <!-- Boss HUD: top-right — jauh dari sprite boss -->
-            <div class="absolute top-2 right-2 w-[48%] hp-bar-container bg-red-900 z-20" id="boss-hud-container">
-                <div class="flex justify-between items-center mb-1 px-1">
-                    <span id="boss-name" class="pixel-font text-[6px] text-white truncate w-16">BOSS</span>
-                    <span id="boss-lvl-text" class="pixel-font text-[6px] text-yellow-300">Lv1</span>
+        <div class="w-[calc(100%-16px)] relative flex-grow min-h-[220px] max-h-[300px] flex flex-col flex-shrink-0 shadow-sm overflow-hidden rounded-[2rem] mx-2 mt-3 border-4 border-white/80" id="arena-container" style="background: linear-gradient(180deg, #dcfce7 0%, #bbf7d0 100%);">
+            
+            <!-- Boss HUD: top-right -->
+            <div class="absolute top-4 right-4 w-[45%] bg-white/80 backdrop-blur-sm p-2 rounded-2xl border-2 border-white shadow-sm z-20" id="boss-hud-container">
+                <div class="flex justify-between items-center mb-1.5 px-1">
+                    <span id="boss-name" class="bubbly-font text-xs text-slate-700 truncate w-20">BOSS</span>
+                    <span id="boss-lvl-text" class="bubbly-font text-[10px] text-sky-500 bg-sky-100 px-1.5 py-0.5 rounded-md">Lv1</span>
                 </div>
-                <div class="w-full bg-gray-800 rounded-sm p-0.5"><div id="boss-hp-bar" class="hp-bar-fill bg-green-400" style="width:100%"></div></div>
-            </div>
-            <!-- Boss sprite: kanan, FACING LEFT (scaleX -1) seperti Pokemon game asli -->
-            <div class="absolute top-6 right-3 w-20 h-20 z-10 flex justify-center items-end" id="boss-sprite-area" style="transform:scaleX(-1);">
-                <img id="boss-img" src="" class="max-w-full max-h-full object-contain" style="image-rendering:pixelated;" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'">
-            </div>
-            <!-- Player sprite: kiri bawah, FACING RIGHT (front sprite normal) -->
-            <div class="absolute bottom-14 left-3 w-18 h-18 z-10 flex justify-center items-end" id="player-sprite-area">
-                <img id="player-img" src="" class="max-w-full max-h-full object-contain" style="width:72px;height:72px;image-rendering:pixelated;" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'">
-            </div>
-            <!-- Player HUD: bottom-left, DI BAWAH sprite, tidak overlap -->
-            <div class="absolute bottom-1 left-2 w-[52%] hp-bar-container bg-blue-900 z-20" id="player-hud-container">
-                <div class="flex justify-between items-center mb-1 px-1">
-                    <span id="player-hud-name" class="pixel-font text-[6px] text-white truncate w-16">PLAYER</span>
-                    <span id="player-hud-lvl" class="pixel-font text-[6px] text-yellow-300">Lv1</span>
+                <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                    <div id="boss-hp-bar" class="h-full bg-emerald-400 transition-all duration-300" style="width:100%"></div>
                 </div>
-                <div class="w-full bg-gray-800 rounded-sm p-0.5"><div id="player-hp-bar" class="hp-bar-fill bg-green-400" style="width:100%"></div></div>
+            </div>
+            
+            <!-- Boss sprite: kanan, FACING LEFT (Default no flip) -->
+            <div class="absolute top-8 right-4 w-28 h-28 z-10 flex justify-center items-end" id="boss-sprite-area">
+                <img id="boss-img" src="" class="max-w-full max-h-full object-contain filter drop-shadow-md" style="image-rendering:pixelated;">
+            </div>
+            
+            <!-- Player sprite: kiri bawah, FACING RIGHT (Flip -1) -->
+            <div class="absolute bottom-16 left-4 w-28 h-28 z-10 flex justify-center items-end" id="player-sprite-area" style="transform:scaleX(-1);">
+                <img id="player-img" src="" class="max-w-full max-h-full object-contain filter drop-shadow-md" style="image-rendering:pixelated;">
+            </div>
+            
+            <!-- Player HUD: bottom-left -->
+            <div class="absolute bottom-4 left-4 w-[45%] bg-white/80 backdrop-blur-sm p-2 rounded-2xl border-2 border-white shadow-sm z-20" id="player-hud-container">
+                <div class="flex justify-between items-center mb-1.5 px-1">
+                    <span id="player-hud-name" class="bubbly-font text-xs text-slate-700 truncate w-20">PLAYER</span>
+                    <span id="player-hud-lvl" class="bubbly-font text-[10px] text-sky-500 bg-sky-100 px-1.5 py-0.5 rounded-md">Lv1</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                    <div id="player-hp-bar" class="h-full bg-emerald-400 transition-all duration-300" style="width:100%"></div>
+                </div>
             </div>
 
             <!-- Battle Log -->
-            <div class="absolute bottom-0 w-full bg-white/95 border-t-3 border-gray-600 px-3 py-1.5 h-[48px] flex items-center z-30">
-                <span id="battle-log" class="pixel-font text-[7px] text-gray-800 leading-relaxed">MUNCUL!</span>
-                <span id="log-cursor" class="pixel-font text-[8px] animate-pulse ml-1">▮</span>
+            <div class="absolute bottom-0 left-0 w-full bg-white/80 backdrop-blur-md px-4 py-2 min-h-[44px] flex items-center justify-center z-30 border-t-2 border-white">
+                <span id="battle-log" class="bubbly-font text-sm text-slate-600 text-center">MUNCUL!</span>
+                <span id="log-cursor" class="bubbly-font text-sm text-sky-400 animate-pulse ml-1">●</span>
             </div>
 
             <!-- Battle Bag Overlay -->
-            <div id="battle-bag-modal" class="hidden absolute inset-0 z-50 bg-black/80 flex-col items-center justify-center p-2">
-                <div class="bg-white p-3 rounded-lg border-4 border-green-500 w-full max-w-[280px]">
-                    <h3 class="pixel-font text-[9px] text-green-700 mb-3 border-b-2 border-green-200 pb-1 text-center">TAS ITEM</h3>
-                    <div id="battle-item-list" class="flex flex-col gap-2 max-h-36 overflow-y-auto no-scrollbar mb-2"></div>
-                    <button onclick="document.getElementById('battle-bag-modal').classList.add('hidden')" class="retro-btn w-full py-2 bg-gray-200 border-gray-400">
-                        <span class="pixel-font text-[8px] text-gray-700 mt-1">TUTUP</span>
+            <div id="battle-bag-modal" class="hidden absolute inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex-col items-center justify-center p-4">
+                <div class="glass-panel p-5 w-full max-w-[280px] border-4 border-emerald-300">
+                    <h3 class="bubbly-font text-lg text-emerald-600 mb-4 text-center">TAS ITEM</h3>
+                    <div id="battle-item-list" class="flex flex-col gap-3 max-h-48 overflow-y-auto no-scrollbar mb-4"></div>
+                    <button onclick="document.getElementById('battle-bag-modal').classList.add('hidden')" class="pastel-btn btn-white w-full py-3">
+                        <span class="bubbly-font text-sm text-slate-600">TUTUP</span>
                     </button>
                 </div>
             </div>
         </div>
 
         <!-- Grid -->
-        <div class="relative flex justify-center w-full flex-shrink-0 mt-1">
-            <div id="grid-container" class="relative w-full" style="max-width:360px;">
-                <div id="turn-blocker" class="hidden absolute inset-0 z-40 flex justify-center items-center bg-black/45 rounded-xl backdrop-blur-[2px]">
-                    <span class="pixel-font text-[10px] text-white text-outline animate-pulse" id="blocker-text">GILIRAN MUSUH...</span>
+        <div class="relative flex justify-center w-full flex-shrink-0 mt-2 px-2">
+            <div id="grid-container" class="relative w-full max-w-[360px] aspect-square glass-panel p-2">
+                <div id="turn-blocker" class="hidden absolute inset-0 z-40 flex justify-center items-center bg-white/40 backdrop-blur-sm rounded-[20px]">
+                    <span class="bubbly-font text-lg text-slate-600 animate-pulse" id="blocker-text">GILIRAN MUSUH...</span>
                 </div>
-                <div id="grid" class="grid gap-1 w-full" style="grid-template-columns:repeat(6,1fr);aspect-ratio:1;"></div>
+                <div id="grid" class="grid gap-1.5 w-full h-full" style="grid-template-columns:repeat(6,1fr);"></div>
             </div>
         </div>
 
         <!-- Party HUD -->
-        <div id="party-hp-hud" class="w-full flex justify-center gap-1 mt-1 flex-shrink-0 px-1" style="height:44px;"></div>
+        <div id="party-hp-hud" class="w-full flex justify-center gap-2 mt-3 mb-2 flex-shrink-0 px-2 h-14"></div>
     </div>
 
     <!-- ════ BAG / TAS ════ -->
-    <div id="view-bag" class="view-section pt-12 bg-gray-50">
-        <button onclick="switchView('view-menu')" class="absolute top-3 left-3 retro-btn px-3 py-2 z-10"><span class="pixel-font text-[8px] mt-1 text-gray-600">&lt;&lt; MENU</span></button>
+    <div id="view-bag" class="view-section pt-16">
+        <button onclick="switchView('view-menu')" class="absolute top-4 left-4 pastel-btn btn-white px-4 py-2 z-10"><span class="bubbly-font text-sm">&lt;&lt; MENU</span></button>
 
-        <div class="w-full max-w-sm mx-auto flex flex-col items-center mb-2 mt-2 px-2">
-            <div class="flex w-full mb-3 gap-2">
-                <button id="tab-btn-pokemon" onclick="renderBag('pokemon')" class="flex-1 retro-btn py-2 bg-blue-500 border-blue-700">
-                    <span class="pixel-font text-[8px] text-white mt-1">POKEMON</span>
+        <div class="w-full max-w-sm mx-auto flex flex-col items-center mb-4 mt-2 px-4">
+            <div class="flex w-full mb-4 gap-3">
+                <button id="tab-btn-pokemon" onclick="renderBag('pokemon')" class="flex-1 pastel-btn btn-sky py-3">
+                    <span class="bubbly-font text-sm">POKEMON</span>
                 </button>
-                <button id="tab-btn-item" onclick="renderBag('item')" class="flex-1 retro-btn py-2 bg-gray-200 border-gray-400">
-                    <span class="pixel-font text-[8px] text-gray-700 mt-1">ITEMS</span>
+                <button id="tab-btn-item" onclick="renderBag('item')" class="flex-1 pastel-btn btn-white py-3">
+                    <span class="bubbly-font text-sm text-slate-500">ITEMS</span>
                 </button>
             </div>
-            <div id="bag-header-pokemon" class="flex w-full justify-between items-center gap-2">
-                <div class="bg-white border-2 border-gray-400 px-3 py-1.5 rounded shadow-sm flex items-center">
-                    <p class="pixel-font text-[6px] mt-1 text-gray-700">DECK: <span id="deck-count" class="text-pink-500 text-[8px]">0</span>/6</p>
+            
+            <div id="bag-header-pokemon" class="flex w-full justify-between items-center gap-3">
+                <div class="bg-white/80 border-2 border-white px-4 py-2 rounded-xl shadow-sm flex items-center">
+                    <p class="bubbly-font text-xs text-slate-600 mt-1">DECK: <span id="deck-count" class="text-pink-500 text-sm">0</span>/6</p>
                 </div>
-                <select id="sort-select" onchange="renderBag('pokemon')" class="pixel-font text-[6px] p-2 retro-input cursor-pointer bg-white">
+                <select id="sort-select" onchange="renderBag('pokemon')" class="bubbly-font text-xs p-2.5 pastel-input cursor-pointer bg-white">
                     <option value="level">URUT: LEVEL</option>
                     <option value="atk">URUT: ATK</option>
                     <option value="rarity">URUT: RARITY</option>
                 </select>
             </div>
             <div id="bag-header-item" class="hidden w-full text-center">
-                <p class="pixel-font text-[6px] text-gray-500 bg-white/90 p-2 rounded border border-gray-300">Pilih item untuk digunakan pada Pokemon.</p>
+                <p class="font-bold text-sm text-slate-500 bg-white/70 p-3 rounded-xl border-2 border-white">Pilih item untuk digunakan.</p>
             </div>
         </div>
 
-        <div class="w-full max-w-sm mx-auto flex-1 overflow-y-auto no-scrollbar glass-panel p-2 bg-white/60 mx-2">
-            <div id="bag-grid" class="grid grid-cols-2 gap-3 pb-8 px-1"></div>
+        <div class="w-full max-w-sm mx-auto flex-1 overflow-y-auto no-scrollbar glass-panel p-3 mx-2 mb-4">
+            <div id="bag-grid" class="grid grid-cols-2 gap-4 pb-4 px-1"></div>
         </div>
     </div>
 
     <!-- ════ CARD DETAIL OVERLAY ════ -->
-    <div id="card-overlay" class="hidden fixed inset-0 z-[60] bg-black/85 flex-col justify-center items-center p-4">
-        <h2 class="pixel-font text-sm text-yellow-400 mb-4 text-outline">DATA POKEMON</h2>
+    <div id="card-overlay" class="hidden fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm flex-col justify-center items-center p-4">
+        <h2 class="bubbly-font text-2xl text-yellow-300 mb-6 drop-shadow-md">DATA POKEMON</h2>
         <div id="deck-detail-container" class="flex justify-center w-full overflow-y-auto no-scrollbar max-h-[75vh]"></div>
-        <button onclick="closeCardOverlay()" class="mt-4 retro-btn px-6 py-3 border-gray-400 flex-shrink-0">
-            <span class="pixel-font text-[8px] text-gray-700 mt-1">TUTUP</span>
+        <button onclick="closeCardOverlay()" class="mt-6 pastel-btn btn-white px-10 py-4 flex-shrink-0">
+            <span class="bubbly-font text-sm text-slate-600 mt-1">TUTUP</span>
         </button>
     </div>
 
     <!-- ════ MODALS ════ -->
-    <div id="alert-modal" class="hidden fixed inset-0 z-[100] bg-black/80 flex justify-center items-center p-4">
-        <div class="bg-white border-4 border-blue-500 p-6 rounded-xl max-w-xs w-full text-center shadow-2xl">
-            <h3 id="alert-title" class="pixel-font text-sm text-blue-600 mb-4">PERHATIAN</h3>
-            <p id="alert-msg" class="pixel-font text-[8px] text-gray-700 leading-loose mb-6">Pesan.</p>
-            <button onclick="document.getElementById('alert-modal').classList.add('hidden')" class="retro-btn w-full py-3 bg-gray-100">
-                <span class="pixel-font text-[10px] mt-1">OKE</span>
+    <div id="alert-modal" class="hidden fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm flex justify-center items-center p-4">
+        <div class="glass-panel p-6 max-w-xs w-full text-center border-4 border-sky-300">
+            <h3 id="alert-title" class="bubbly-font text-xl text-sky-600 mb-3">PERHATIAN</h3>
+            <p id="alert-msg" class="font-bold text-sm text-slate-600 leading-relaxed mb-6">Pesan.</p>
+            <button onclick="document.getElementById('alert-modal').classList.add('hidden')" class="pastel-btn btn-sky w-full py-3">
+                <span class="bubbly-font text-base mt-1">OKE</span>
             </button>
         </div>
     </div>
-    <div id="confirm-modal" class="hidden fixed inset-0 z-[100] bg-black/80 flex justify-center items-center p-4">
-        <div class="bg-white border-4 border-red-500 p-6 rounded-xl max-w-xs w-full text-center shadow-2xl">
-            <h3 id="confirm-title" class="pixel-font text-sm text-red-600 mb-4">KONFIRMASI</h3>
-            <p id="confirm-msg" class="pixel-font text-[8px] text-gray-700 leading-loose mb-6">Pesan.</p>
-            <div class="flex gap-2">
-                <button onclick="closeConfirm(false)" class="retro-btn flex-1 py-3 bg-gray-100"><span class="pixel-font text-[10px] mt-1">BATAL</span></button>
-                <button onclick="closeConfirm(true)" class="retro-btn flex-1 py-3 bg-red-500 border-red-700"><span class="pixel-font text-[10px] text-white mt-1">YAKIN</span></button>
+    
+    <div id="confirm-modal" class="hidden fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm flex justify-center items-center p-4">
+        <div class="glass-panel p-6 max-w-xs w-full text-center border-4 border-rose-300">
+            <h3 id="confirm-title" class="bubbly-font text-xl text-rose-600 mb-3">KONFIRMASI</h3>
+            <p id="confirm-msg" class="font-bold text-sm text-slate-600 leading-relaxed mb-6">Pesan.</p>
+            <div class="flex gap-3">
+                <button onclick="closeConfirm(false)" class="pastel-btn btn-white flex-1 py-3"><span class="bubbly-font text-sm mt-1">BATAL</span></button>
+                <button onclick="closeConfirm(true)" class="pastel-btn btn-rose flex-1 py-3"><span class="bubbly-font text-sm mt-1">YAKIN</span></button>
             </div>
         </div>
     </div>
-    <div id="rename-modal" class="hidden fixed inset-0 z-[100] bg-black/80 flex justify-center items-center p-4">
-        <div class="bg-white border-4 border-blue-500 p-6 rounded-xl max-w-xs w-full text-center shadow-2xl">
-            <h3 class="pixel-font text-sm text-blue-600 mb-4">GANTI NAMA</h3>
-            <input type="text" id="rename-input" maxlength="12" placeholder="NAMA BARU" class="retro-input mb-4"
+    
+    <div id="rename-modal" class="hidden fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm flex justify-center items-center p-4">
+        <div class="glass-panel p-6 max-w-xs w-full text-center border-4 border-sky-300">
+            <h3 class="bubbly-font text-xl text-sky-600 mb-4">GANTI NAMA</h3>
+            <input type="text" id="rename-input" maxlength="12" placeholder="NAMA BARU" class="pastel-input mb-5"
                 oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9_]/g,'')">
-            <div class="flex gap-2">
-                <button onclick="document.getElementById('rename-modal').classList.add('hidden')" class="retro-btn flex-1 py-3 bg-gray-100"><span class="pixel-font text-[10px] mt-1">BATAL</span></button>
-                <button onclick="applyRename()" class="retro-btn flex-1 py-3 bg-blue-500 border-blue-700"><span class="pixel-font text-[10px] text-white mt-1">SIMPAN</span></button>
+            <div class="flex gap-3">
+                <button onclick="document.getElementById('rename-modal').classList.add('hidden')" class="pastel-btn btn-white flex-1 py-3"><span class="bubbly-font text-sm mt-1">BATAL</span></button>
+                <button onclick="applyRename()" class="pastel-btn btn-sky flex-1 py-3"><span class="bubbly-font text-sm mt-1">SIMPAN</span></button>
             </div>
         </div>
     </div>
@@ -605,6 +592,135 @@
 </div><!-- end #app-shell -->
 
 <script>
+// ============================================================
+//  LOGIC & DATA LAYER
+// ============================================================
+const POKE_SPRITE_URL = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
+const POKE_ANIM_URL   = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/';
+const POKE_ART_URL    = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
+const API_URL         = 'https://pokeapi.co/api/v2/pokemon/';
+const MOVE_URL        = 'https://pokeapi.co/api/v2/move/';
+
+const RARITY_DB = {
+    common:    { ids: [1,4,7,10,13,16,19,21,23,29,32,41,43,46,48,50,52,54,56,58,60,63,66,69,72,74,79,83,86,90,92,96,98,100,102,104,108,111,114,116,118,120,128,132,138,140] },
+    rare:      { ids: [25,35,39,55,62,68,71,73,75,76,78,82,84,85,87,88,89,93,94,95,97,99,101,103,105,106,107,109,110,112,113,115,117,119,121,122,123,124,125,126,127,130,133,134,136,137,139,141,142,143] },
+    epic:      { ids: [94,123,130,131,134,135,136,143,147,148] },
+    legendary: { ids: [144,145,146,149,150,151] }
+};
+
+const ITEMS_DB = {
+    junk: [
+        { id: 'oran-berry', name: 'Oran Berry', type: 'heal', val: 10, img: 'oran-berry' },
+        { id: 'pecha-berry', name: 'Pecha Berry', type: 'heal', val: 8, img: 'pecha-berry' },
+        { id: 'rawst-berry', name: 'Rawst Berry', type: 'heal', val: 8, img: 'rawst-berry' },
+        { id: 'aspear-berry', name: 'Aspear Berry', type: 'heal', val: 8, img: 'aspear-berry' },
+    ],
+    common: [
+        { id: 'potion', name: 'Potion', type: 'heal', val: 50, img: 'potion' },
+        { id: 'antidote', name: 'Antidote', type: 'heal', val: 30, img: 'antidote' },
+        { id: 'paralyze-heal', name: 'Paralyze Heal', type: 'heal', val: 30, img: 'paralyze-heal' },
+    ],
+    rare: [
+        { id: 'super-potion', name: 'Super Potion', type: 'heal', val: 200, img: 'super-potion' },
+        { id: 'rare-candy', name: 'Rare Candy', type: 'exp', val: 1, img: 'rare-candy' },
+        { id: 'full-heal', name: 'Full Heal', type: 'heal', val: 150, img: 'full-heal' },
+        { id: 'hyper-potion', name: 'Hyper Potion', type: 'heal', val: 350, img: 'hyper-potion' },
+        { id: 'revive', name: 'Revive', type: 'revive', val: 1, img: 'revive' },
+    ],
+    epic: [
+        { id: 'thunder-stone', name: 'Thunder Stone', type: 'evo', val: 1, img: 'thunder-stone' },
+        { id: 'fire-stone', name: 'Fire Stone', type: 'evo', val: 1, img: 'fire-stone' },
+        { id: 'water-stone', name: 'Water Stone', type: 'evo', val: 1, img: 'water-stone' },
+        { id: 'leaf-stone', name: 'Leaf Stone', type: 'evo', val: 1, img: 'leaf-stone' },
+        { id: 'max-potion', name: 'Max Potion', type: 'heal', val: 9999, img: 'max-potion' },
+        { id: 'max-revive', name: 'Max Revive', type: 'revive', val: 2, img: 'max-revive' },
+        { id: 'pp-up', name: 'PP Up', type: 'buff', val: 1, img: 'pp-up' },
+        { id: 'x-attack', name: 'X Attack', type: 'buff', val: 1, img: 'x-attack' },
+        { id: 'x-defense', name: 'X Defense', type: 'buff', val: 1, img: 'x-defense' },
+    ]
+};
+
+const EVO_DB = {
+    1:{target:2,reqLvl:16},2:{target:3,reqLvl:32}, 4:{target:5,reqLvl:16},5:{target:6,reqLvl:36},
+    7:{target:8,reqLvl:16},8:{target:9,reqLvl:36}, 10:{target:11,reqLvl:7},11:{target:12,reqLvl:10},
+    13:{target:14,reqLvl:7},14:{target:15,reqLvl:10}, 16:{target:17,reqLvl:18},17:{target:18,reqLvl:36},
+    19:{target:20,reqLvl:20}, 25:{target:26,reqItem:'thunder-stone'}, 37:{target:38,reqItem:'fire-stone'},
+    58:{target:59,reqLvl:28}, 60:{target:61,reqLvl:25},61:{target:62,reqLvl:36}, 63:{target:64,reqLvl:16},64:{target:65,reqLvl:36},
+    66:{target:67,reqLvl:28}, 74:{target:75,reqLvl:25},75:{target:76,reqItem:'leaf-stone'}, 79:{target:80,reqLvl:37},
+    86:{target:87,reqLvl:34}, 90:{target:91,reqItem:'water-stone'}, 92:{target:93,reqLvl:25},93:{target:94,reqLvl:40},
+    98:{target:99,reqLvl:28}, 100:{target:101,reqLvl:30}, 102:{target:103,reqItem:'leaf-stone'}, 104:{target:105,reqLvl:28},
+    111:{target:112,reqLvl:42}, 116:{target:117,reqLvl:32}, 118:{target:119,reqLvl:33}, 120:{target:121,reqItem:'water-stone'},
+    129:{target:130,reqLvl:20}, 133:{target:135,reqItem:'thunder-stone'}, 138:{target:139,reqLvl:40},140:{target:141,reqLvl:40},
+    147:{target:148,reqLvl:30},148:{target:149,reqLvl:55}
+};
+
+const typeColors = { normal:'#94a3b8',fire:'#f87171',water:'#60a5fa',electric:'#fbbf24', grass:'#4ade80',ice:'#22d3ee',fighting:'#fb7185',poison:'#c084fc', ground:'#fb923c',flying:'#7dd3fc',psychic:'#f472b6',bug:'#a3e635', rock:'#f59e0b',ghost:'#a78bfa',dragon:'#818cf8',dark:'#475569', steel:'#94a3b8',fairy:'#fb7185' };
+const typeChart = {
+    normal:{weak:['fighting'],resist:['ghost']},
+    fire:{weak:['water','ground','rock'],resist:['fire','grass','bug','fairy']},
+    water:{weak:['electric','grass'],resist:['fire','water','ice']},
+    grass:{weak:['fire','ice','poison','flying','bug'],resist:['water','grass','electric','ground']},
+    electric:{weak:['ground'],resist:['electric','flying']},
+    ice:{weak:['fire','fighting','rock','steel'],resist:['ice']},
+    fighting:{weak:['flying','psychic','fairy'],resist:['bug','rock','dark']},
+    poison:{weak:['ground','psychic'],resist:['grass','fighting','poison','fairy']},
+    ground:{weak:['water','grass','ice'],resist:['poison','rock','electric']},
+    flying:{weak:['electric','ice','rock'],resist:['grass','fighting','bug','ground']},
+    psychic:{weak:['bug','ghost','dark'],resist:['fighting','psychic']},
+    bug:{weak:['fire','flying','rock'],resist:['grass','fighting','ground']},
+    rock:{weak:['water','grass','fighting','ground','steel'],resist:['normal','fire','poison','flying']},
+    ghost:{weak:['ghost','dark'],resist:['poison','bug','normal','fighting']},
+    dragon:{weak:['ice','dragon','fairy'],resist:['fire','water','grass','electric']},
+    dark:{weak:['fighting','bug','fairy'],resist:['ghost','dark','psychic']},
+    steel:{weak:['fire','fighting','ground'],resist:['normal','grass','ice','flying','psychic','bug','rock','dragon','steel','fairy','poison']},
+    fairy:{weak:['poison','steel'],resist:['fighting','bug','dark','dragon']}
+};
+
+const STARTER_POOL = [
+    { id:1,  name:'bulbasaur',  rarity:'common', hp:45, atk:49, def:49, spa:65, spd:65, speed:45, types:['grass','poison'], level:1, exp:0, currentMove:'vine-whip',  movePower:45, moveClass:'physical', moveType:'grass',  movePool:[{level:1,name:'tackle'},{level:4,name:'vine-whip'}],  cryUrl:'' },
+    { id:4,  name:'charmander', rarity:'common', hp:39, atk:52, def:43, spa:60, spd:50, speed:65, types:['fire'],           level:1, exp:0, currentMove:'ember',       movePower:40, moveClass:'special',  moveType:'fire',   movePool:[{level:1,name:'scratch'},{level:7,name:'ember'}],     cryUrl:'' },
+    { id:7,  name:'squirtle',   rarity:'common', hp:44, atk:48, def:65, spa:50, spd:64, speed:43, types:['water'],          level:1, exp:0, currentMove:'water-gun',   movePower:40, moveClass:'special',  moveType:'water',  movePool:[{level:1,name:'tackle'},{level:7,name:'water-gun'}],  cryUrl:'' },
+    { id:10, name:'caterpie',   rarity:'common', hp:45, atk:30, def:35, spa:20, spd:20, speed:45, types:['bug'],            level:1, exp:0, currentMove:'tackle',      movePower:40, moveClass:'physical', moveType:'normal', movePool:[{level:1,name:'tackle'}],                             cryUrl:'' },
+    { id:13, name:'weedle',     rarity:'common', hp:40, atk:35, def:30, spa:20, spd:20, speed:50, types:['bug','poison'],   level:1, exp:0, currentMove:'poison-sting',movePower:15, moveClass:'physical', moveType:'poison', movePool:[{level:1,name:'poison-sting'}],                        cryUrl:'' },
+    { id:16, name:'pidgey',     rarity:'common', hp:40, atk:45, def:40, spa:35, spd:35, speed:56, types:['normal','flying'],level:1, exp:0, currentMove:'gust',        movePower:40, moveClass:'special',  moveType:'flying', movePool:[{level:1,name:'tackle'},{level:5,name:'gust'}],        cryUrl:'' },
+    { id:19, name:'rattata',    rarity:'common', hp:30, atk:56, def:35, spa:25, spd:35, speed:72, types:['normal'],         level:1, exp:0, currentMove:'quick-attack',movePower:40, moveClass:'physical', moveType:'normal', movePool:[{level:1,name:'tackle'},{level:6,name:'quick-attack'}],cryUrl:'' },
+    { id:21, name:'spearow',    rarity:'common', hp:40, atk:60, def:30, spa:31, spd:31, speed:70, types:['normal','flying'],level:1, exp:0, currentMove:'peck',        movePower:35, moveClass:'physical', moveType:'flying', movePool:[{level:1,name:'peck'}],                               cryUrl:'' },
+    { id:23, name:'ekans',      rarity:'common', hp:35, atk:60, def:44, spa:40, spd:54, speed:55, types:['poison'],         level:1, exp:0, currentMove:'poison-sting',movePower:15, moveClass:'physical', moveType:'poison', movePool:[{level:1,name:'wrap'},{level:9,name:'poison-sting'}],  cryUrl:'' },
+    { id:29, name:'nidoran-f',  rarity:'common', hp:55, atk:47, def:52, spa:40, spd:40, speed:41, types:['poison'],         level:1, exp:0, currentMove:'scratch',     movePower:40, moveClass:'physical', moveType:'normal', movePool:[{level:1,name:'scratch'},{level:9,name:'tail-whip'}],  cryUrl:'' },
+    { id:32, name:'nidoran-m',  rarity:'common', hp:46, atk:57, def:40, spa:40, spd:40, speed:50, types:['poison'],         level:1, exp:0, currentMove:'peck',        movePower:35, moveClass:'physical', moveType:'flying', movePool:[{level:1,name:'leer'},{level:8,name:'peck'}],          cryUrl:'' },
+    { id:41, name:'zubat',      rarity:'common', hp:40, atk:45, def:35, spa:30, spd:40, speed:55, types:['poison','flying'],level:1, exp:0, currentMove:'bite',        movePower:60, moveClass:'physical', moveType:'dark',   movePool:[{level:1,name:'leech-life'},{level:12,name:'bite'}],   cryUrl:'' },
+    { id:43, name:'oddish',     rarity:'common', hp:45, atk:50, def:55, spa:75, spd:65, speed:30, types:['grass','poison'], level:1, exp:0, currentMove:'absorb',      movePower:20, moveClass:'special',  moveType:'grass',  movePool:[{level:1,name:'absorb'}],                             cryUrl:'' },
+    { id:46, name:'paras',      rarity:'common', hp:35, atk:70, def:55, spa:45, spd:55, speed:25, types:['bug','grass'],    level:1, exp:0, currentMove:'scratch',     movePower:40, moveClass:'physical', moveType:'normal', movePool:[{level:1,name:'scratch'},{level:6,name:'stun-spore'}], cryUrl:'' },
+    { id:48, name:'venonat',    rarity:'common', hp:60, atk:55, def:50, spa:40, spd:55, speed:45, types:['bug','poison'],   level:1, exp:0, currentMove:'tackle',      movePower:40, moveClass:'physical', moveType:'normal', movePool:[{level:1,name:'tackle'},{level:9,name:'confusion'}],   cryUrl:'' },
+    { id:50, name:'diglett',    rarity:'common', hp:10, atk:55, def:25, spa:35, spd:45, speed:95, types:['ground'],         level:1, exp:0, currentMove:'scratch',     movePower:40, moveClass:'physical', moveType:'normal', movePool:[{level:1,name:'scratch'}],                            cryUrl:'' },
+    { id:52, name:'meowth',     rarity:'common', hp:40, atk:45, def:35, spa:40, spd:40, speed:90, types:['normal'],         level:1, exp:0, currentMove:'scratch',     movePower:40, moveClass:'physical', moveType:'normal', movePool:[{level:1,name:'scratch'},{level:12,name:'pay-day'}],   cryUrl:'' },
+    { id:54, name:'psyduck',    rarity:'common', hp:50, atk:52, def:48, spa:65, spd:50, speed:55, types:['water'],          level:1, exp:0, currentMove:'water-gun',   movePower:40, moveClass:'special',  moveType:'water',  movePool:[{level:1,name:'scratch'},{level:5,name:'water-gun'}],  cryUrl:'' },
+    { id:58, name:'growlithe',  rarity:'common', hp:55, atk:70, def:45, spa:70, spd:50, speed:60, types:['fire'],           level:1, exp:0, currentMove:'ember',       movePower:40, moveClass:'special',  moveType:'fire',   movePool:[{level:1,name:'bite'},{level:7,name:'ember'}],         cryUrl:'' },
+    { id:60, name:'poliwag',    rarity:'common', hp:40, atk:50, def:40, spa:40, spd:40, speed:90, types:['water'],          level:1, exp:0, currentMove:'water-gun',   movePower:40, moveClass:'special',  moveType:'water',  movePool:[{level:1,name:'water-gun'}],                          cryUrl:'' },
+];
+
+function getSpriteUrl(pokeId) { return `${POKE_SPRITE_URL}${pokeId}.png`; }
+function getAnimUrl(pokeId)   { return `${POKE_ANIM_URL}front_default/${pokeId}.gif`; }
+function genUID()             { return Math.random().toString(36).substring(2,10); }
+function sleep(ms)            { return new Promise(r => setTimeout(r, ms)); }
+
+function getMultiplier(atkType, defType) {
+    if (!typeChart[defType]) return 1;
+    if (typeChart[defType].resist.includes(atkType)) return 0.5;
+    if (typeChart[defType].weak.includes(atkType))   return 1.5;
+    return 1;
+}
+function calcStat(base, level, isHp = false) {
+    if (isHp) return Math.floor(0.01 * (2 * base) * level) + level + 10;
+    return Math.floor(0.01 * (2 * base) * level) + 5;
+}
+function calculateDamage(lvl, power, attackerAtk, defenderDef, isStab, typeMult) {
+    let dmg = Math.floor((((2*lvl/5)+2)*power*(attackerAtk/Math.max(5,defenderDef)))/50)+2;
+    if (isStab) dmg = Math.floor(dmg * 1.5);
+    dmg = Math.floor(dmg * typeMult);
+    return Math.max(1, Math.floor(dmg * ((Math.random() * 0.15) + 0.85)));
+}
+
 // ── GAME STATE ─────────────────────────────────────────────
 let player = null;
 window.player = player;
@@ -648,7 +764,7 @@ function throwDebugError(e) {
         document.getElementById('loading-screen').classList.add('flex');
         document.getElementById('loading-spinner').classList.remove('animate-spin');
         document.getElementById('loading-text').innerText = 'FATAL ERROR!';
-        document.getElementById('loading-text').classList.add('text-red-500');
+        document.getElementById('loading-text').classList.replace('text-sky-500', 'text-rose-500');
         document.getElementById('error-box-container').classList.remove('hidden');
         document.getElementById('error-box-container').classList.add('flex');
         document.getElementById('error-log-box').value = `Error: ${e?.name} - ${e?.message}\n\nStack:\n${e?.stack}`;
@@ -660,9 +776,8 @@ function confirmTrainerName() {
     initAudio();
     const nameInput = document.getElementById('trainer-name-input');
     let name = nameInput.value.trim().toUpperCase();
-    if (!name || name.length < 2) { nameInput.style.borderColor='#ef4444'; setTimeout(()=>nameInput.style.borderColor='',1000); return; }
+    if (!name || name.length < 2) { nameInput.style.borderColor='#fb7185'; setTimeout(()=>nameInput.style.borderColor='',1000); return; }
 
-    // Pick 6 RANDOM unique common starters from pool
     const shuffled = [...STARTER_POOL].sort(()=>Math.random()-0.5);
     const starters = shuffled.slice(0, 6).map(s => {
         let c = JSON.parse(JSON.stringify(s));
@@ -696,7 +811,6 @@ async function finalizeInit() {
     player.inventory    = player.inventory    || {};
     window.player       = player;
 
-    // Fix sprite URLs
     player.unlocked.forEach(p => {
         if (!p.uid) p.uid = genUID();
         if (p.id) p.id = Number(p.id);
@@ -705,13 +819,11 @@ async function finalizeInit() {
         if (!p.artUrl) p.artUrl = `${POKE_ART_URL}${p.id}.png`;
     });
 
-    // Legacy deck UID fix
     player.deck = player.deck.map(dId => {
         let p = player.unlocked.find(u => u.id === dId || u.uid === dId);
         return p ? p.uid : null;
     }).filter(Boolean);
 
-    // If new player has less than 6, add random starters
     if (player.unlocked.length < 6) {
         const existing = player.unlocked.map(u=>u.id);
         const shuffled = [...STARTER_POOL].sort(()=>Math.random()-0.5);
@@ -725,7 +837,6 @@ async function finalizeInit() {
         }
     }
 
-    // Ensure deck has 6 unique valid UIDs
     let uDeck = [...new Set(player.deck)].filter(uid => player.unlocked.find(u=>u.uid===uid));
     while (uDeck.length < 6) {
         let next = player.unlocked.find(u => !uDeck.includes(u.uid));
@@ -831,14 +942,12 @@ async function executeGacha(times) {
     const flash      = document.getElementById('gacha-flash');
     const resultBox  = document.getElementById('gacha-result-container');
     const resultGrid = document.getElementById('gacha-result-grid');
-    const rays       = document.getElementById('gacha-rays');
-    const sparkles   = document.getElementById('gacha-sparkles');
     const hint       = document.getElementById('gacha-loading-hint');
 
     overlay.classList.remove('hidden'); overlay.classList.add('flex');
     singleAnim.classList.add('hidden'); singleAnim.classList.remove('flex');
     resultBox.classList.add('hidden');  resultBox.classList.remove('flex');
-    flash.classList.add('hidden'); rays.classList.add('hidden'); resultGrid.innerHTML = '';
+    flash.classList.add('hidden'); resultGrid.innerHTML = '';
 
     let results = [], highestRarity = 'junk';
     const rarityWeight = { junk:0, common:1, rare:2, epic:3, legendary:4 };
@@ -862,50 +971,42 @@ async function executeGacha(times) {
     }
     syncDataToDB(); renderGachaUI(); updateCoinDisplay();
 
-    // Animation
     const ballFile = highestRarity==='rare'?'great-ball.png':highestRarity==='epic'?'ultra-ball.png':highestRarity==='legendary'?'master-ball.png':'poke-ball.png';
-    if      (highestRarity==='legendary') overlay.style.background='radial-gradient(ellipse at center,#3d1a00 0%,#1a0800 70%)';
-    else if (highestRarity==='epic')      overlay.style.background='radial-gradient(ellipse at center,#1a0533 0%,#000 70%)';
-    else if (highestRarity==='rare')      overlay.style.background='radial-gradient(ellipse at center,#001033 0%,#000 70%)';
-    else                                  overlay.style.background='radial-gradient(ellipse at center,#0a0a0a 0%,#000 70%)';
 
     hint.innerText = '???';
     ballImg.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${ballFile}`;
-    ballImg.className = 'w-28 h-28 object-contain filter drop-shadow-2xl gacha-drop';
+    ballImg.className = 'w-32 h-32 object-contain filter drop-shadow-2xl gacha-drop';
     playSound('hit'); await sleep(700);
 
     const shakes = highestRarity==='legendary'?5:highestRarity==='epic'?4:highestRarity==='rare'?3:2;
-    for (let s=0;s<shakes;s++) { ballImg.className='w-28 h-28 object-contain filter drop-shadow-2xl gacha-shake'; playSound('hit'); await sleep(500); ballImg.className='w-28 h-28 object-contain filter drop-shadow-2xl'; await sleep(150); }
+    for (let s=0;s<shakes;s++) { ballImg.className='w-32 h-32 object-contain filter drop-shadow-2xl gacha-shake'; playSound('hit'); await sleep(500); ballImg.className='w-32 h-32 object-contain filter drop-shadow-2xl'; await sleep(150); }
 
-    if (highestRarity==='epic'||highestRarity==='legendary') { sparkles.classList.remove('hidden'); await sleep(300); }
     if (highestRarity==='legendary') playSound('legendary'); else playSound('catch');
-    rays.classList.remove('hidden');
+    
     flash.classList.remove('hidden');
     flash.className = 'absolute inset-0 z-[251] gacha-flash-fx bg-white pointer-events-none';
     await sleep(200); singleAnim.classList.add('hidden'); singleAnim.classList.remove('flex');
-    await sleep(200); flash.classList.add('hidden'); rays.classList.add('hidden'); sparkles.classList.add('hidden');
+    await sleep(200); flash.classList.add('hidden');
 
-    // Result text
     const gotchaText = document.getElementById('gacha-gotcha-text');
     if      (highestRarity==='legendary') gotchaText.innerText='✨ LEGENDARY! ✨';
     else if (highestRarity==='epic')      gotchaText.innerText='🌟 EPIC! 🌟';
     else if (highestRarity==='rare')      gotchaText.innerText='💙 RARE! 💙';
     else gotchaText.innerText='GOTCHA!';
 
-    // Result cards — full Pokemon card style
     results.forEach((p, idx) => {
         const card = document.createElement('div');
         card.style.animationDelay = `${idx*0.1}s`;
 
         if (p.isItem) {
-            card.className = `gacha-reveal rarity-${p.rarity}-card`;
-            card.style.cssText = `width:100px;height:150px;border-radius:12px;border:3px solid #94a3b8;background:#f8fafc;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:6px 4px;position:relative;overflow:hidden;flex-shrink:0;`;
-            const rc = (badgeColors[p.rarity]||'bg-gray-400 text-white').replace('bg-','').replace(' text-white','').replace(' text-yellow-900','');
+            card.className = `gacha-reveal bg-white`;
+            card.style.cssText = `width:105px;height:145px;border-radius:20px;border:4px solid white;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 4px;position:relative;overflow:hidden;flex-shrink:0;box-shadow:0 8px 20px rgba(0,0,0,0.1);`;
+            const bgRarityColor = p.rarity==='legendary'?'#facc15':p.rarity==='epic'?'#c084fc':p.rarity==='rare'?'#60a5fa':'#94a3b8';
             card.innerHTML = `
-                <div style="position:absolute;top:0;right:0;font-family:'Press Start 2P';font-size:5px;padding:3px 5px;border-radius:0 0 0 6px;background:${p.rarity==='legendary'?'#eab308':p.rarity==='epic'?'#a855f7':p.rarity==='rare'?'#3b82f6':'#6b7280'};color:white;z-index:10;text-transform:uppercase;">${p.rarity}</div>
-                <span style="font-family:'Press Start 2P';font-size:5px;color:#475569;text-transform:uppercase;margin-top:2px;z-index:10;">ITEM</span>
-                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${p.img}.png" style="width:52px;height:52px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
-                <div style="width:100%;text-align:center;background:#3b82f6;color:white;font-family:'Press Start 2P';font-size:5px;padding:4px 2px;border-radius:0 0 8px 8px;margin:-6px -4px -6px;text-transform:uppercase;">${p.name}</div>
+                <div style="position:absolute;top:0;right:0;font-family:'Nunito',sans-serif;font-weight:900;font-size:10px;padding:3px 8px;border-radius:0 0 0 12px;background:${bgRarityColor};color:white;z-index:10;text-transform:uppercase;">${p.rarity}</div>
+                <span style="font-family:'Nunito',sans-serif;font-weight:900;font-size:10px;color:#94a3b8;text-transform:uppercase;margin-top:4px;z-index:10;">ITEM</span>
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${p.img}.png" style="width:55px;height:55px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
+                <div style="width:100%;text-align:center;background:#7dd3fc;color:#0369a1;font-family:'Nunito',sans-serif;font-weight:800;font-size:11px;padding:6px 2px;border-radius:0 0 16px 16px;margin:-8px -4px -8px;text-transform:uppercase;">${p.name}</div>
             `;
         } else {
             const mainType = p.types?.[0] || 'normal';
@@ -913,16 +1014,17 @@ async function executeGacha(times) {
             const artSrc = p.artUrl || `${POKE_ART_URL}${p.id}.png`;
             const typesHtml = (p.types||[mainType]).map(t=>`<span class="type-badge type-${t}">${t}</span>`).join('');
             const dupLabel = p.isDup
-                ? `<div style="position:absolute;bottom:0;left:0;right:0;text-align:center;background:rgba(0,0,0,0.75);color:white;font-family:'Press Start 2P';font-size:5px;padding:4px;border-radius:0 0 10px 10px;text-transform:uppercase;">DUP! +${p.refund} KOIN</div>`
-                : `<div style="position:absolute;bottom:0;left:0;right:0;text-align:center;background:rgba(34,197,94,0.88);color:white;font-family:'Press Start 2P';font-size:5px;padding:4px;border-radius:0 0 10px 10px;">NEW!</div>`;
+                ? `<div style="position:absolute;bottom:0;left:0;right:0;text-align:center;background:rgba(255,255,255,0.9);color:#e11d48;font-family:'Nunito',sans-serif;font-weight:900;font-size:10px;padding:5px;border-radius:0 0 16px 16px;text-transform:uppercase;">DUP! +${p.refund} KOIN</div>`
+                : `<div style="position:absolute;bottom:0;left:0;right:0;text-align:center;background:rgba(255,255,255,0.9);color:#047857;font-family:'Nunito',sans-serif;font-weight:900;font-size:10px;padding:5px;border-radius:0 0 16px 16px;">NEW!</div>`;
 
-            card.className = `bg-type-${mainType} gacha-reveal rarity-${p.rarity}-card ${isLeg?'legendary-bg-anim gacha-card-float':''}`;
-            card.style.cssText = `width:100px;height:150px;border-radius:12px;border:3px solid;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:5px 4px;position:relative;overflow:hidden;flex-shrink:0;`;
+            card.className = `bg-type-${mainType} gacha-reveal ${isLeg?'gacha-card-float':''}`;
+            card.style.cssText = `width:105px;height:145px;border-radius:20px;border:4px solid white;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:6px 4px;position:relative;overflow:hidden;flex-shrink:0;box-shadow:0 8px 20px rgba(0,0,0,0.1);`;
+            const bgRarityColor = p.rarity==='legendary'?'#facc15':p.rarity==='epic'?'#c084fc':p.rarity==='rare'?'#60a5fa':'#94a3b8';
             card.innerHTML = `
-                <div style="position:absolute;top:0;right:0;font-family:'Press Start 2P';font-size:5px;padding:3px 5px;border-radius:0 0 0 6px;background:${isLeg?'#eab308':p.rarity==='epic'?'#a855f7':p.rarity==='rare'?'#3b82f6':'#6b7280'};color:${isLeg?'#713f12':'white'};z-index:10;text-transform:uppercase;">${p.rarity}</div>
-                <span style="font-family:'Press Start 2P';font-size:5px;color:white;text-shadow:1px 1px 0 #000;text-transform:capitalize;margin-top:2px;z-index:10;text-align:center;max-width:90%;overflow:hidden;text-overflow:ellipsis;">${p.name}</span>
-                <img src="${artSrc}" style="width:68px;height:68px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.3));image-rendering:auto;" onerror="this.src='${getSpriteUrl(p.id)}'">
-                <div style="display:flex;gap:2px;flex-wrap:wrap;justify-content:center;z-index:10;">${typesHtml}</div>
+                <div style="position:absolute;top:0;right:0;font-family:'Nunito',sans-serif;font-weight:900;font-size:10px;padding:3px 8px;border-radius:0 0 0 12px;background:${bgRarityColor};color:${isLeg?'#713f12':'white'};z-index:10;text-transform:uppercase;">${p.rarity}</div>
+                <span style="font-family:'Nunito',sans-serif;font-weight:900;font-size:12px;color:#334155;text-transform:capitalize;margin-top:6px;z-index:10;text-align:center;max-width:90%;overflow:hidden;text-overflow:ellipsis;">${p.name}</span>
+                <img src="${artSrc}" style="width:70px;height:70px;object-fit:contain;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.15));" onerror="this.src='${getSpriteUrl(p.id)}'">
+                <div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:center;z-index:10;margin-bottom:12px;">${typesHtml}</div>
                 ${dupLabel}
             `;
         }
@@ -936,7 +1038,7 @@ async function executeGacha(times) {
 
 function closeGachaResult() {
     const o = document.getElementById('gacha-anim-overlay');
-    o.classList.add('hidden'); o.classList.remove('flex'); o.style.background = '';
+    o.classList.add('hidden'); o.classList.remove('flex');
 }
 
 // ── BAG ────────────────────────────────────────────────────
@@ -947,10 +1049,9 @@ function renderBag(tab = currentBagTab) {
     if (tab === 'pokemon') {
         document.getElementById('bag-header-pokemon').classList.remove('hidden');
         document.getElementById('bag-header-item').classList.add('hidden');
-        document.getElementById('tab-btn-pokemon').className = 'flex-1 retro-btn py-2 bg-blue-500 border-blue-700';
-        document.getElementById('tab-btn-pokemon').firstElementChild.className = 'pixel-font text-[8px] text-white mt-1';
-        document.getElementById('tab-btn-item').className = 'flex-1 retro-btn py-2 bg-gray-200 border-gray-400';
-        document.getElementById('tab-btn-item').firstElementChild.className = 'pixel-font text-[8px] text-gray-700 mt-1';
+        document.getElementById('tab-btn-pokemon').className = 'flex-1 pastel-btn btn-sky py-3';
+        document.getElementById('tab-btn-item').className = 'flex-1 pastel-btn btn-white py-3';
+        document.getElementById('tab-btn-item').firstElementChild.className = 'bubbly-font text-sm text-slate-500';
         document.getElementById('deck-count').innerText = player.deck.length;
 
         const sortBy = document.getElementById('sort-select').value;
@@ -962,54 +1063,57 @@ function renderBag(tab = currentBagTab) {
             const mainType   = poke.types?.[0] || 'normal';
             const isLeg      = poke.rarity === 'legendary';
             const el         = document.createElement('div');
-            el.className     = `deck-card p-2 bg-type-${mainType} ${isSelected?'in-deck':''} ${isLeg?'card-legendary':''} flex flex-col justify-between border-gray-300`;
+            el.className     = `glass-panel p-3 bg-type-${mainType} ${isSelected?'border-sky-400 border-4 scale-105 shadow-xl':'border-2'} flex flex-col justify-between relative cursor-pointer`;
+            el.onclick       = () => showCardDetail(poke.uid);
+            
             let typesHtml    = (poke.types||[mainType]).map(t=>`<span class="type-badge type-${t}">${t}</span>`).join('');
             const deckImg    = poke.artUrl || `${POKE_ART_URL}${poke.id}.png`;
             const calcAtk    = calcStat(poke.atk, poke.level);
 
+            const badgeBg = poke.rarity==='legendary'?'bg-yellow-400 text-yellow-900':poke.rarity==='epic'?'bg-purple-400 text-white':poke.rarity==='rare'?'bg-blue-400 text-white':'bg-slate-400 text-white';
+
             el.innerHTML = `
-                <div class="absolute top-0 right-0 pixel-font text-[4px] px-1.5 py-0.5 rounded-bl shadow-sm z-10 uppercase border-b-2 border-l-2 border-white/50 ${badgeColors[poke.rarity]||badgeColors.common}">${poke.rarity}</div>
-                <div class="flex justify-between items-start mb-1" onclick="showCardDetail('${poke.uid}');event.stopPropagation()">
-                    <span class="pixel-font text-[5px] text-white text-shadow-sm capitalize truncate w-16">${poke.name}</span>
-                    <div class="bg-black/70 text-white pixel-font text-[4px] px-1 py-0.5 rounded mt-4">LV${poke.level}</div>
+                <div class="absolute top-0 right-0 bubbly-font text-[9px] px-2 py-1 rounded-bl-xl shadow-sm z-10 uppercase border-b border-l border-white/50 ${badgeBg}">${poke.rarity}</div>
+                <div class="flex justify-between items-start mb-2">
+                    <span class="font-bold text-sm text-slate-800 capitalize truncate w-16">${poke.name}</span>
+                    <div class="bg-white/80 text-sky-600 font-bold text-[10px] px-1.5 py-0.5 rounded-md mt-4 border border-sky-100">LV${poke.level}</div>
                 </div>
-                <div class="w-full h-14 flex justify-center items-center bg-white/20 rounded my-1 cursor-pointer" onclick="showCardDetail('${poke.uid}');event.stopPropagation()">
-                    <img src="${deckImg}" class="w-12 h-12 object-contain filter drop-shadow-md" style="image-rendering:auto;" onerror="this.src='${getSpriteUrl(poke.id)}'">
+                <div class="w-full h-16 flex justify-center items-center bg-white/40 rounded-xl my-1 border border-white/50">
+                    <img src="${deckImg}" class="w-14 h-14 object-contain filter drop-shadow-md" onerror="this.src='${getSpriteUrl(poke.id)}'">
                 </div>
-                <div class="flex justify-center gap-1 flex-wrap w-full mb-1">${typesHtml}</div>
-                <div class="bg-white/80 p-1 rounded mb-1 shadow-inner">
-                    <div class="flex justify-between pixel-font text-[4px] text-gray-700"><span>ATK</span><span class="text-red-600">${calcAtk}</span></div>
+                <div class="flex justify-center gap-1 flex-wrap w-full mt-1 mb-2">${typesHtml}</div>
+                <div class="bg-white/80 px-2 py-1 rounded-lg mb-2 shadow-sm border border-white">
+                    <div class="flex justify-between font-bold text-[10px] text-slate-600"><span>ATK</span><span class="text-rose-500">${calcAtk}</span></div>
                 </div>
-                <button class="w-full py-1.5 rounded text-white ${isSelected?'bg-red-500':'bg-green-500'} retro-btn p-0 mt-1 border-white" onclick="toggleDeck('${poke.uid}')">
-                    <span class="pixel-font text-[5px] mt-1 text-shadow-sm">${isSelected?'LEPAS':'PILIH'}</span>
+                <button class="w-full py-2 rounded-xl pastel-btn ${isSelected?'btn-rose':'btn-emerald'} border-white" onclick="toggleDeck('${poke.uid}');event.stopPropagation()">
+                    <span class="bubbly-font text-xs">${isSelected?'LEPAS':'PILIH'}</span>
                 </button>
             `;
             grid.appendChild(el);
         });
-        if (!grid.children.length) grid.innerHTML = `<p class="pixel-font text-[8px] text-gray-500 col-span-2 text-center mt-6">Belum punya Pokemon.</p>`;
+        if (!grid.children.length) grid.innerHTML = `<p class="font-bold text-sm text-slate-500 col-span-2 text-center mt-8">Belum punya Pokemon.</p>`;
     } else {
         document.getElementById('bag-header-pokemon').classList.add('hidden');
         document.getElementById('bag-header-item').classList.remove('hidden');
-        document.getElementById('tab-btn-item').className = 'flex-1 retro-btn py-2 bg-blue-500 border-blue-700';
-        document.getElementById('tab-btn-item').firstElementChild.className = 'pixel-font text-[8px] text-white mt-1';
-        document.getElementById('tab-btn-pokemon').className = 'flex-1 retro-btn py-2 bg-gray-200 border-gray-400';
-        document.getElementById('tab-btn-pokemon').firstElementChild.className = 'pixel-font text-[8px] text-gray-700 mt-1';
+        document.getElementById('tab-btn-item').className = 'flex-1 pastel-btn btn-sky py-3';
+        document.getElementById('tab-btn-item').firstElementChild.className = 'bubbly-font text-sm text-sky-800';
+        document.getElementById('tab-btn-pokemon').className = 'flex-1 pastel-btn btn-white py-3';
 
         Object.keys(player.inventory).forEach(key => {
             const qty = player.inventory[key]; if (qty<=0) return;
             let dbItem = null; for (let r in ITEMS_DB) { const f = ITEMS_DB[r].find(i=>i.id===key); if(f) dbItem=f; }
             if (!dbItem) return;
             const el = document.createElement('div');
-            el.className = 'flex flex-col items-center justify-center p-2 border-2 border-gray-300 rounded bg-white relative';
+            el.className = 'glass-panel flex flex-col items-center justify-center p-4 border-2 border-white rounded-2xl bg-white/70 relative';
             el.innerHTML = `
-                <div class="absolute top-1 right-1 bg-gray-800 text-white pixel-font text-[5px] px-1 rounded">x${qty}</div>
-                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${dbItem.img}.png" class="w-10 h-10 object-contain mb-1" style="image-rendering:pixelated;">
-                <span class="pixel-font text-[6px] text-gray-800 text-center w-full truncate">${dbItem.name}</span>
-                <span class="pixel-font text-[4px] text-blue-500 mb-2">${dbItem.type.toUpperCase()}</span>
+                <div class="absolute top-2 right-2 bg-slate-700 text-white font-bold text-xs px-2 py-0.5 rounded-lg border border-white shadow-sm">x${qty}</div>
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${dbItem.img}.png" class="w-12 h-12 object-contain mb-2 filter drop-shadow-sm" style="image-rendering:pixelated;">
+                <span class="font-bold text-sm text-slate-800 text-center w-full truncate">${dbItem.name}</span>
+                <span class="bubbly-font text-[10px] text-sky-500 mt-1 px-2 py-0.5 bg-sky-50 rounded-md border border-sky-100">${dbItem.type.toUpperCase()}</span>
             `;
             grid.appendChild(el);
         });
-        if (!grid.children.length) grid.innerHTML = `<p class="pixel-font text-[8px] text-gray-500 col-span-2 text-center mt-6">Tas kosong.</p>`;
+        if (!grid.children.length) grid.innerHTML = `<p class="font-bold text-sm text-slate-500 col-span-2 text-center mt-8">Tas kosong.</p>`;
     }
 }
 
@@ -1034,7 +1138,7 @@ function showCardDetail(uid) {
     const cSpa = calcStat(poke.spa,  poke.level);
     const cSpdef = calcStat(poke.spd, poke.level);
 
-    let moveOpts = poke.movePool ? poke.movePool.map(m=>`<option value="${m.name}" ${m.name===poke.currentMove?'selected':''} ${m.level>poke.level?'disabled':''}>${m.name.replace(/-/g,' ')} (Lv${m.level})</option>`).join('') : '';
+    let moveOpts = poke.movePool ? poke.movePool.map(m=>`<option value="${m.name}" ${m.name===poke.currentMove?'selected':''} ${m.level>poke.level?'disabled':''}>${m.name.replace(/-/g,' ').toUpperCase()} (Lv${m.level})</option>`).join('') : '';
     let evoData = EVO_DB[poke.id], canEvo=false, evoTxt='';
     if (evoData) {
         if (evoData.reqLvl && poke.level >= evoData.reqLvl) { canEvo=true; evoTxt='EVOLVE READY!'; }
@@ -1042,33 +1146,38 @@ function showCardDetail(uid) {
         else if (evoData.reqItem && player.inventory[evoData.reqItem]>0) { canEvo=true; evoTxt='USE STONE!'; }
         else if (evoData.reqItem) evoTxt=`Butuh ${evoData.reqItem.replace(/-/g,' ')}`;
     }
-    const evoBtnHtml = evoData ? `<button ${canEvo?`onclick="evolvePokemon('${poke.uid}')"` :'disabled'} class="w-full py-1.5 mt-2 rounded text-white ${canEvo?'bg-green-500 animate-pulse':'bg-gray-400'} retro-btn p-0 border-white"><span class="pixel-font text-[5px] mt-1">${evoTxt}</span></button>` : '';
-    const candyBtn = player.inventory['rare-candy']>0 ? `<button onclick="useCandy('${poke.uid}')" class="w-full py-1.5 mt-1 rounded text-white bg-blue-500 retro-btn p-0 border-white"><span class="pixel-font text-[5px] mt-1">RARE CANDY (${player.inventory['rare-candy']})</span></button>` : '';
+    const evoBtnHtml = evoData ? `<button ${canEvo?`onclick="evolvePokemon('${poke.uid}')"` :'disabled'} class="w-full py-2.5 mt-3 rounded-xl pastel-btn ${canEvo?'btn-emerald animate-pulse':'btn-white'}"><span class="bubbly-font text-xs">${evoTxt}</span></button>` : '';
+    const candyBtn = player.inventory['rare-candy']>0 ? `<button onclick="useCandy('${poke.uid}')" class="w-full py-2.5 mt-2 rounded-xl pastel-btn btn-sky"><span class="bubbly-font text-xs">RARE CANDY (${player.inventory['rare-candy']})</span></button>` : '';
 
     document.getElementById('deck-detail-container').innerHTML = `
-        <div class="w-60 p-3 rounded-xl flex flex-col items-center relative border-4 border-white shadow-lg bg-type-${mainType}">
-            <div class="h-24 w-full flex justify-center items-end mb-2">
-                <img src="${imgSrc}" class="max-h-24 max-w-full object-contain filter drop-shadow-lg" style="image-rendering:auto;" onerror="this.src='${getSpriteUrl(poke.id)}'">
+        <div class="w-72 p-5 rounded-[2rem] flex flex-col items-center relative border-4 border-white shadow-xl bg-type-${mainType}">
+            <div class="h-28 w-full flex justify-center items-end mb-3">
+                <img src="${imgSrc}" class="max-h-28 max-w-full object-contain filter drop-shadow-lg" onerror="this.src='${getSpriteUrl(poke.id)}'">
             </div>
-            <div class="flex items-center gap-2 mb-1">
-                <span class="pixel-font text-[10px] text-white text-shadow-sm capitalize">${poke.name}</span>
-                <span class="pixel-font text-[8px] bg-black/70 text-white px-1 py-0.5 rounded">Lv${poke.level}</span>
+            <div class="flex items-center gap-3 mb-2">
+                <span class="bubbly-font text-xl text-slate-800 capitalize">${poke.name}</span>
+                <span class="font-bold text-xs bg-white/80 text-sky-600 px-2 py-1 rounded-lg border border-sky-200">Lv${poke.level}</span>
             </div>
-            <div class="flex gap-1 justify-center flex-wrap my-1">${typesHtml}</div>
-            <div class="w-full bg-white/97 p-2 rounded mt-2 shadow-inner">
-                <div class="pixel-font text-[5px] text-gray-500 mb-1">PILIH JURUS:</div>
-                <select onchange="changeMove('${poke.uid}',this.value)" class="pixel-font text-[6px] p-1 border border-gray-400 rounded w-full mb-1 bg-white text-red-600 outline-none cursor-pointer">${moveOpts}</select>
-                <div class="grid grid-cols-2 gap-x-2 mt-2">
-                    <div class="flex justify-between pixel-font text-[5px] text-gray-700 mb-1"><span>HP</span><span class="text-green-600">${cHp}</span></div>
-                    <div class="flex justify-between pixel-font text-[5px] text-gray-700 mb-1"><span>SPD</span><span class="text-cyan-600">${cSpd}</span></div>
-                    <div class="flex justify-between pixel-font text-[5px] text-gray-700 mb-1"><span>ATK</span><span class="text-red-600">${cAtk}</span></div>
-                    <div class="flex justify-between pixel-font text-[5px] text-gray-700 mb-1"><span>DEF</span><span class="text-yellow-600">${cDef}</span></div>
-                    <div class="flex justify-between pixel-font text-[5px] text-gray-700 mb-1"><span>SP.ATK</span><span class="text-purple-600">${cSpa}</span></div>
-                    <div class="flex justify-between pixel-font text-[5px] text-gray-700 mb-1"><span>SP.DEF</span><span class="text-blue-600">${cSpdef}</span></div>
+            <div class="flex gap-2 justify-center flex-wrap my-2">${typesHtml}</div>
+            
+            <div class="w-full bg-white/80 p-4 rounded-2xl mt-3 shadow-inner border border-white">
+                <div class="bubbly-font text-[10px] text-slate-500 mb-1">PILIH JURUS:</div>
+                <select onchange="changeMove('${poke.uid}',this.value)" class="bubbly-font text-xs p-2 pastel-input w-full mb-3 bg-white text-rose-500 cursor-pointer shadow-sm">${moveOpts}</select>
+                
+                <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-2">
+                    <div class="flex justify-between font-bold text-xs text-slate-600 bg-white px-2 py-1 rounded border border-slate-100"><span>HP</span><span class="text-emerald-500">${cHp}</span></div>
+                    <div class="flex justify-between font-bold text-xs text-slate-600 bg-white px-2 py-1 rounded border border-slate-100"><span>SPD</span><span class="text-sky-500">${cSpd}</span></div>
+                    <div class="flex justify-between font-bold text-xs text-slate-600 bg-white px-2 py-1 rounded border border-slate-100"><span>ATK</span><span class="text-rose-500">${cAtk}</span></div>
+                    <div class="flex justify-between font-bold text-xs text-slate-600 bg-white px-2 py-1 rounded border border-slate-100"><span>DEF</span><span class="text-yellow-600">${cDef}</span></div>
+                    <div class="flex justify-between font-bold text-xs text-slate-600 bg-white px-2 py-1 rounded border border-slate-100"><span>S.ATK</span><span class="text-purple-500">${cSpa}</span></div>
+                    <div class="flex justify-between font-bold text-xs text-slate-600 bg-white px-2 py-1 rounded border border-slate-100"><span>S.DEF</span><span class="text-indigo-500">${cSpdef}</span></div>
                 </div>
-                <div class="flex justify-between pixel-font text-[5px] text-blue-600 mt-1 mb-1"><span>POWER</span><span>${poke.movePower||'?'} (${(poke.moveClass||'phy').substring(0,4).toUpperCase()})</span></div>
-                <div class="flex justify-between pixel-font text-[5px] text-gray-700 mt-2 mb-1"><span>EXP</span><span>${poke.exp}/${maxExp}</span></div>
-                <div class="w-full bg-gray-300 h-1.5 rounded overflow-hidden mb-1"><div class="bg-blue-500 h-full" style="width:${(poke.exp/maxExp)*100}%"></div></div>
+                
+                <div class="flex justify-between font-bold text-xs text-sky-600 mt-3 mb-2 bg-sky-50 px-3 py-1.5 rounded-lg border border-sky-100"><span>POWER</span><span>${poke.movePower||'?'} (${(poke.moveClass||'phy').substring(0,3).toUpperCase()})</span></div>
+                
+                <div class="flex justify-between font-bold text-xs text-slate-500 mt-3 mb-1"><span>EXP</span><span>${poke.exp}/${maxExp}</span></div>
+                <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden mb-2"><div class="bg-sky-400 h-full" style="width:${(poke.exp/maxExp)*100}%"></div></div>
+                
                 ${evoBtnHtml}${candyBtn}
             </div>
         </div>
@@ -1128,21 +1237,21 @@ function initAbly() { if(!realtime) realtime=new Ably.Realtime({key:'4opURQ.FVPi
 
 function renderPrepDecksLocal() {
     const c=document.getElementById('prep-p1-deck'); c.innerHTML='';
-    player.deck.forEach(uid=>{let p=player.unlocked.find(u=>u.uid===uid);if(p)c.innerHTML+=`<img src="${p.spriteUrl||getSpriteUrl(p.id)}" class="w-10 h-10 bg-white/50 rounded object-contain border border-blue-300" style="image-rendering:pixelated;" onerror="this.src='${getSpriteUrl(p.id)}'">`});
-    while(c.children.length<6) c.innerHTML+=`<div class="w-10 h-10 bg-black/10 rounded"></div>`;
+    player.deck.forEach(uid=>{let p=player.unlocked.find(u=>u.uid===uid);if(p)c.innerHTML+=`<img src="${p.spriteUrl||getSpriteUrl(p.id)}" class="w-10 h-10 bg-white/80 rounded-xl object-contain border-2 border-sky-200 shadow-sm" style="image-rendering:pixelated;" onerror="this.src='${getSpriteUrl(p.id)}'">`});
+    while(c.children.length<6) c.innerHTML+=`<div class="w-10 h-10 bg-white/40 rounded-xl border-2 border-sky-100"></div>`;
 }
 function renderPrepDecksOpponent() {
     const c=document.getElementById('prep-p2-deck'); c.innerHTML='';
-    if(oppData?.deckVisualIds) oppData.deckVisualIds.forEach(id=>{c.innerHTML+=`<img src="${getSpriteUrl(id)}" class="w-10 h-10 bg-white/50 rounded object-contain border border-red-300" style="image-rendering:pixelated;" onerror="this.src='${getSpriteUrl(id)}'">`});
-    while(c.children.length<6) c.innerHTML+=`<div class="w-10 h-10 bg-black/10 rounded"></div>`;
+    if(oppData?.deckVisualIds) oppData.deckVisualIds.forEach(id=>{c.innerHTML+=`<img src="${getSpriteUrl(id)}" class="w-10 h-10 bg-white/80 rounded-xl object-contain border-2 border-rose-200 shadow-sm" style="image-rendering:pixelated;" onerror="this.src='${getSpriteUrl(id)}'">`});
+    while(c.children.length<6) c.innerHTML+=`<div class="w-10 h-10 bg-white/40 rounded-xl border-2 border-rose-100"></div>`;
 }
 function getDeckVisualIds() { return player.deck.map(uid=>player.unlocked.find(u=>u.uid===uid)?.id||1); }
 
 function enterPrepRoom(code) {
     isMpConnected=true; inPrepRoom=true; amIReady=false; isOppReady=false; mpRoomCode=code;
-    document.getElementById('btn-ready-pvp').className='retro-btn py-4 mt-4 bg-gray-200 border-gray-400 shadow-md';
+    document.getElementById('btn-ready-pvp').className='pastel-btn btn-white py-5 mt-4';
     document.getElementById('txt-ready-pvp').innerText='KLIK UNTUK READY';
-    document.getElementById('txt-ready-pvp').className='pixel-font text-[10px] mt-1 text-gray-600';
+    document.getElementById('txt-ready-pvp').className='bubbly-font text-base text-slate-500 mt-1';
     document.getElementById('prep-p1-name').innerText=pvpScores.p1Name||'HOST';
     document.getElementById('prep-p2-name').innerText=pvpScores.p2Name||'MENUNGGU...';
     renderPrepDecksLocal(); renderPrepDecksOpponent();
@@ -1207,8 +1316,8 @@ function joinMultiplayer() {
 function toggleReadyPvp() {
     initAudio(); amIReady=!amIReady;
     const btn=document.getElementById('btn-ready-pvp'); const txt=document.getElementById('txt-ready-pvp');
-    if(amIReady){btn.className='retro-btn py-4 mt-4 bg-green-500 border-green-700 shadow-md';txt.innerText='READY!';txt.className='pixel-font text-[10px] mt-1 text-white';}
-    else{btn.className='retro-btn py-4 mt-4 bg-gray-200 border-gray-400 shadow-md';txt.innerText='KLIK UNTUK READY';txt.className='pixel-font text-[10px] mt-1 text-gray-600';}
+    if(amIReady){btn.className='pastel-btn btn-emerald py-5 mt-4';txt.innerText='READY!';txt.className='bubbly-font text-base text-emerald-800 mt-1';}
+    else{btn.className='pastel-btn btn-white py-5 mt-4';txt.innerText='KLIK UNTUK READY';txt.className='bubbly-font text-base text-slate-500 mt-1';}
     mpChannel.publish('player_ready',{name:player.username,ready:amIReady});
     checkBothReady();
 }
@@ -1223,10 +1332,9 @@ async function startGame(multiplayerFlag=false) {
     battleParty=window.battleParty; activeSummonId=window.activeSummonId;
     if(!battleParty.length) return showAlert('Error','Data Party kosong!');
 
-    // Use animated GIF sprites for grid tiles (showdown front)
     activeAssets = battleParty.map(p => {
         const rar = p.rarity || 'common';
-        return { uid: p.uid, src: p.animUrl || getAnimUrl(p.id), rarity: rar };
+        return { uid: p.uid, id: p.id, src: p.animUrl || getAnimUrl(p.id), rarity: rar };
     });
 
     board=[]; sessionCoins=0; document.getElementById('session-coins').innerText=0; isAnimating=false; myTurn=false;
@@ -1239,7 +1347,7 @@ async function startGame(multiplayerFlag=false) {
         boss.name=(amIHost?pvpScores.p2Name:pvpScores.p1Name).substring(0,8)||'OPP';
         boss.hp=100;boss.maxHp=100;boss.level='PVP';boss.type='normal';
         boss.img='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/vs-seeker.png';
-        document.getElementById('arena-container').className='w-full battle-arena-bg relative flex flex-col flex-shrink-0 shadow-lg overflow-hidden bg-type-normal';
+        document.getElementById('arena-container').className='w-[calc(100%-16px)] relative flex-grow min-h-[220px] max-h-[300px] flex flex-col flex-shrink-0 shadow-sm overflow-hidden rounded-[2rem] mx-2 mt-3 border-4 border-white/80 bg-type-normal';
         document.getElementById('boss-name').innerText=boss.name;
         document.getElementById('boss-img').src=boss.img;
         document.getElementById('boss-lvl-text').innerText='PVP';
@@ -1266,36 +1374,29 @@ async function startGame(multiplayerFlag=false) {
 }
 
 function getRandomActivePokemon() {
-    if(!activeAssets||!activeAssets.length) return {uid:"err",src:getSpriteUrl(1),rarity:"common"};
-    // Shallow copy tiap call — fix bug semua tile jadi pokemon yg sama (reference issue)
+    if(!activeAssets||!activeAssets.length) return {uid:"err", id: 1, src:getSpriteUrl(1), rarity:"common"};
     const a = activeAssets[Math.floor(Math.random()*activeAssets.length)];
-    return { uid: a.uid, src: a.src, rarity: a.rarity };
+    return { uid: a.uid, id: a.id, src: a.src, rarity: a.rarity };
 }
 
-// Buat board dengan distribusi tile MERATA antar semua pokemon (fix all-same-pokemon bug)
-// Strategi: isi slot dengan round-robin shuffled, lalu shuffle posisinya
 function buildBalancedBoard() {
     if(!activeAssets||!activeAssets.length) return [];
-    const total = width * width; // 36
+    const total = width * width; 
     const n = activeAssets.length;
-    // Kalau cuma 1 pokemon di deck, tetap pakai random biasa (resolveInitialMatches handle)
     if(n === 1) {
         const arr = [];
         for(let i=0;i<total;i++) arr.push(getRandomActivePokemon());
         return arr;
     }
-    // Pastiin setiap pokemon muncul minimal floor(total/n) kali, sisa diisi random
     const perPoke = Math.floor(total / n);
     const tiles = [];
     for(let i=0;i<n;i++) {
         for(let j=0;j<perPoke;j++) {
             const a = activeAssets[i];
-            tiles.push({ uid: a.uid, src: a.src, rarity: a.rarity });
+            tiles.push({ uid: a.uid, id: a.id, src: a.src, rarity: a.rarity });
         }
     }
-    // Isi sisa dengan random
     while(tiles.length < total) tiles.push(getRandomActivePokemon());
-    // Fisher-Yates shuffle
     for(let i=tiles.length-1;i>0;i--){
         const j=Math.floor(Math.random()*(i+1));
         [tiles[i],tiles[j]]=[tiles[j],tiles[i]];
@@ -1318,7 +1419,6 @@ async function spawnPvEEnemy() {
     try {
         let res=await fetchWithTimeout(`${API_URL}${randomId}`); let data=await res.json();
         boss.name=data.name.toUpperCase();
-        // Use animated front sprite for boss
         boss.img=data.sprites?.other?.showdown?.front_default||data.sprites?.front_default||getSpriteUrl(randomId);
         boss.type=data.types[0].type.name;
         const bs=extractStats(data);
@@ -1327,9 +1427,9 @@ async function spawnPvEEnemy() {
         boss.spa=calcStat(bs.spa,boss.level); boss.spd=calcStat(bs.spd,boss.level); boss.speed=calcStat(bs.speed,boss.level);
         if(bRarity==='epic'){boss.atk=Math.floor(boss.atk*1.3);boss.def=Math.floor(boss.def*1.2);boss.maxHp=Math.floor(boss.maxHp*1.25);boss.hp=boss.maxHp;}
         else if(bRarity==='legendary'){boss.atk=Math.floor(boss.atk*1.6);boss.def=Math.floor(boss.def*1.5);boss.maxHp=Math.floor(boss.maxHp*1.5);boss.hp=boss.maxHp;}
-        document.getElementById('arena-container').style.cssText='';
-        document.getElementById('arena-container').className=`w-full battle-arena-bg relative flex flex-col flex-shrink-0 shadow-lg overflow-hidden bg-type-${boss.type}`;
-        document.getElementById('arena-container').style.height='200px';
+        
+        document.getElementById('arena-container').className=`w-[calc(100%-16px)] relative flex-grow min-h-[220px] max-h-[300px] flex flex-col flex-shrink-0 shadow-sm overflow-hidden rounded-[2rem] mx-2 mt-3 border-4 border-white/80 bg-type-${boss.type}`;
+        
         if(data.cries?.latest) playCry(data.cries.latest);
         const partyTypes=battleParty.flatMap(p=>p.types||['normal']);
         const partyWeakTypes=partyTypes.flatMap(t=>typeChart[t]?.weak||[]);
@@ -1338,8 +1438,7 @@ async function spawnPvEEnemy() {
         const fb=STARTER_POOL[Math.floor(Math.random()*STARTER_POOL.length)];
         boss.id=fb.id;boss.name=fb.name.toUpperCase();boss.img=getAnimUrl(fb.id);boss.type=fb.types[0];boss.rarity=fb.rarity;
         boss.maxHp=calcStat(fb.hp,boss.level,true);boss.hp=boss.maxHp;boss.atk=calcStat(fb.atk,boss.level);boss.def=calcStat(fb.def,boss.level);
-        document.getElementById('arena-container').className=`w-full battle-arena-bg relative flex flex-col flex-shrink-0 shadow-lg overflow-hidden bg-type-${boss.type}`;
-        document.getElementById('arena-container').style.height='200px';
+        document.getElementById('arena-container').className=`w-[calc(100%-16px)] relative flex-grow min-h-[220px] max-h-[300px] flex flex-col flex-shrink-0 shadow-sm overflow-hidden rounded-[2rem] mx-2 mt-3 border-4 border-white/80 bg-type-${boss.type}`;
     }
     document.getElementById('boss-name').innerText=boss.name;
     document.getElementById('boss-img').src=boss.img;
@@ -1358,22 +1457,20 @@ function updateHPUI() {
 }
 function updateColorBar(id,pct) {
     const bar=document.getElementById(id); bar.style.width=`${pct}%`;
-    bar.style.backgroundColor=pct>50?'#4ade80':pct>20?'#facc15':'#f87171';
+    bar.style.backgroundColor=pct>50?'#34d399':pct>20?'#fbbf24':'#f87171'; // emerald-400, amber-400, red-400
 }
 function updatePartyHUD() {
     const hud=document.getElementById('party-hp-hud'); hud.innerHTML='';
     battleParty.forEach(p=>{
         const slot=document.createElement('div');
         slot.className=`party-hud-slot ${p.isKo?'ko-hud':''} ${p.uid===activeSummonId?'active-hud':''}`;
-        slot.innerHTML=`<img src="${p.spriteUrl||getSpriteUrl(p.id)}" onerror="this.src='${getSpriteUrl(p.id)}'"><div class="energy-bar-bg"><div class="energy-bar-fill" style="width:${Math.max(0,(p.hp/p.maxHp)*100)}%;background:${p.hp/p.maxHp>0.5?'#22c55e':p.hp/p.maxHp>0.25?'#facc15':'#ef4444'}"></div></div>`;
+        slot.innerHTML=`<img src="${p.spriteUrl||getSpriteUrl(p.id)}" onerror="this.src='${getSpriteUrl(p.id)}'"><div class="energy-bar-bg"><div class="energy-bar-fill" style="width:${Math.max(0,(p.hp/p.maxHp)*100)}%;background:${p.hp/p.maxHp>0.5?'#34d399':p.hp/p.maxHp>0.25?'#fbbf24':'#f87171'}"></div></div>`;
         slot.onclick=()=>{if(!p.isKo&&p.uid!==activeSummonId&&myTurn&&!isAnimating){switchSummon(p.uid);}};
         hud.appendChild(slot);
     });
-    // inject energy bar style
     if(!document.getElementById('energy-style')) {
-        const s=document.createElement('style');
-        s.id='energy-style';
-        s.textContent='.energy-bar-bg{position:absolute;bottom:-6px;left:-2px;right:-2px;height:6px;background:#ef4444;border-radius:2px;overflow:hidden;border:1px solid #fff;}.energy-bar-fill{height:100%;width:100%;transition:width .3s;}';
+        const s=document.createElement('style'); s.id='energy-style';
+        s.textContent='.energy-bar-bg{position:absolute;bottom:-6px;left:4px;right:4px;height:6px;background:#e2e8f0;border-radius:4px;overflow:hidden;border:1px solid #fff;box-shadow:inset 0 1px 2px rgba(0,0,0,0.1);}.energy-bar-fill{height:100%;width:100%;transition:width .3s ease-out;}';
         document.head.appendChild(s);
     }
 }
@@ -1389,7 +1486,7 @@ function renderBoard(animatedIndices=[], animClass='') {
             const isKo=battleParty.find(p=>p.uid===poke.uid)?.isKo;
             const rar = poke.rarity || 'common';
             item.className=`orb-container orb-${rar} ${isKo?'ko-tile':''}`;
-            item.innerHTML=`<img src="${poke.src}" onerror="this.src='${getSpriteUrl(1)}'">`;
+            item.innerHTML=`<img src="${poke.src}" onerror="this.src='${getSpriteUrl(poke.id)}'">`;
             if(animatedIndices.includes(i)) item.classList.add(animClass);
             item.addEventListener('touchstart',e=>handleSwipeStart(e,i),{passive:false});
             item.addEventListener('mousedown',e=>handleSwipeStart(e,i));
@@ -1630,7 +1727,6 @@ async function switchSummon(uid) {
     const img=document.getElementById('player-img');
     document.getElementById('player-hud-name').innerText=pData.name.toUpperCase();
     document.getElementById('player-hud-lvl').innerText='Lv'+pData.level;
-    // Gunakan animated front sprite (facing right natural, sudah sesuai layout baru)
     const frontUrl = pData.animUrl || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${pData.id}.gif`;
     const fallback = getSpriteUrl(pData.id);
     if(img.src !== frontUrl){
@@ -1648,14 +1744,14 @@ function showDamage(target,amount) {
     const floater=document.createElement('div'); floater.className='dmg-floater';
     floater.innerText=amount===0?'DODGE!':'-'+Math.ceil(amount);
     const arena=document.getElementById('arena-container');
-    if(target==='boss'){floater.style.right='28px';floater.style.top='70px';}
+    if(target==='boss'){floater.style.right='28px';floater.style.top='50px';}
     else{floater.style.left='28px';floater.style.top='90px';}
     arena.appendChild(floater); setTimeout(()=>floater.remove(),800);
 }
 function showSkillFX(target,color) {
     const fx=document.createElement('div'); fx.className='skill-fx'; fx.style.color=color;
     const arena=document.getElementById('arena-container');
-    if(target==='boss'){fx.style.right='38px';fx.style.top='110px';}
+    if(target==='boss'){fx.style.right='38px';fx.style.top='90px';}
     else{fx.style.left='38px';fx.style.top='130px';}
     arena.appendChild(fx); setTimeout(()=>fx.remove(),500);
 }
@@ -1672,20 +1768,20 @@ function openBattleBag() {
         if(!dbItem||(dbItem.type!=='heal'&&dbItem.type!=='revive')) return;
         hasItems=true;
         const el=document.createElement('div');
-        el.className='flex justify-between items-center bg-gray-100 p-2 rounded border border-gray-300';
+        el.className='flex justify-between items-center bg-white p-3 rounded-xl border-2 border-emerald-200 shadow-sm';
         el.innerHTML=`
-            <div class="flex items-center gap-2">
-                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${dbItem.img}.png" class="w-6 h-6" style="image-rendering:pixelated;">
+            <div class="flex items-center gap-3">
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${dbItem.img}.png" class="w-8 h-8" style="image-rendering:pixelated;">
                 <div class="flex flex-col">
-                    <span class="pixel-font text-[6px]">${dbItem.name} (x${qty})</span>
-                    <span class="pixel-font text-[4px] text-green-600">${dbItem.type==='heal'?`+${dbItem.val} HP`:'REVIVE'}</span>
+                    <span class="font-bold text-xs text-slate-700">${dbItem.name} (x${qty})</span>
+                    <span class="bubbly-font text-[10px] text-emerald-500">${dbItem.type==='heal'?`+${dbItem.val} HP`:'REVIVE'}</span>
                 </div>
             </div>
-            <button onclick="useItemInBattle('${key}',${dbItem.val},'${dbItem.type}')" class="retro-btn bg-green-500 px-3 py-1 text-white border-green-700"><span class="pixel-font text-[5px] mt-1">PAKAI</span></button>
+            <button onclick="useItemInBattle('${key}',${dbItem.val},'${dbItem.type}')" class="pastel-btn btn-emerald px-3 py-2"><span class="bubbly-font text-[10px]">PAKAI</span></button>
         `;
         list.appendChild(el);
     });
-    if(!hasItems) list.innerHTML=`<p class="pixel-font text-[6px] text-gray-500 text-center py-4">Tidak ada item.</p>`;
+    if(!hasItems) list.innerHTML=`<p class="font-bold text-sm text-slate-400 text-center py-6">Tidak ada item penyembuh.</p>`;
     modal.classList.remove('hidden'); modal.classList.add('flex');
 }
 async function useItemInBattle(itemId,val,type) {
@@ -1710,7 +1806,201 @@ async function useItemInBattle(itemId,val,type) {
     if(isMultiplayer){myTurn=false;lockGrid();mpChannel.publish('attack',{dmg:0,attackerId:activeP?.id,type:'normal',isHeal:true});}
 }
 
-// ── INIT ───────────────────────────────────────────────────
+// ── AUDIO ENGINE ──────────────────────────────────────────
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+function initAudio() {
+    if (!audioCtx) audioCtx = new AudioCtx();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+function playSound(type) {
+    try {
+        initAudio();
+        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        const t = audioCtx.currentTime;
+        if (type==='hit')          { osc.type='square'; osc.frequency.setValueAtTime(150,t); osc.frequency.exponentialRampToValueAtTime(40,t+0.1); gain.gain.setValueAtTime(0.3,t); gain.gain.exponentialRampToValueAtTime(0.01,t+0.1); osc.start(); osc.stop(t+0.1); }
+        else if(type==='supereffective'){ osc.type='sawtooth'; osc.frequency.setValueAtTime(400,t); osc.frequency.exponentialRampToValueAtTime(800,t+0.1); gain.gain.setValueAtTime(0.3,t); gain.gain.exponentialRampToValueAtTime(0.01,t+0.2); osc.start(); osc.stop(t+0.2); }
+        else if(type==='coin')     { osc.type='sine'; osc.frequency.setValueAtTime(900,t); osc.frequency.setValueAtTime(1200,t+0.05); gain.gain.setValueAtTime(0.2,t); gain.gain.exponentialRampToValueAtTime(0.01,t+0.2); osc.start(); osc.stop(t+0.2); }
+        else if(type==='heal')     { osc.type='sine'; osc.frequency.setValueAtTime(400,t); osc.frequency.linearRampToValueAtTime(800,t+0.3); gain.gain.setValueAtTime(0.3,t); gain.gain.exponentialRampToValueAtTime(0.01,t+0.4); osc.start(); osc.stop(t+0.4); }
+        else if(type==='ko')       { osc.type='sawtooth'; osc.frequency.setValueAtTime(100,t); osc.frequency.exponentialRampToValueAtTime(20,t+0.3); gain.gain.setValueAtTime(0.4,t); gain.gain.exponentialRampToValueAtTime(0.01,t+0.4); osc.start(); osc.stop(t+0.4); }
+        else if(type==='catch')    { osc.type='square'; osc.frequency.setValueAtTime(800,t); osc.frequency.setValueAtTime(1200,t+0.1); gain.gain.setValueAtTime(0.2,t); gain.gain.exponentialRampToValueAtTime(0.01,t+0.5); osc.start(); osc.stop(t+0.5); }
+        else if(type==='legendary'){ for(let i=0;i<4;i++){const o2=audioCtx.createOscillator(),g2=audioCtx.createGain();o2.connect(g2);g2.connect(audioCtx.destination);const t2=t+i*0.12;o2.type='sine';o2.frequency.setValueAtTime([523,659,784,1047][i],t2);g2.gain.setValueAtTime(0.2,t2);g2.gain.exponentialRampToValueAtTime(0.01,t2+0.4);o2.start(t2);o2.stop(t2+0.4);} }
+    } catch(e) {}
+}
+function playCry(url) {
+    if (!url) return;
+    try { const a = new Audio(url); a.volume = 0.3; a.play().catch(()=>{}); } catch(e) {}
+}
+
+// ── DEEP STORAGE: IndexedDB + localStorage fallback ───────
+const DB_NAME = 'PokeMatchRPG', DB_STORE = 'saveData', DB_KEY = 'playerSave';
+let db = null;
+function openDB() {
+    return new Promise((res, rej) => {
+        if (db) { res(db); return; }
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = e => { const d = e.target.result; if(!d.objectStoreNames.contains(DB_STORE)) d.createObjectStore(DB_STORE); };
+        req.onsuccess = e => { db = e.target.result; res(db); };
+        req.onerror = () => rej(req.error);
+    });
+}
+async function saveToStorage(data) {
+    const str = JSON.stringify(data);
+    try { const d=await openDB(); const tx=d.transaction(DB_STORE,'readwrite'); tx.objectStore(DB_STORE).put(str,DB_KEY); await new Promise((r,j)=>{tx.oncomplete=r;tx.onerror=j;}); } catch(e){}
+    try { localStorage.setItem('poke_match_save', str); } catch(e) {}
+}
+async function loadFromStorage() {
+    try { const d=await openDB(); const tx=d.transaction(DB_STORE,'readonly'); const req=tx.objectStore(DB_STORE).get(DB_KEY); const result=await new Promise((r,j)=>{req.onsuccess=()=>r(req.result);req.onerror=j;}); if(result) return JSON.parse(result); } catch(e){}
+    try { const ls=localStorage.getItem('poke_match_save'); if(ls) return JSON.parse(ls); } catch(e){}
+    return null;
+}
+function syncDataToDB() { if (window.player) saveToStorage(window.player); }
+
+// ── FETCH HELPERS ─────────────────────────────────────────
+async function fetchWithTimeout(resource, options = {}) {
+    const { timeout = 5000 } = options;
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    const response = await fetch(resource, { ...options, signal: controller.signal });
+    clearTimeout(id); return response;
+}
+let moveCache = {};
+async function fetchMoveDetails(moveName) {
+    if (moveCache[moveName]) return moveCache[moveName];
+    try {
+        let res = await fetchWithTimeout(`${MOVE_URL}${moveName}`, {timeout:3000});
+        let data = await res.json();
+        let obj = { power: data.power||40, type: data.type.name, damageClass: data.damage_class.name };
+        moveCache[moveName] = obj; return obj;
+    } catch(e) { return { power:40, type:'normal', damageClass:'physical' }; }
+}
+function extractStats(data) {
+    return {
+        hp:    data.stats.find(s=>s.stat.name==='hp')?.base_stat||50,
+        atk:   data.stats.find(s=>s.stat.name==='attack')?.base_stat||50,
+        def:   data.stats.find(s=>s.stat.name==='defense')?.base_stat||50,
+        spa:   data.stats.find(s=>s.stat.name==='special-attack')?.base_stat||50,
+        spd:   data.stats.find(s=>s.stat.name==='special-defense')?.base_stat||50,
+        speed: data.stats.find(s=>s.stat.name==='speed')?.base_stat||50
+    };
+}
+
+async function fetchNewPokemon(pId, rarity) {
+    try {
+        let res  = await fetchWithTimeout(`${API_URL}${pId}`, {timeout:5000});
+        let data = await res.json();
+        let rawMoves = data.moves.filter(m => m.version_group_details?.length > 0 && m.version_group_details[0].move_learn_method.name === 'level-up');
+        rawMoves.sort((a,b) => a.version_group_details[0].level_learned_at - b.version_group_details[0].level_learned_at);
+        let mPool = [];
+        for (let rm of rawMoves) {
+            if (mPool.length >= 4) break;
+            try {
+                let mData = await fetchMoveDetails(rm.move.name);
+                if (mData.damageClass !== 'status' && mData.power > 0)
+                    mPool.push({ level: rm.version_group_details[0].level_learned_at, name: rm.move.name });
+            } catch(e) {}
+        }
+        if (mPool.length === 0) mPool = [{level:1, name:'tackle'}];
+        let moveDetails = await fetchMoveDetails(mPool[0].name);
+        const baseStats = extractStats(data);
+        return {
+            uid: genUID(), isPokemon: true, id: Number(pId), name: data.name,
+            rarity, hp: baseStats.hp, atk: baseStats.atk, def: baseStats.def,
+            spa: baseStats.spa, spd: baseStats.spd, speed: baseStats.speed,
+            types: data.types.map(t => t.type.name),
+            spriteUrl: getSpriteUrl(Number(pId)),
+            animUrl:   data.sprites?.other?.showdown?.front_default || getAnimUrl(pId),
+            artUrl:    data.sprites?.other?.['official-artwork']?.front_default || `${POKE_ART_URL}${pId}.png`,
+            level: 1, exp: 0,
+            currentMove: mPool[0].name, movePower: moveDetails.power,
+            moveClass: moveDetails.damageClass, moveType: moveDetails.type,
+            movePool: mPool, cryUrl: data.cries?.latest || ''
+        };
+    } catch(e) {
+        const fb = STARTER_POOL[Math.floor(Math.random() * STARTER_POOL.length)];
+        return { ...JSON.parse(JSON.stringify(fb)), uid: genUID(), isPokemon: true, id: Number(pId), rarity, level:1, exp:0, spriteUrl: getSpriteUrl(Number(pId)), animUrl: getAnimUrl(pId), artUrl: `${POKE_ART_URL}${pId}.png` };
+    }
+}
+
+async function rollGachaSingleItem() {
+    let isItem = Math.random() < 0.40;
+    if (isItem) {
+        let r = Math.random() * 100;
+        let rarity = r < 55 ? 'junk' : r < 80 ? 'common' : r < 95 ? 'rare' : 'epic';
+        let pool = ITEMS_DB[rarity];
+        let chosen = pool[Math.floor(Math.random() * pool.length)];
+        return { isPokemon: false, rarity, data: chosen };
+    } else {
+        window.player.pityCounter++;
+        let r = Math.random() * 100, rarity = 'common';
+        if (window.player.pityCounter >= 50) {
+            rarity = Math.random() < 0.25 ? 'legendary' : 'epic';
+            window.player.pityCounter = 0;
+        } else {
+            if      (r < 2)  rarity = 'legendary';
+            else if (r < 10) rarity = 'epic';
+            else if (r < 35) rarity = 'rare';
+            else             rarity = 'common';
+            if (rarity === 'legendary' || rarity === 'epic') window.player.pityCounter = 0;
+        }
+        const pool = RARITY_DB[rarity].ids;
+        return { isPokemon: true, rarity, id: pool[Math.floor(Math.random() * pool.length)] };
+    }
+}
+
+function initBattleParty() {
+    window.battleParty = window.player.deck.map(uid => {
+        let p = window.player.unlocked.find(u => u.uid === uid);
+        if (!p) return null;
+        let maxHp = calcStat(p.hp, p.level, true);
+        return {
+            ...JSON.parse(JSON.stringify(p)),
+            maxHp, hp: maxHp, isKo: false,
+            currentAtk: calcStat(p.atk, p.level),
+            currentDef: calcStat(p.def, p.level),
+            currentSpa: calcStat(p.spa, p.level),
+            currentSpd: calcStat(p.spd, p.level),
+        };
+    }).filter(Boolean);
+    window.activeSummonId = window.battleParty[0]?.uid || null;
+}
+
+function getActivePokemon()  { return window.battleParty?.find(p => p.uid === window.activeSummonId); }
+function getAliveCount()     { return window.battleParty?.filter(p => !p.isKo).length || 0; }
+function getNextAlivePokemon(){ return window.battleParty?.find(p => !p.isKo && p.uid !== window.activeSummonId); }
+
+function giveExpToDeck(amount) {
+    let lvlUp = false;
+    window.player.deck.forEach(uid => {
+        let p = window.player.unlocked.find(u => u.uid === uid);
+        if (!p) return;
+        p.exp += amount;
+        let max = p.level * 100;
+        while (p.exp >= max) { p.level++; p.exp -= max; p.atk+=2; p.def+=1; p.hp+=5; p.spa+=1; p.spd+=1; p.speed+=1; max = p.level * 100; lvlUp = true; }
+    });
+    return lvlUp;
+}
+
+// ── MATCH-3 BOARD HELPERS ─────────────────────────────────
+const BOARD_WIDTH = 6;
+function swap(board, i, j) { const t = board[i]; board[i] = board[j]; board[j] = t; }
+function findMatches(board) {
+    let matched = new Set();
+    for(let r=0;r<BOARD_WIDTH;r++){for(let c=0;c<BOARD_WIDTH-2;c++){let i=r*BOARD_WIDTH+c;if(!board[i])continue;let uid=board[i].uid,ml=1;while(c+ml<BOARD_WIDTH&&board[i+ml]?.uid===uid)ml++;if(ml>=3)for(let k=0;k<ml;k++)matched.add(i+k);c+=ml-1;}}
+    for(let c=0;c<BOARD_WIDTH;c++){for(let r=0;r<BOARD_WIDTH-2;r++){let i=r*BOARD_WIDTH+c;if(!board[i])continue;let uid=board[i].uid,ml=1;while(r+ml<BOARD_WIDTH&&board[i+ml*BOARD_WIDTH]?.uid===uid)ml++;if(ml>=3)for(let k=0;k<ml;k++)matched.add(i+k*BOARD_WIDTH);r+=ml-1;}}
+    return Array.from(matched);
+}
+function resolveInitialMatches(board, getRandomFn) {
+    let matches = findMatches(board), loop=0;
+    while(matches.length>0&&loop<15){ matches.forEach(i=>board[i]=getRandomFn()); matches=findMatches(board); loop++; }
+}
+function hasPossibleMoves(board) {
+    for(let r=0;r<BOARD_WIDTH;r++){for(let c=0;c<BOARD_WIDTH;c++){let i=r*BOARD_WIDTH+c;if(c<BOARD_WIDTH-1){swap(board,i,i+1);let m=findMatches(board);swap(board,i,i+1);if(m.length>0)return true;}if(r<BOARD_WIDTH-1){swap(board,i,i+BOARD_WIDTH);let m=findMatches(board);swap(board,i,i+BOARD_WIDTH);if(m.length>0)return true;}}}
+    return false;
+}
+
+// INIT
 window.onload = () => { initGame(); };
 </script>
 </body>
