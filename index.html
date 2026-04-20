@@ -535,6 +535,7 @@
     // ==========================================
     function startDraft() {
         channel.unsubscribe('JOIN_REQ'); channel.unsubscribe('HOST_ACCEPT'); // Bersihkan listener handshake
+        channel.unsubscribe('DRAFT_COMPLETE'); // Bersihkan listener sinkronisasi sebelum memulai draft baru
         
         document.getElementById('lobby-screen').classList.add('hidden'); 
         document.getElementById('game-over').classList.add('hidden');
@@ -561,6 +562,15 @@
                 
                 document.getElementById('p2-count').innerText = `${oppTeam.length}/5`;
                 draftTurn = myTurnId; updateDraftUI(); pT(600); checkDraftDone();
+            }
+        });
+
+        // LISTENER BARU: Guest menunggu DRAFT_COMPLETE dari Host untuk memastikan sinkronisasi selesai
+        channel.subscribe('DRAFT_COMPLETE', (msg) => {
+            if(myRole === 'guest' && myTeam.length === 5 && oppTeam.length === 5) {
+                document.getElementById('draft-turn-text').innerText = "MEMASUKI ARENA...";
+                document.getElementById('draft-turn-text').className = "text-xl font-black uppercase text-sky-500 mt-1";
+                setTimeout(initBattle, 1500);
             }
         });
     }
@@ -645,8 +655,20 @@
     function checkDraftDone() {
         if(myTeam.length === 5 && oppTeam.length === 5) {
             clearInterval(draftTimer);
-            document.getElementById('draft-turn-text').innerText = "MEMASUKI ARENA...";
-            setTimeout(initBattle, 1500);
+            
+            // SINKRONISASI UPDATE: Host mengecek state dan mengirim sinyal konfirmasi ke Guest
+            if (myRole === 'host') {
+                document.getElementById('draft-turn-text').innerText = "MEMASUKI ARENA...";
+                document.getElementById('draft-turn-text').className = "text-xl font-black uppercase text-sky-500 mt-1";
+                
+                // Host broadcast DRAFT_COMPLETE ke guest
+                channel.publish('DRAFT_COMPLETE', { ready: true });
+                setTimeout(initBattle, 1500);
+            } else {
+                // Guest menunggu instruksi dari host via event DRAFT_COMPLETE
+                document.getElementById('draft-turn-text').innerText = "MENUNGGU HOST...";
+                document.getElementById('draft-turn-text').className = "text-xl font-black uppercase text-slate-500 mt-1 animate-pulse";
+            }
         }
     }
 
