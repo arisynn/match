@@ -358,18 +358,15 @@
         hideLoading();
         cleanupMultiplayer();
         
-        // Sembunyikan semua layar yang sedang aktif
         document.getElementById('lobby-screen').classList.add('hidden');
         document.getElementById('draft-screen').style.display = 'none';
         document.getElementById('game-container').classList.add('hidden');
         document.getElementById('game-over').classList.add('hidden');
 
-        // Tampilkan layar Error
         const errScreen = document.getElementById('error-screen');
         errScreen.classList.remove('hidden');
         document.getElementById('error-context').innerText = context || "Terjadi Kesalahan Kritis";
 
-        // Parsing error agar rapi
         let errString = "";
         if (error instanceof Error) {
             errString = `${error.name}: ${error.message}\n\nTrace:\n${error.stack || 'Tidak ada trace'}`;
@@ -386,7 +383,6 @@
         const errText = document.getElementById('error-details').innerText;
         const btn = document.getElementById('btn-copy-error');
         
-        // Gunakan eksekusi command bawaan (ramah iFrame & Canvas)
         const textarea = document.createElement('textarea');
         textarea.value = errText;
         document.body.appendChild(textarea);
@@ -406,7 +402,7 @@
     }
 
     // ==========================================
-    // 1. MULTIPLAYER HANDSHAKE (SISTEM SEDERHANA & TANGGUH)
+    // 1. MULTIPLAYER HANDSHAKE (3-WAY HANDSHAKE TANGGUH)
     // ==========================================
     let isHandshakeDone = false;
     let guestJoinInterval = null;
@@ -430,51 +426,51 @@
 
     async function createRoom() {
         initA(); myName = getName();
-        const code = Math.random().toString(36).substring(2, 6).toUpperCase();
         myRole = 'host'; myTurnId = 'p1'; isHandshakeDone = false; oppName = ''; poolData = []; typeRels = {};
 
+        // Sembunyikan tombol, tampilkan status menunggu (tanpa kode dulu)
         document.getElementById('lobby-actions').classList.add('hidden');
         document.getElementById('lobby-waiting').classList.remove('hidden');
-        document.getElementById('display-room-code').innerText = code;
+        document.getElementById('display-room-code').innerText = "....";
+        document.getElementById('lobby-sync-msg').innerText = "Membuat Arena & Memuat Kartu...";
         
-        showLoading("Menyiapkan Room...");
+        showLoading("Menyiapkan Kartu...");
         cleanupMultiplayer();
 
         try {
-            await initAblyAsync();
-            channel = ably.channels.get(`poke-room-${code}`);
-            
-            // 1. HOST BERSEDIA MENERIMA TAMU SEJAK AWAL
-            channel.subscribe('GUEST_JOIN', (msg) => {
-                if (isHandshakeDone) return;
-                oppName = msg.data.name;
-                checkHostReady(); // Cek apakah kartu sudah siap
-            });
-
-            setupPresence();
-
-            // 2. HOST MULAI DOWNLOAD KARTU
-            document.getElementById('lobby-sync-msg').innerText = "Memuat database kartu...";
+            // 1. HOST MENGUNDUH DATA DULUAN SEBELUM MEMBUKA ROOM
             let success = await fetchPool();
             if(!success) { 
                 throw new Error("Gagal mengunduh kartu dari PokeAPI. Cek koneksi internet atau server PokeAPI sedang terganggu."); 
             }
 
-            // 3. HOST SELESAI DOWNLOAD, TUNGGU TAMU
+            // 2. KARTU SUDAH SIAP, BUAT KODE DAN KONEK ABLY
+            const code = Math.random().toString(36).substring(2, 6).toUpperCase();
+            await initAblyAsync();
+            channel = ably.channels.get(`poke-room-${code}`);
+            setupPresence();
+            
+            // 3. TAMPILKAN KODE KE LAYAR SEKARANG KARENA HOST SUDAH SIAP 100%
+            document.getElementById('display-room-code').innerText = code;
             document.getElementById('lobby-sync-msg').innerText = "Menunggu lawan bergabung...";
             hideLoading();
-            checkHostReady(); // Cek apakah tamu sudah nunggu duluan
+
+            // 4. TERIMA TAMU MENGGUNAKAN SISTEM 3-WAY HANDSHAKE
+            channel.subscribe('GUEST_JOIN', (msg) => {
+                oppName = msg.data.name;
+                // Host akan selalu mengirim balik DATA setiap kali Guest mengetuk pintu
+                channel.publish('HOST_DATA', { pool: poolData, types: typeRels, hostName: myName });
+            });
+
+            // 5. HOST MENUNGGU KONFIRMASI BAHWA GUEST SUDAH MENERIMA DATA
+            channel.subscribe('GUEST_CONFIRM', () => {
+                if(!isHandshakeDone) {
+                    isHandshakeDone = true;
+                    startDraft(); // Host akhirnya masuk Draft dengan jaminan Guest sudah siap
+                }
+            });
 
         } catch(err) { showErrorScreen(err, "GAGAL MEMBUAT ROOM"); }
-    }
-
-    function checkHostReady() {
-        // Jika kartu sudah siap DAN tamu sudah mengirim sinyal GUEST_JOIN
-        if (poolData.length > 0 && oppName !== '' && !isHandshakeDone) {
-            isHandshakeDone = true;
-            channel.publish('HOST_START', { pool: poolData, types: typeRels, hostName: myName });
-            startDraft();
-        }
     }
 
     async function joinRoom() {
@@ -491,34 +487,37 @@
             channel = ably.channels.get(`poke-room-${code}`);
             setupPresence();
 
-            // 1. GUEST MENUNGGU PERINTAH MULAI DARI HOST
-            channel.subscribe('HOST_START', (msg) => {
+            // 1. GUEST MENUNGGU DATA DARI HOST
+            channel.subscribe('HOST_DATA', (msg) => {
                 if(isHandshakeDone) return;
-                isHandshakeDone = true;
+                isHandshakeDone = true; // Tandai selesai agar tidak mengulang
+                
                 clearInterval(guestJoinInterval);
                 clearTimeout(joinTimeoutTimer);
                 hideLoading();
                 
+                // Simpan data dari Host
                 oppName = msg.data.hostName;
                 poolData = msg.data.pool;
                 typeRels = msg.data.types;
                 
-                startDraft();
+                // 2. DATA DITERIMA -> BERITAHU HOST BAHWA GUEST SIAP MASUK DRAFT
+                channel.publish('GUEST_CONFIRM', {});
+                startDraft(); // Guest masuk Draft duluan/bersamaan
             });
 
-            // 2. GUEST SPAM REQUEST JOIN SAMPAI DITERIMA (Anti Pesan Hilang)
-            // Guest akan terus mengetuk pintu setiap 2 detik sampai dibukakan oleh Host.
+            // 3. GUEST TERUS MEMINTA DATA SAMPAI DITERIMA
             channel.publish('GUEST_JOIN', { name: myName });
             guestJoinInterval = setInterval(() => {
                 if (!isHandshakeDone) channel.publish('GUEST_JOIN', { name: myName });
             }, 2000);
 
-            // 3. TIMEOUT JIKA HOST TIDAK ADA / TIDAK MERESPON (15 Detik)
+            // 4. TIMEOUT JIKA HOST TIDAK MERESPON (15 Detik)
             if(joinTimeoutTimer) clearTimeout(joinTimeoutTimer);
             joinTimeoutTimer = setTimeout(() => {
                 if(!isHandshakeDone) {
                     clearInterval(guestJoinInterval);
-                    showErrorScreen(new Error("Timeout (15 Detik): Host tidak merespon.\n\nKemungkinan:\n1. Kode Room Salah.\n2. Host sudah menutup game.\n3. Host masih terjebak loading kartu (Koneksi host lambat)."), "ROOM TIDAK DITEMUKAN");
+                    showErrorScreen(new Error("Timeout (15 Detik): Host tidak merespon.\n\nPastikan KODE BENAR dan Host masih berada di ruang tunggu Lobby menunggu kamu bergabung."), "ROOM TIDAK DITEMUKAN");
                 }
             }, 15000);
 
@@ -611,9 +610,10 @@
     // 3. DRAFT PICK & TIMER LOGIC
     // ==========================================
     function startDraft() {
-        // Bersihkan listener handshake lama
+        // Bersihkan SEMUA listener handshake agar tidak bocor / memicu error ganda
         channel.unsubscribe('GUEST_JOIN'); 
-        channel.unsubscribe('HOST_START');
+        channel.unsubscribe('HOST_DATA');
+        channel.unsubscribe('GUEST_CONFIRM');
         channel.unsubscribe('DRAFT_COMPLETE'); 
         
         document.getElementById('lobby-screen').classList.add('hidden'); 
@@ -644,7 +644,7 @@
             }
         });
 
-        // Sinkronisasi masuk Arena untuk Guest
+        // Sinkronisasi masuk Arena
         channel.subscribe('DRAFT_COMPLETE', (msg) => {
             if(myRole === 'guest' && myTeam.length === 5 && oppTeam.length === 5) {
                 document.getElementById('draft-turn-text').innerText = "MEMASUKI ARENA...";
