@@ -34,6 +34,19 @@
         #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: #ffffff; padding: 10px 20px; border-radius: 12px; font-size: 0.85rem; font-weight: 800; opacity: 0; transition: opacity 0.3s, transform 0.3s; z-index: 99999; pointer-events: none; width: max-content; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.15);}
         #toast.show { opacity: 1; transform: translate(-50%, 10px); }
 
+        /* --- LOBBY WAITING ROOM --- */
+        .slot-card {
+            background: #fff; border: 4px solid #cbd5e1; border-radius: 1rem; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 140px; width: 45%; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            position: relative; overflow: hidden; transition: all 0.3s ease;
+        }
+        .slot-card.filled-host { border-color: #0ea5e9; background: #f0f9ff; }
+        .slot-card.filled-guest { border-color: #f43f5e; background: #fff1f2; }
+        .avatar-placeholder { width: 60px; height: 60px; background: #e2e8f0; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2rem; color: #94a3b8; margin-bottom: 0.5rem; }
+        .filled-host .avatar-placeholder { background: #bae6fd; color: #0284c7; }
+        .filled-guest .avatar-placeholder { background: #fecdd3; color: #e11d48; }
+
         /* --- DRAFT PICK UI --- */
         #draft-screen { display: flex; flex-direction: column; height: 100%; width: 100%; background: #e2e8f0; gap: 4px; padding: 4px;}
 
@@ -165,12 +178,14 @@
     <!-- GLOBAL MUTE BUTTON -->
     <button id="btn-mute" onclick="toggleMute()" class="fixed top-4 right-4 z-[100] bg-white border-2 border-slate-300 rounded-full w-10 h-10 flex items-center justify-center text-xl shadow-md transition-transform active:scale-95">🔊</button>
 
-    <!-- 1. LOBBY -->
+    <!-- 1. MAIN MENU & LOBBY ROOM -->
     <div id="lobby-screen" class="fixed inset-0 bg-slate-100 z-50 flex flex-col items-center justify-center p-6">
-        <div class="bg-white border-4 border-slate-300 w-full p-8 rounded-2xl text-center shadow-lg">
+        
+        <!-- MAIN MENU (CREATE / JOIN) -->
+        <div id="main-menu" class="bg-white border-4 border-slate-300 w-full p-8 rounded-2xl text-center shadow-lg transition-all duration-300">
             <h1 class="text-4xl font-black text-slate-800 mb-6 uppercase leading-tight">Master<br><span class="text-sky-500">Battle</span></h1>
             
-            <div id="lobby-actions" class="space-y-4">
+            <div class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-500 mb-1 text-left px-1">Nama Kamu:</label>
                     <input type="text" id="player-name-input" placeholder="DAZAI" maxlength="10" class="w-full p-3 border-2 border-slate-300 rounded-xl mb-2 text-center text-xl font-black uppercase outline-none focus:border-sky-400 bg-slate-50">
@@ -185,12 +200,38 @@
                     <button onclick="joinRoom()" class="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-lg font-black active:scale-95 transition-transform">GABUNG ROOM</button>
                 </div>
             </div>
+        </div>
 
-            <div id="lobby-waiting" class="hidden mt-2">
-                <p class="text-lg font-bold text-slate-700 mb-1">Kode Room:</p>
-                <h2 id="display-room-code" class="text-6xl font-black text-sky-500 tracking-widest bg-slate-100 py-2 rounded-lg border border-slate-200 mb-4">...</h2>
-                <p id="lobby-sync-msg" class="text-sm text-slate-500 font-bold animate-pulse">Menunggu lawan bergabung...</p>
-                <button onclick="cancelLobby()" class="mt-4 px-4 py-2 bg-slate-200 text-slate-600 font-bold rounded-lg text-sm uppercase">Batal</button>
+        <!-- WAITING ROOM LOBBY (MLBB STYLE) -->
+        <div id="waiting-room" class="bg-slate-800 border-4 border-slate-700 w-full p-6 rounded-2xl text-center shadow-2xl hidden flex-col items-center">
+            <div class="bg-slate-900 px-4 py-2 rounded-lg border-2 border-slate-700 mb-6 w-full relative overflow-hidden">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">KODE RUANGAN</span>
+                <span id="display-room-code" class="text-4xl font-black text-white tracking-[0.2em] relative z-10">....</span>
+            </div>
+
+            <div class="flex justify-between items-center w-full mb-8 px-2 relative">
+                <!-- SLOT 1: HOST -->
+                <div id="slot-1" class="slot-card">
+                    <div class="avatar-placeholder">?</div>
+                    <span id="slot-1-name" class="font-black text-sm uppercase text-slate-500">MENGHUBUNGKAN...</span>
+                    <span class="text-[9px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full mt-1">HOST</span>
+                </div>
+
+                <div class="font-black text-3xl italic text-slate-400 px-2">VS</div>
+
+                <!-- SLOT 2: GUEST -->
+                <div id="slot-2" class="slot-card">
+                    <div class="avatar-placeholder">?</div>
+                    <span id="slot-2-name" class="font-black text-sm uppercase text-slate-500">KOSONG</span>
+                    <span class="text-[9px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full mt-1">GUEST</span>
+                </div>
+            </div>
+
+            <p id="lobby-status-text" class="text-sm font-bold text-slate-300 mb-4 animate-pulse">Menyiapkan Ruangan...</p>
+
+            <div class="w-full space-y-2">
+                <button id="btn-start-game" onclick="hostStartGame()" class="hidden w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-lg shadow-lg active:scale-95 transition-all uppercase tracking-wider">MULAI BATTLE</button>
+                <button onclick="cancelLobby()" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl font-bold text-sm transition-colors border border-slate-600">TINGGALKAN ROOM</button>
             </div>
         </div>
     </div>
@@ -292,23 +333,6 @@
         </div>
     </div>
 
-    <!-- 5. ERROR SCREEN -->
-    <div id="error-screen" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[200000] flex flex-col items-center justify-center hidden">
-        <div class="bg-white p-6 rounded-2xl max-w-sm w-[90%] border-4 border-rose-500 shadow-2xl flex flex-col gap-4">
-            <div class="text-center">
-                <h2 class="text-3xl font-black text-rose-600 uppercase">SYSTEM ERROR</h2>
-                <p id="error-context" class="text-slate-500 font-bold text-sm mt-1">Terjadi Kesalahan</p>
-            </div>
-            <div class="bg-slate-100 rounded-lg p-3 overflow-y-auto border-2 border-slate-200 relative max-h-[40vh]">
-                <pre id="error-details" class="text-[10px] text-slate-700 font-mono whitespace-pre-wrap break-all"></pre>
-            </div>
-            <div class="flex flex-col gap-2 w-full mt-2">
-                <button onclick="copyError()" id="btn-copy-error" class="w-full py-3 bg-slate-800 hover:bg-slate-900 rounded-xl font-black text-white active:scale-95 shadow-md transition-all">📋 SALIN ERROR</button>
-                <button onclick="returnToLobby()" class="w-full py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-black active:scale-95 shadow-sm transition-all">KEMBALI KE LOBBY</button>
-            </div>
-        </div>
-    </div>
-
 <script>
     // --- CONFIG & DATA ---
     const ROWS = 6; const COLS = 6; const POOL_SIZE = 15;
@@ -332,6 +356,8 @@
     let rematchReq = { me: false, opp: false };
     let opponentConnected = true;
     let draftTimer; let draftTimeLeft = 15;
+    
+    let isDataLoaded = false; // Flag untuk memastikan kartu API selesai diunduh host
 
     // --- AUDIO & MUTE ---
     let actx; let isMuted = false;
@@ -353,60 +379,9 @@
     function hideLoading() { document.getElementById('global-loading').classList.remove('show'); }
     function getName() { let input = document.getElementById('player-name-input').value.trim(); return input === "" ? (myRole === 'host' ? "HOST" : "GUEST") : input; }
 
-    // --- ERROR HANDLER SYSTEM ---
-    function showErrorScreen(error, context) {
-        hideLoading();
-        cleanupMultiplayer();
-        
-        document.getElementById('lobby-screen').classList.add('hidden');
-        document.getElementById('draft-screen').style.display = 'none';
-        document.getElementById('game-container').classList.add('hidden');
-        document.getElementById('game-over').classList.add('hidden');
-
-        const errScreen = document.getElementById('error-screen');
-        errScreen.classList.remove('hidden');
-        document.getElementById('error-context').innerText = context || "Terjadi Kesalahan Kritis";
-
-        let errString = "";
-        if (error instanceof Error) {
-            errString = `${error.name}: ${error.message}\n\nTrace:\n${error.stack || 'Tidak ada trace'}`;
-        } else if (typeof error === 'object') {
-            try { errString = JSON.stringify(error, null, 2); } catch(e) { errString = String(error); }
-        } else {
-            errString = String(error);
-        }
-
-        document.getElementById('error-details').innerText = errString;
-    }
-
-    function copyError() {
-        const errText = document.getElementById('error-details').innerText;
-        const btn = document.getElementById('btn-copy-error');
-        
-        const textarea = document.createElement('textarea');
-        textarea.value = errText;
-        document.body.appendChild(textarea);
-        textarea.select();
-        try {
-            document.execCommand('copy');
-            btn.innerText = "✅ TERSALIN!";
-            btn.classList.replace('bg-slate-800', 'bg-emerald-600');
-            setTimeout(() => {
-                btn.innerText = "📋 SALIN ERROR";
-                btn.classList.replace('bg-emerald-600', 'bg-slate-800');
-            }, 2000);
-        } catch (err) { 
-            showToast("Gagal menyalin error ke clipboard."); 
-        }
-        document.body.removeChild(textarea);
-    }
-
     // ==========================================
-    // 1. MULTIPLAYER HANDSHAKE (3-WAY HANDSHAKE TANGGUH)
+    // 1. LOBBY WAITING ROOM (MLBB STYLE)
     // ==========================================
-    let isHandshakeDone = false;
-    let guestJoinInterval = null;
-    let joinTimeoutTimer = null;
 
     function initAblyAsync() {
         return new Promise((resolve, reject) => {
@@ -420,57 +395,49 @@
     }
 
     function cleanupMultiplayer() {
-        clearInterval(guestJoinInterval); clearTimeout(joinTimeoutTimer);
-        if(channel) { try{channel.unsubscribe(); channel.detach();}catch(_){} channel = null; }
+        if(channel) { try{channel.unsubscribe(); channel.presence.leave(); channel.detach();}catch(_){} channel = null; }
     }
 
     async function createRoom() {
         initA(); myName = getName();
-        myRole = 'host'; myTurnId = 'p1'; isHandshakeDone = false; oppName = ''; poolData = []; typeRels = {};
-
-        // Sembunyikan tombol, tampilkan status menunggu (tanpa kode dulu)
-        document.getElementById('lobby-actions').classList.add('hidden');
-        document.getElementById('lobby-waiting').classList.remove('hidden');
-        document.getElementById('display-room-code').innerText = "....";
-        document.getElementById('lobby-sync-msg').innerText = "Membuat Arena & Memuat Kartu...";
+        myRole = 'host'; myTurnId = 'p1'; oppName = ''; poolData = []; typeRels = {}; isDataLoaded = false;
         
-        showLoading("Menyiapkan Kartu...");
-        cleanupMultiplayer();
+        const code = Math.random().toString(36).substring(2, 6).toUpperCase();
+
+        // Transisi Layar Utama ke Lobby
+        document.getElementById('main-menu').classList.add('hidden');
+        document.getElementById('waiting-room').classList.remove('hidden');
+        document.getElementById('waiting-room').classList.add('flex');
+        document.getElementById('display-room-code').innerText = code;
+        
+        resetLobbyUI();
+        document.getElementById('lobby-status-text').innerText = "Menyiapkan Koneksi...";
 
         try {
-            // 1. HOST MENGUNDUH DATA DULUAN SEBELUM MEMBUKA ROOM
-            let success = await fetchPool();
-            if(!success) { 
-                throw new Error("Gagal mengunduh kartu dari PokeAPI. Cek koneksi internet atau server PokeAPI sedang terganggu."); 
-            }
-
-            // 2. KARTU SUDAH SIAP, BUAT KODE DAN KONEK ABLY
-            const code = Math.random().toString(36).substring(2, 6).toUpperCase();
             await initAblyAsync();
             channel = ably.channels.get(`poke-room-${code}`);
-            setupPresence();
             
-            // 3. TAMPILKAN KODE KE LAYAR SEKARANG KARENA HOST SUDAH SIAP 100%
-            document.getElementById('display-room-code').innerText = code;
-            document.getElementById('lobby-sync-msg').innerText = "Menunggu lawan bergabung...";
-            hideLoading();
+            // Listen Presence untuk Update UI Lobby
+            channel.presence.subscribe(() => updateLobbyPresenceUI());
+            
+            // Masuk sebagai Host
+            channel.presence.enter({ name: myName, role: 'host' });
 
-            // 4. TERIMA TAMU MENGGUNAKAN SISTEM 3-WAY HANDSHAKE
-            channel.subscribe('GUEST_JOIN', (msg) => {
-                oppName = msg.data.name;
-                // Host akan selalu mengirim balik DATA setiap kali Guest mengetuk pintu
-                channel.publish('HOST_DATA', { pool: poolData, types: typeRels, hostName: myName });
-            });
-
-            // 5. HOST MENUNGGU KONFIRMASI BAHWA GUEST SUDAH MENERIMA DATA
-            channel.subscribe('GUEST_CONFIRM', () => {
-                if(!isHandshakeDone) {
-                    isHandshakeDone = true;
-                    startDraft(); // Host akhirnya masuk Draft dengan jaminan Guest sudah siap
+            // Sambil menunggu teman, Host ngeload kartu API di background
+            document.getElementById('lobby-status-text').innerText = "Menyiapkan Arena & Kartu...";
+            fetchPool().then(success => {
+                if(success) {
+                    isDataLoaded = true;
+                    document.getElementById('lobby-status-text').innerText = "Menunggu Lawan Gabung...";
+                    document.getElementById('lobby-status-text').classList.replace('text-slate-300', 'text-sky-300');
+                    updateLobbyPresenceUI(); // Re-evaluasi tombol MULAI
+                } else {
+                    showToast("Gagal memuat kartu. Silakan keluar dan buat room lagi.");
+                    document.getElementById('lobby-status-text').innerText = "Gagal memuat sistem.";
                 }
             });
 
-        } catch(err) { showErrorScreen(err, "GAGAL MEMBUAT ROOM"); }
+        } catch(err) { showToast("Gagal Membuat Room"); cancelLobby(); }
     }
 
     async function joinRoom() {
@@ -478,60 +445,137 @@
         const code = document.getElementById('room-code-input').value.toUpperCase();
         if (code.length !== 4) return showToast("Kode harus 4 digit!");
         
-        myRole = 'guest'; myTurnId = 'p2'; isHandshakeDone = false;
-        showLoading("Mencari Room...");
-        cleanupMultiplayer();
+        myRole = 'guest'; myTurnId = 'p2'; oppName = '';
+        
+        // Transisi Layar Utama ke Lobby
+        document.getElementById('main-menu').classList.add('hidden');
+        document.getElementById('waiting-room').classList.remove('hidden');
+        document.getElementById('waiting-room').classList.add('flex');
+        document.getElementById('display-room-code').innerText = code;
+
+        resetLobbyUI();
+        document.getElementById('lobby-status-text').innerText = "Mencari Ruangan...";
 
         try {
             await initAblyAsync();
             channel = ably.channels.get(`poke-room-${code}`);
-            setupPresence();
 
-            // 1. GUEST MENUNGGU DATA DARI HOST
-            channel.subscribe('HOST_DATA', (msg) => {
-                if(isHandshakeDone) return;
-                isHandshakeDone = true; // Tandai selesai agar tidak mengulang
-                
-                clearInterval(guestJoinInterval);
-                clearTimeout(joinTimeoutTimer);
-                hideLoading();
-                
-                // Simpan data dari Host
-                oppName = msg.data.hostName;
+            // Listen Presence untuk Update UI Lobby
+            channel.presence.subscribe(() => updateLobbyPresenceUI());
+
+            // Listen Perintah Mulai Game dari Host
+            channel.subscribe('START_GAME', (msg) => {
                 poolData = msg.data.pool;
                 typeRels = msg.data.types;
-                
-                // 2. DATA DITERIMA -> BERITAHU HOST BAHWA GUEST SIAP MASUK DRAFT
-                channel.publish('GUEST_CONFIRM', {});
-                startDraft(); // Guest masuk Draft duluan/bersamaan
+                document.getElementById('lobby-status-text').innerText = "MEMASUKI ARENA...";
+                document.getElementById('lobby-status-text').className = "text-xl font-black text-emerald-400 mt-2";
+                setTimeout(startDraft, 1000);
             });
+            
+            // Masuk sebagai Guest
+            channel.presence.enter({ name: myName, role: 'guest' });
 
-            // 3. GUEST TERUS MEMINTA DATA SAMPAI DITERIMA
-            channel.publish('GUEST_JOIN', { name: myName });
-            guestJoinInterval = setInterval(() => {
-                if (!isHandshakeDone) channel.publish('GUEST_JOIN', { name: myName });
-            }, 2000);
+        } catch(err) { showToast("Gagal Bergabung"); cancelLobby(); }
+    }
 
-            // 4. TIMEOUT JIKA HOST TIDAK MERESPON (15 Detik)
-            if(joinTimeoutTimer) clearTimeout(joinTimeoutTimer);
-            joinTimeoutTimer = setTimeout(() => {
-                if(!isHandshakeDone) {
-                    clearInterval(guestJoinInterval);
-                    showErrorScreen(new Error("Timeout (15 Detik): Host tidak merespon.\n\nPastikan KODE BENAR dan Host masih berada di ruang tunggu Lobby menunggu kamu bergabung."), "ROOM TIDAK DITEMUKAN");
+    function resetLobbyUI() {
+        const s1 = document.getElementById('slot-1'); const s2 = document.getElementById('slot-2');
+        s1.className = 'slot-card'; s2.className = 'slot-card';
+        document.getElementById('slot-1-name').innerText = "KOSONG"; document.getElementById('slot-1-name').className = "font-black text-sm uppercase text-slate-500";
+        document.getElementById('slot-2-name').innerText = "KOSONG"; document.getElementById('slot-2-name').className = "font-black text-sm uppercase text-slate-500";
+        document.querySelector('#slot-1 .avatar-placeholder').innerText = '?';
+        document.querySelector('#slot-2 .avatar-placeholder').innerText = '?';
+        document.getElementById('btn-start-game').classList.add('hidden');
+    }
+
+    // Fungsi Utama Ruang Tunggu
+    function updateLobbyPresenceUI() {
+        if(!channel) return;
+        channel.presence.get((err, members) => {
+            if(err || !members) return;
+
+            let hostData = members.find(m => m.data.role === 'host')?.data;
+            let guestData = members.find(m => m.data.role === 'guest')?.data;
+
+            // Update Slot 1 (Host)
+            const s1 = document.getElementById('slot-1');
+            if(hostData) {
+                s1.classList.add('filled-host');
+                document.getElementById('slot-1-name').innerText = hostData.name;
+                document.getElementById('slot-1-name').className = "font-black text-sm uppercase text-sky-600";
+                document.querySelector('#slot-1 .avatar-placeholder').innerText = hostData.name.charAt(0);
+                if(myRole === 'guest') oppName = hostData.name; // Guest simpan nama Host
+            }
+
+            // Update Slot 2 (Guest)
+            const s2 = document.getElementById('slot-2');
+            if(guestData) {
+                s2.classList.add('filled-guest');
+                document.getElementById('slot-2-name').innerText = guestData.name;
+                document.getElementById('slot-2-name').className = "font-black text-sm uppercase text-rose-600";
+                document.querySelector('#slot-2 .avatar-placeholder').innerText = guestData.name.charAt(0);
+                if(myRole === 'host') oppName = guestData.name; // Host simpan nama Guest
+            } else {
+                s2.classList.remove('filled-guest');
+                document.getElementById('slot-2-name').innerText = "MENUNGGU...";
+                document.getElementById('slot-2-name').className = "font-black text-sm uppercase text-slate-500 animate-pulse";
+                document.querySelector('#slot-2 .avatar-placeholder').innerText = '?';
+                if(myRole === 'host') oppName = '';
+            }
+
+            // Atur Tombol Mulai (Hanya untuk Host)
+            const btnStart = document.getElementById('btn-start-game');
+            if (myRole === 'host') {
+                if (hostData && guestData) {
+                    if (isDataLoaded) {
+                        // Kedua pemain siap & Kartu siap
+                        document.getElementById('lobby-status-text').innerText = "Lawan Ditemukan. Siap Dimulai!";
+                        btnStart.classList.remove('hidden');
+                        btnStart.innerText = "MULAI BATTLE";
+                        btnStart.disabled = false;
+                        btnStart.className = "w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-lg shadow-lg active:scale-95 transition-all uppercase tracking-wider";
+                    } else {
+                        // Lawan sdh masuk, tapi host belum selesai load API
+                        document.getElementById('lobby-status-text').innerText = "Lawan Ditemukan! Menyelesaikan Loading Data...";
+                        btnStart.classList.remove('hidden');
+                        btnStart.innerText = "MEMUAT DATA...";
+                        btnStart.disabled = true;
+                        btnStart.className = "w-full py-4 bg-slate-500 text-slate-300 rounded-xl font-black text-lg shadow-inner cursor-not-allowed uppercase tracking-wider animate-pulse";
+                    }
+                } else {
+                    btnStart.classList.add('hidden');
+                    if(isDataLoaded) document.getElementById('lobby-status-text').innerText = "Menunggu Lawan Gabung...";
                 }
-            }, 15000);
+            } else {
+                // Untuk Guest
+                if (hostData && guestData) {
+                    document.getElementById('lobby-status-text').innerText = "Menunggu Host Memulai...";
+                }
+            }
+        });
+    }
 
-        } catch(err) { showErrorScreen(err, "GAGAL GABUNG KE ROOM"); }
+    function hostStartGame() {
+        if (!isDataLoaded || !oppName) return;
+        document.getElementById('btn-start-game').innerText = "MEMULAI...";
+        document.getElementById('btn-start-game').disabled = true;
+        
+        // Host broadcast event START dengan membawa data lengkap
+        channel.publish('START_GAME', { pool: poolData, types: typeRels });
+        
+        document.getElementById('lobby-status-text').innerText = "MEMASUKI ARENA...";
+        document.getElementById('lobby-status-text').className = "text-xl font-black text-emerald-400 mt-2";
+        setTimeout(startDraft, 1000);
     }
 
     function cancelLobby() {
         cleanupMultiplayer();
-        document.getElementById('lobby-actions').classList.remove('hidden');
-        document.getElementById('lobby-waiting').classList.add('hidden');
+        document.getElementById('waiting-room').classList.add('hidden');
+        document.getElementById('waiting-room').classList.remove('flex');
+        document.getElementById('main-menu').classList.remove('hidden');
     }
 
     function setupPresence() {
-        channel.presence.enter({ name: myName });
         channel.presence.subscribe('leave', (member) => {
             if(member.data && member.data.name === oppName) {
                 opponentConnected = false; updateBoardLock(); showToast("Lawan Terputus!");
@@ -548,7 +592,7 @@
     }
 
     // ==========================================
-    // 2. FETCH POKEAPI (WITH ERROR FALLBACK)
+    // 2. FETCH POKEAPI
     // ==========================================
     async function fetchPool() {
         try {
@@ -610,12 +654,6 @@
     // 3. DRAFT PICK & TIMER LOGIC
     // ==========================================
     function startDraft() {
-        // Bersihkan SEMUA listener handshake agar tidak bocor / memicu error ganda
-        channel.unsubscribe('GUEST_JOIN'); 
-        channel.unsubscribe('HOST_DATA');
-        channel.unsubscribe('GUEST_CONFIRM');
-        channel.unsubscribe('DRAFT_COMPLETE'); 
-        
         document.getElementById('lobby-screen').classList.add('hidden'); 
         document.getElementById('game-over').classList.add('hidden');
         document.getElementById('draft-screen').style.display = 'flex';
@@ -624,6 +662,9 @@
         document.getElementById('ui-opp-name').innerText = oppName;
 
         renderPool(); updateDraftUI();
+        
+        // Mulai memantau presence untuk in-game (Koneksi putus/nyambung)
+        setupPresence();
 
         channel.unsubscribe('pick');
         channel.subscribe('pick', (msg) => {
@@ -641,15 +682,6 @@
                 
                 document.getElementById('p2-count').innerText = `${oppTeam.length}/5`;
                 draftTurn = myTurnId; updateDraftUI(); pT(600); checkDraftDone();
-            }
-        });
-
-        // Sinkronisasi masuk Arena
-        channel.subscribe('DRAFT_COMPLETE', (msg) => {
-            if(myRole === 'guest' && myTeam.length === 5 && oppTeam.length === 5) {
-                document.getElementById('draft-turn-text').innerText = "MEMASUKI ARENA...";
-                document.getElementById('draft-turn-text').className = "text-xl font-black uppercase text-sky-500 mt-1";
-                setTimeout(initBattle, 1500);
             }
         });
     }
@@ -734,15 +766,9 @@
     function checkDraftDone() {
         if(myTeam.length === 5 && oppTeam.length === 5) {
             clearInterval(draftTimer);
-            if (myRole === 'host') {
-                document.getElementById('draft-turn-text').innerText = "MEMASUKI ARENA...";
-                document.getElementById('draft-turn-text').className = "text-xl font-black uppercase text-sky-500 mt-1";
-                channel.publish('DRAFT_COMPLETE', { ready: true });
-                setTimeout(initBattle, 1500);
-            } else {
-                document.getElementById('draft-turn-text').innerText = "MENUNGGU HOST...";
-                document.getElementById('draft-turn-text').className = "text-xl font-black uppercase text-slate-500 mt-1 animate-pulse";
-            }
+            document.getElementById('draft-turn-text').innerText = "MEMASUKI ARENA...";
+            document.getElementById('draft-turn-text').className = "text-xl font-black uppercase text-sky-500 mt-1";
+            setTimeout(initBattle, 1500); // Keduanya transisi otomatis ke Arena tanpa perlu di sync lagi, karena data pick sdh terjamin sinkron
         }
     }
 
@@ -1103,20 +1129,14 @@
             if (myRole === 'host') {
                 let success = await fetchPool();
                 if(success) {
-                    channel.publish('rematch-data', { pool: poolData, types: typeRels });
+                    channel.publish('START_GAME', { pool: poolData, types: typeRels });
                     startDraft();
                 }
-            } else {
-                channel.subscribe('rematch-data', (msg) => {
-                    poolData = msg.data.pool; typeRels = msg.data.types;
-                    channel.unsubscribe('rematch-data');
-                    startDraft();
-                });
             }
         }
     }
 
-    function returnToLobby() { if(channel) channel.detach(); location.reload(); }
+    function returnToLobby() { if(channel) { channel.presence.leave(); channel.detach(); } location.reload(); }
     function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 </script>
 </body>
