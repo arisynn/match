@@ -20,7 +20,7 @@
         .pixel-text { font-family: 'VT323', monospace; }
         .tcg-text { font-family: 'Oswald', sans-serif; }
 
-        /* --- GLOBAL LOADING (Diadaptasi dari Kubik) --- */
+        /* --- GLOBAL LOADING --- */
         #global-loading {
             position: fixed; inset: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(8px);
             z-index: 100000; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -301,7 +301,7 @@
     const getAnim = (id) => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`;
     const getStatic = (id) => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
 
-    // --- ABLY & STATE (SISTEM KUBIK) ---
+    // --- ABLY & STATE ---
     let ably = null;
     let channel = null; 
     let myRole = ''; let myTurnId = '';
@@ -337,10 +337,12 @@
     function getName() { let input = document.getElementById('player-name-input').value.trim(); return input === "" ? (myRole === 'host' ? "HOST" : "GUEST") : input; }
 
     // ==========================================
-    // 1. MULTIPLAYER HANDSHAKE (100% KUBIK STYLE)
+    // 1. MULTIPLAYER HANDSHAKE (SISTEM SEDERHANA & TANGGUH)
     // ==========================================
-    
-    // Fungsi inisiasi Ably yang aman menunggu status "connected"
+    let isHandshakeDone = false;
+    let guestJoinInterval = null;
+    let joinTimeoutTimer = null;
+
     function initAblyAsync() {
         return new Promise((resolve, reject) => {
             if(ably && ably.connection.state === 'connected') return resolve();
@@ -353,14 +355,14 @@
     }
 
     function cleanupMultiplayer() {
+        clearInterval(guestJoinInterval); clearTimeout(joinTimeoutTimer);
         if(channel) { try{channel.unsubscribe(); channel.detach();}catch(_){} channel = null; }
     }
 
     async function createRoom() {
-        initA();
-        myName = getName();
+        initA(); myName = getName();
         const code = Math.random().toString(36).substring(2, 6).toUpperCase();
-        myRole = 'host'; myTurnId = 'p1';
+        myRole = 'host'; myTurnId = 'p1'; isHandshakeDone = false; oppName = ''; poolData = []; typeRels = {};
 
         document.getElementById('lobby-actions').classList.add('hidden');
         document.getElementById('lobby-waiting').classList.remove('hidden');
@@ -369,81 +371,88 @@
         showLoading("Menyiapkan Room...");
         cleanupMultiplayer();
 
-        initAblyAsync().then(() => {
+        try {
+            await initAblyAsync();
             channel = ably.channels.get(`poke-room-${code}`);
-            channel.attach(async (err) => {
-                if(err) { hideLoading(); showToast('Gagal membuat room!'); return; }
-                
-                // Fetch data Pokemon DULUAN, baru ijinkan join
-                document.getElementById('lobby-sync-msg').innerText = "Memuat database kartu...";
-                let success = await fetchPool();
-                if(!success) { hideLoading(); showToast("Gagal memuat kartu dari server."); return; }
-
-                document.getElementById('lobby-sync-msg').innerText = "Menunggu lawan bergabung...";
-                hideLoading();
-
-                // Listen untuk Guest yang mau join
-                channel.subscribe('JOIN_REQ', (msg) => {
-                    oppName = msg.data.name;
-                    // Langsung balas dengan data lengkap (Accept)
-                    channel.publish('HOST_ACCEPT', { pool: poolData, types: typeRels, hostName: myName });
-                    startDraft();
-                });
-
-                setupPresence();
+            
+            // 1. HOST BERSEDIA MENERIMA TAMU SEJAK AWAL
+            channel.subscribe('GUEST_JOIN', (msg) => {
+                if (isHandshakeDone) return;
+                oppName = msg.data.name;
+                checkHostReady(); // Cek apakah kartu sudah siap
             });
-        }).catch(err => { hideLoading(); showToast('Koneksi internet gagal.'); cancelLobby(); });
+
+            setupPresence();
+
+            // 2. HOST MULAI DOWNLOAD KARTU
+            document.getElementById('lobby-sync-msg').innerText = "Memuat database kartu...";
+            let success = await fetchPool();
+            if(!success) { hideLoading(); showToast("Gagal memuat kartu."); cancelLobby(); return; }
+
+            // 3. HOST SELESAI DOWNLOAD, TUNGGU TAMU
+            document.getElementById('lobby-sync-msg').innerText = "Menunggu lawan bergabung...";
+            hideLoading();
+            checkHostReady(); // Cek apakah tamu sudah nunggu duluan
+
+        } catch(err) { hideLoading(); showToast('Koneksi gagal.'); cancelLobby(); }
     }
 
-    let joinTimeoutTimer = null;
-    function joinRoom() {
-        initA();
-        myName = getName();
+    function checkHostReady() {
+        // Jika kartu sudah siap DAN tamu sudah mengirim sinyal GUEST_JOIN
+        if (poolData.length > 0 && oppName !== '' && !isHandshakeDone) {
+            isHandshakeDone = true;
+            channel.publish('HOST_START', { pool: poolData, types: typeRels, hostName: myName });
+            startDraft();
+        }
+    }
+
+    async function joinRoom() {
+        initA(); myName = getName();
         const code = document.getElementById('room-code-input').value.toUpperCase();
         if (code.length !== 4) return showToast("Kode harus 4 digit!");
         
-        myRole = 'guest'; myTurnId = 'p2';
+        myRole = 'guest'; myTurnId = 'p2'; isHandshakeDone = false;
         showLoading("Mencari Room...");
         cleanupMultiplayer();
 
-        initAblyAsync().then(() => {
+        try {
+            await initAblyAsync();
             channel = ably.channels.get(`poke-room-${code}`);
-            
-            channel.attach((err) => {
-                if(err) { hideLoading(); showToast('Gagal terhubung ke room!'); return; }
+            setupPresence();
+
+            // 1. GUEST MENUNGGU PERINTAH MULAI DARI HOST
+            channel.subscribe('HOST_START', (msg) => {
+                if(isHandshakeDone) return;
+                isHandshakeDone = true;
+                clearInterval(guestJoinInterval);
+                clearTimeout(joinTimeoutTimer);
+                hideLoading();
                 
-                let isAccepted = false;
-
-                // Subscribe menunggu balasan Host
-                channel.subscribe('HOST_ACCEPT', (msg) => {
-                    if(isAccepted) return;
-                    isAccepted = true;
-                    clearTimeout(joinTimeoutTimer); // Berhasil, matikan timer error
-                    hideLoading();
-                    
-                    oppName = msg.data.hostName;
-                    poolData = msg.data.pool;
-                    typeRels = msg.data.types;
-                    
-                    startDraft();
-                });
-
-                // Kirim request join ke Host
-                channel.publish('JOIN_REQ', { name: myName });
+                oppName = msg.data.hostName;
+                poolData = msg.data.pool;
+                typeRels = msg.data.types;
                 
-                // TIMEOUT ANTI-INFINITE LOADING (10 Detik)
-                if(joinTimeoutTimer) clearTimeout(joinTimeoutTimer);
-                joinTimeoutTimer = setTimeout(() => {
-                    if(!isAccepted) {
-                        hideLoading();
-                        showToast('Host tidak merespon atau Room tidak ada.');
-                        cleanupMultiplayer();
-                    }
-                }, 10000);
-
-                setupPresence();
+                startDraft();
             });
-        }).catch(err => { hideLoading(); showToast('Koneksi internet gagal.'); });
+
+            // 2. GUEST SPAM REQUEST JOIN SAMPAI DITERIMA (Anti Pesan Hilang)
+            // Guest akan terus mengetuk pintu setiap 2 detik sampai dibukakan oleh Host.
+            channel.publish('GUEST_JOIN', { name: myName });
+            guestJoinInterval = setInterval(() => {
+                if (!isHandshakeDone) channel.publish('GUEST_JOIN', { name: myName });
+            }, 2000);
+
+            // 3. TIMEOUT JIKA HOST TIDAK ADA / TIDAK MERESPON (15 Detik)
+            if(joinTimeoutTimer) clearTimeout(joinTimeoutTimer);
+            joinTimeoutTimer = setTimeout(() => {
+                if(!isHandshakeDone) {
+                    clearInterval(guestJoinInterval);
+                    hideLoading(); showToast('Room tidak ada / Host belum siap.');
+                    cancelLobby();
+                }
+            }, 15000);
+
+        } catch(err) { hideLoading(); showToast('Koneksi gagal.'); cancelLobby(); }
     }
 
     function cancelLobby() {
@@ -464,7 +473,6 @@
                 opponentConnected = true; updateBoardLock(); showToast("Lawan Kembali.");
             }
         });
-        
         channel.subscribe('rematch', async (msg) => {
             if(msg.data.sender !== myRole) { rematchReq.opp = true; checkRematchLogic(); }
         });
@@ -482,9 +490,8 @@
             const resRaw = await Promise.all(promises);
             let res = resRaw.filter(r => r !== null);
             
-            // Fallback kalau API PokeAPI lagi nge-drop supaya game ngga nyangkut
             while(res.length < POOL_SIZE) {
-                let fallback = await fetch(`https://pokeapi.co/api/v2/pokemon/25`).then(r=>r.json()).catch(()=>null); // Pikachu
+                let fallback = await fetch(`https://pokeapi.co/api/v2/pokemon/25`).then(r=>r.json()).catch(()=>null);
                 if(fallback) res.push(fallback); else break; 
             }
 
@@ -534,8 +541,10 @@
     // 3. DRAFT PICK & TIMER LOGIC
     // ==========================================
     function startDraft() {
-        channel.unsubscribe('JOIN_REQ'); channel.unsubscribe('HOST_ACCEPT'); // Bersihkan listener handshake
-        channel.unsubscribe('DRAFT_COMPLETE'); // Bersihkan listener sinkronisasi sebelum memulai draft baru
+        // Bersihkan listener handshake lama
+        channel.unsubscribe('GUEST_JOIN'); 
+        channel.unsubscribe('HOST_START');
+        channel.unsubscribe('DRAFT_COMPLETE'); 
         
         document.getElementById('lobby-screen').classList.add('hidden'); 
         document.getElementById('game-over').classList.add('hidden');
@@ -565,7 +574,7 @@
             }
         });
 
-        // LISTENER BARU: Guest menunggu DRAFT_COMPLETE dari Host untuk memastikan sinkronisasi selesai
+        // Sinkronisasi masuk Arena untuk Guest
         channel.subscribe('DRAFT_COMPLETE', (msg) => {
             if(myRole === 'guest' && myTeam.length === 5 && oppTeam.length === 5) {
                 document.getElementById('draft-turn-text').innerText = "MEMASUKI ARENA...";
@@ -655,17 +664,12 @@
     function checkDraftDone() {
         if(myTeam.length === 5 && oppTeam.length === 5) {
             clearInterval(draftTimer);
-            
-            // SINKRONISASI UPDATE: Host mengecek state dan mengirim sinyal konfirmasi ke Guest
             if (myRole === 'host') {
                 document.getElementById('draft-turn-text').innerText = "MEMASUKI ARENA...";
                 document.getElementById('draft-turn-text').className = "text-xl font-black uppercase text-sky-500 mt-1";
-                
-                // Host broadcast DRAFT_COMPLETE ke guest
                 channel.publish('DRAFT_COMPLETE', { ready: true });
                 setTimeout(initBattle, 1500);
             } else {
-                // Guest menunggu instruksi dari host via event DRAFT_COMPLETE
                 document.getElementById('draft-turn-text').innerText = "MENUNGGU HOST...";
                 document.getElementById('draft-turn-text').className = "text-xl font-black uppercase text-slate-500 mt-1 animate-pulse";
             }
@@ -782,7 +786,7 @@
         for (let y=0; y<ROWS; y++) {
             board[y]=[];
             for (let x=0; x<COLS; x++) {
-                let pIdx; do { pIdx = Math.random() < 0.05 ? 5 : Math.floor(Math.random() * 5); } // pIdx 5 = Potion Gem
+                let pIdx; do { pIdx = Math.random() < 0.05 ? 5 : Math.floor(Math.random() * 5); } 
                 while ((x>=2 && board[y][x-1].pIdx===pIdx && board[y][x-2].pIdx===pIdx) || (y>=2 && board[y-1][x].pIdx===pIdx && board[y-2][x].pIdx===pIdx));
                 const gem = createGem(x, y, pIdx); board[y][x] = { pIdx, el: gem };
             }
@@ -796,7 +800,7 @@
     function createGem(x, y, pIdx) {
         const div = document.createElement('div'); div.className = 'gem';
         const img = document.createElement('img'); 
-        img.src = pIdx === 5 ? POTION_IMG : myTeam[pIdx].spriteS; // Tampilkan Potion
+        img.src = pIdx === 5 ? POTION_IMG : myTeam[pIdx].spriteS; 
         img.setAttribute('draggable', 'false'); div.appendChild(img);
         updatePos(div, x, y); gemsContainer.appendChild(div); return div;
     }
@@ -860,7 +864,6 @@
                 ax+=x; ay+=y;
             });
 
-            // EFEK POTION
             if(group.pIdx === 5) {
                 let healAmt = 40 * group.cells.length;
                 let myPoke = myTeam[state.myActive];
@@ -872,7 +875,6 @@
                 continue;
             }
 
-            // EFEK ATTACK
             let myPoke = myTeam[group.pIdx]; let oppPoke = oppTeam[state.oppActive];
             if(state.myActive !== group.pIdx) setActive('p1', group.pIdx);
 
