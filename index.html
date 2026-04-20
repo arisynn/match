@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Pokemon Master Match</title>
+    <title>Pokemon Master TCG & Match</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <style>
@@ -12,7 +12,7 @@
         body, html {
             height: 100%; margin: 0;
             font-family: 'Nunito', sans-serif;
-            background-color: #f1f5f9; color: #1e293b;
+            background-color: #f8fafc; color: #1e293b;
             overflow: hidden; touch-action: none; 
             user-select: none; -webkit-user-select: none;
         }
@@ -38,18 +38,15 @@
         .slot-card {
             background: #f8fafc; border: 3px dashed #cbd5e1; border-radius: 1rem; 
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 150px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+            height: 140px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
             position: relative; overflow: hidden; transition: all 0.3s ease;
         }
         .slot-card.filled-host { border: 4px solid #0ea5e9; background: #f0f9ff; box-shadow: 0 10px 15px -3px rgba(14, 165, 233, 0.2); }
         .slot-card.filled-guest { border: 4px solid #f43f5e; background: #fff1f2; box-shadow: 0 10px 15px -3px rgba(244, 63, 94, 0.2); }
         
-        .avatar-box { width: 70px; height: 70px; background: #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-bottom: 0.5rem; overflow: hidden; border: 3px solid #cbd5e1; box-shadow: 0 4px 6px rgba(0,0,0,0.1);}
-        .filled-host .avatar-box { border-color: #38bdf8; }
-        .filled-guest .avatar-box { border-color: #fb7185; }
-        .avatar-box img { width: 90%; height: 90%; object-fit: contain; }
-
-        .score-box { background: #1e293b; color: white; padding: 0.5rem 1rem; border-radius: 0.75rem; font-family: 'Oswald', sans-serif; font-size: 1.5rem; letter-spacing: 2px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); margin-bottom: 1rem;}
+        .avatar-placeholder { width: 60px; height: 60px; background: #e2e8f0; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2rem; color: #94a3b8; margin-bottom: 0.5rem; font-weight: 900;}
+        .filled-host .avatar-placeholder { background: #bae6fd; color: #0284c7; }
+        .filled-guest .avatar-placeholder { background: #fecdd3; color: #e11d48; }
 
         /* --- DRAFT PICK UI --- */
         #draft-screen { display: flex; flex-direction: column; height: 100%; width: 100%; background: #e2e8f0; gap: 4px; padding: 4px;}
@@ -102,13 +99,17 @@
         .type-badge { font-family: 'Oswald', sans-serif; font-size: 0.5rem; padding: 0.1rem 0.25rem; border-radius: 0.25rem; color: white; text-transform: uppercase; box-shadow: 0 1px 2px rgba(0,0,0,0.2);}
         .type-badge-lg { font-family: 'Oswald', sans-serif; font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 0.35rem; color: white; text-transform: uppercase; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
 
-        /* --- BATTLE ARENA UI --- */
-        .top-status-bar { display: flex; justify-content: space-between; align-items: flex-end; gap: 0.5rem; width: 100%; padding: 0.25rem; z-index: 60; }
+        /* --- BATTLE ARENA UI (WITH ENERGY BAR) --- */
+        .top-status-bar {
+            display: flex; justify-content: space-between; align-items: flex-end; gap: 0.5rem;
+            width: 100%; padding: 0.25rem; z-index: 60;
+        }
 
         .fighter-plate {
             flex: 1; display: flex; flex-direction: column; background: #fff;
             border-radius: 0.75rem; border: 3px solid #cbd5e1; padding: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative; overflow: hidden; transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative; overflow: hidden;
+            transition: all 0.3s ease;
         }
         .fighter-plate.p1 { border-color: #0ea5e9; border-bottom-right-radius: 0; }
         .fighter-plate.p2 { border-color: #f43f5e; border-bottom-left-radius: 0; align-items: flex-end; }
@@ -116,13 +117,14 @@
 
         .hp-bar-bg { width: 100%; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; margin-top: 2px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);}
         .hp-bar-fill { height: 100%; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s; }
-        
+        .p2 .hp-bar-bg { transform: scaleX(-1); }
+
+        /* ENERGY BAR */
         .ep-bar-bg { width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-top: 2px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);}
         .ep-bar-fill { height: 100%; background: #facc15; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .ep-bar-fill.full { background: #3b82f6; box-shadow: 0 0 10px #60a5fa; animation: pulse-ep 1s infinite; }
         @keyframes pulse-ep { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.3); } }
-        
-        .p2 .hp-bar-bg, .p2 .ep-bar-bg { transform: scaleX(-1); }
+        .p2 .ep-bar-bg { transform: scaleX(-1); }
 
         .arena-bg {
             background: linear-gradient(180deg, #87ceeb 0%, #e0f6ff 50%, #a7f3d0 50%, #4ade80 100%);
@@ -136,7 +138,8 @@
 
         .sprite-container {
             position: absolute; bottom: 8px; z-index: 100;
-            height: 85%; width: 40%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+            height: 85%; width: 40%; 
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
         }
         .p1-container { left: 5%; }
         .p2-container { right: 5%; }
@@ -151,16 +154,13 @@
             position: relative; z-index: 2;
         }
 
-        /* Tag-Team Switch Animations */
-        .switch-out { animation: pull-back 0.4s cubic-bezier(0.36, 0, 0.66, -0.56) forwards; }
-        .switch-in { animation: throw-out 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-        @keyframes pull-back { 0% { transform: scale(1) translateY(0); opacity: 1; filter: brightness(1); } 100% { transform: scale(0) translateY(50px); opacity: 0; filter: brightness(2) sepia(1); } }
-        @keyframes throw-out { 0% { transform: scale(0) translateY(50px); opacity: 0; filter: brightness(2); } 100% { transform: scale(1) translateY(0); opacity: 1; filter: brightness(1); } }
+        .shadow-ellipse {
+            width: 80%; max-width: 70px; height: 15px; background: rgba(0,0,0,0.25);
+            border-radius: 50%; filter: blur(2px); z-index: 1; margin-top: -8px;
+        }
 
-        .shadow-ellipse { width: 80%; max-width: 70px; height: 15px; background: rgba(0,0,0,0.25); border-radius: 50%; filter: blur(2px); z-index: 1; margin-top: -8px; }
-
-        .attack-lunge-p1 { animation: lunge-r 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .attack-lunge-p2 { animation: lunge-l 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .attack-lunge-p1 { animation: lunge-r 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .attack-lunge-p2 { animation: lunge-l 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
         @keyframes lunge-r { 0%, 100% { transform: scaleX(-1) translateX(0); } 50% { transform: scaleX(-1) translateX(-40px); } }
         @keyframes lunge-l { 0%, 100% { transform: scaleX(1) translateX(0); } 50% { transform: scaleX(1) translateX(-40px); } }
         
@@ -170,16 +170,33 @@
         .epic-move-text {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             font-family: 'VT323', monospace; font-size: 2.2rem; color: #fff;
-            text-shadow: 3px 3px 0 #000, -2px -2px 0 #000; white-space: nowrap; z-index: 120; opacity: 0; pointer-events: none;
+            text-shadow: 3px 3px 0 #000, -2px -2px 0 #000;
+            white-space: nowrap; z-index: 120; opacity: 0; pointer-events: none;
         }
         .show-move { animation: slashMove 1.5s ease-out; }
-        @keyframes slashMove { 0% { transform: translate(-100%, -50%) skewX(-20deg); opacity: 0; } 15% { transform: translate(-50%, -50%) skewX(0deg); opacity: 1; } 85% { transform: translate(-50%, -50%) skewX(0deg); opacity: 1; } 100% { transform: translate(100%, -50%) skewX(20deg); opacity: 0; } }
+        @keyframes slashMove {
+            0% { transform: translate(-100%, -50%) skewX(-20deg); opacity: 0; }
+            15% { transform: translate(-50%, -50%) skewX(0deg); opacity: 1; }
+            85% { transform: translate(-50%, -50%) skewX(0deg); opacity: 1; }
+            100% { transform: translate(100%, -50%) skewX(20deg); opacity: 0; }
+        }
 
         /* --- PUZZLE BOARD --- */
-        .game-board-container { width: 100%; aspect-ratio: 1 / 1; position: relative; background: #cbd5e1; border-radius: 1rem; border: 4px solid #fff; box-shadow: 0 8px 15px rgba(0,0,0,0.1); touch-action: none; }
+        .game-board-container {
+            width: 100%; aspect-ratio: 1 / 1; position: relative;
+            background: #cbd5e1; border-radius: 1rem; border: 4px solid #fff;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1); touch-action: none;
+        }
+        
         .gem { position: absolute; width: 16.666%; height: 16.666%; padding: 2px; transition: top 0.2s, left 0.2s, transform 0.1s; z-index: 10; pointer-events: none; }
-        .gem-inner { width: 100%; height: 100%; background: #ffffff; border-radius: 0.5rem; border: 2px solid #e2e8f0; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden; transition: all 0.2s; }
+        
+        .gem-inner { 
+            width: 100%; height: 100%; background: #ffffff; border-radius: 0.5rem; 
+            border: 2px solid #e2e8f0; display: flex; justify-content: center; align-items: center; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden; transition: all 0.2s;
+        }
         .gem-inner.is-potion { background: radial-gradient(circle, #ecfdf5 0%, #a7f3d0 100%); border-color: #34d399; }
+
         .gem.swiping { z-index: 20; }
         .gem.swiping .gem-inner { border-color: #0ea5e9; transform: scale(1.15); box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3); }
         .gem.popping .gem-inner { transform: scale(0); opacity: 0; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -196,6 +213,12 @@
         .floating-heal { color: #10b981; text-shadow: 2px 2px 0 #fff, -1px -1px 0 #fff; }
         @keyframes floatUp { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 20% { transform: translate(-50%, -80%) scale(1.2); opacity: 1; } 100% { transform: translate(-50%, -120px) scale(1); opacity: 0; } }
 
+        /* --- TACTICAL PANEL --- */
+        .tactical-panel {
+            background: #fff; border-radius: 1rem; border: 4px solid #e2e8f0;
+            padding: 0.25rem 0.5rem; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); width: 100%;
+        }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen relative max-w-md mx-auto bg-slate-100">
@@ -207,13 +230,14 @@
         <div id="loading-text" class="text-slate-800 font-bold text-base tracking-wider uppercase">Menghubungkan...</div>
     </div>
 
+    <button id="btn-mute" onclick="toggleMute()" class="fixed top-4 right-4 z-[100] bg-white border-2 border-slate-300 rounded-full w-10 h-10 flex items-center justify-center text-xl shadow-md transition-transform active:scale-95">🔊</button>
+
     <!-- 1. MAIN MENU & LOBBY ROOM -->
     <div id="lobby-screen" class="fixed inset-0 bg-slate-100 z-50 flex flex-col items-center justify-center p-6">
         
         <!-- MAIN MENU -->
         <div id="main-menu" class="bg-white border-4 border-slate-300 w-full p-8 rounded-2xl text-center shadow-lg transition-all duration-300">
-            <!-- POKEMON LOGO -->
-            <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/International_Pok%C3%A9mon_logo.svg" alt="Pokemon" class="w-full h-auto mb-6 drop-shadow-md">
+            <h1 class="text-4xl font-black text-slate-800 mb-6 uppercase leading-tight">Master<br><span class="text-sky-500">Battle</span></h1>
             
             <div class="space-y-4">
                 <div>
@@ -232,37 +256,32 @@
             </div>
         </div>
 
-        <!-- WAITING ROOM (SCOREBOARD & AVATARS) -->
+        <!-- WAITING ROOM -->
         <div id="waiting-room" class="bg-white border-4 border-slate-300 w-full p-6 rounded-2xl text-center shadow-xl hidden flex-col items-center">
-            
-            <!-- SCOREBOARD BARU -->
-            <div class="score-box" id="lobby-scoreboard">P1 0 - 0 P2</div>
-
+            <h2 class="text-xl font-black text-slate-700 uppercase mb-4 tracking-wider">Ruang Persiapan</h2>
             <div class="bg-sky-50 px-6 py-3 rounded-xl border-2 border-sky-200 mb-6 w-full relative overflow-hidden shadow-sm">
                 <span class="text-[10px] font-bold text-sky-600 uppercase tracking-widest block mb-1">KODE RUANGAN</span>
                 <span id="display-room-code" class="text-5xl font-black text-sky-500 tracking-[0.2em] relative z-10">....</span>
             </div>
-            
             <div class="flex justify-between items-center w-full mb-6 px-1 relative gap-2">
                 <div id="slot-1" class="slot-card flex-1">
-                    <div class="avatar-box"><img id="slot-1-avatar" src="" alt="?"></div>
+                    <div class="avatar-placeholder">?</div>
                     <span id="slot-1-name" class="font-black text-sm uppercase text-slate-500 truncate w-full px-2">MENUNGGU...</span>
                     <span class="text-[9px] font-bold text-slate-400 bg-white border border-slate-200 px-3 py-0.5 rounded-full mt-1 shadow-sm">HOST</span>
                 </div>
                 <div class="font-black text-2xl italic text-slate-300 px-1">VS</div>
                 <div id="slot-2" class="slot-card flex-1">
-                    <div class="avatar-box"><img id="slot-2-avatar" src="" alt="?"></div>
+                    <div class="avatar-placeholder">?</div>
                     <span id="slot-2-name" class="font-black text-sm uppercase text-slate-500 truncate w-full px-2">KOSONG</span>
                     <span class="text-[9px] font-bold text-slate-400 bg-white border border-slate-200 px-3 py-0.5 rounded-full mt-1 shadow-sm">GUEST</span>
                 </div>
             </div>
-
             <div class="bg-slate-50 border border-slate-200 w-full py-2 rounded-lg mb-6">
                 <p id="lobby-status-text" class="text-sm font-bold text-slate-500 animate-pulse">Menyiapkan Koneksi...</p>
             </div>
             <div class="w-full space-y-3">
-                <button id="btn-start-game" onclick="hostStartGame()" class="hidden w-full py-4 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-black text-lg shadow-lg active:scale-95 transition-all uppercase tracking-wider">MULAI DRAFT</button>
-                <button onclick="cancelLobby()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold text-sm transition-colors border-2 border-slate-300 active:scale-95">KELUAR</button>
+                <button id="btn-start-game" onclick="hostStartGame()" class="hidden w-full py-4 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-black text-lg shadow-lg active:scale-95 transition-all uppercase tracking-wider">MULAI BATTLE</button>
+                <button onclick="cancelLobby()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold text-sm transition-colors border-2 border-slate-300 active:scale-95">BATAL & KELUAR</button>
             </div>
         </div>
     </div>
@@ -299,11 +318,12 @@
         </div>
     </div>
 
-    <!-- 3. BATTLE ARENA (NO OFFSIDE UI) -->
+    <!-- 3. BATTLE ARENA UI (WITH ENERGY BARS) -->
     <div id="game-container" class="fixed inset-0 bg-slate-50 z-30 flex-col p-2 hidden overflow-y-auto overflow-x-hidden pb-6">
         
         <!-- STATUS BARS -->
         <div class="top-status-bar flex-none mb-0.5">
+            <!-- Player 1 -->
             <div id="plate-p1" class="fighter-plate p1">
                 <div class="flex justify-between items-center w-full mb-1">
                     <span id="player-player-name" class="text-[10px] font-black text-sky-500 uppercase truncate max-w-[50%]">PLAYER</span>
@@ -317,6 +337,7 @@
                 </div>
                 <div class="hp-bar-bg"><div id="player-hp-bar" class="hp-bar-fill bg-emerald-500" style="width:100%"></div></div>
 
+                <!-- ENERGY BAR -->
                 <div class="w-full flex justify-between items-end mt-1">
                     <span class="text-[8px] font-black text-amber-500 uppercase tracking-widest leading-none">Energy</span>
                     <span id="player-ep-text" class="text-[8px] font-black text-amber-600 leading-none">0/10</span>
@@ -324,8 +345,10 @@
                 <div class="ep-bar-bg"><div id="player-ep-bar" class="ep-bar-fill bg-amber-400" style="width:0%"></div></div>
             </div>
 
+            <!-- VS Icon -->
             <div class="font-black text-xl italic text-slate-300 pb-2">VS</div>
 
+            <!-- Player 2 -->
             <div id="plate-p2" class="fighter-plate p2 text-right">
                 <div class="flex justify-between items-center w-full mb-1 flex-row-reverse">
                     <span id="enemy-player-name" class="text-[10px] font-black text-rose-500 uppercase truncate max-w-[50%]">ENEMY</span>
@@ -339,6 +362,7 @@
                 </div>
                 <div class="hp-bar-bg"><div id="enemy-hp-bar" class="hp-bar-fill bg-emerald-500" style="width:100%"></div></div>
 
+                <!-- ENERGY BAR -->
                 <div class="w-full flex justify-between items-end mt-1 flex-row-reverse">
                     <span class="text-[8px] font-black text-amber-500 uppercase tracking-widest leading-none">Energy</span>
                     <span id="enemy-ep-text" class="text-[8px] font-black text-amber-600 leading-none">0/10</span>
@@ -348,7 +372,7 @@
         </div>
 
         <!-- ARENA FIELD -->
-        <div id="battle-arena" class="flex-none arena-bg w-full h-[22vh] min-h-[160px] max-h-[220px] mb-2 mt-1">
+        <div id="battle-arena" class="flex-none arena-bg w-full h-[20vh] min-h-[140px] max-h-[200px] mb-1">
             <div id="epic-move" class="epic-move-text"></div>
 
             <div class="sprite-container p1-container" id="p1-container">
@@ -363,13 +387,13 @@
         </div>
 
         <!-- BATTLE LOG -->
-        <div class="flex-none w-full bg-white border-4 border-slate-300 rounded-xl p-2 mb-2 shadow-sm flex items-center justify-center min-h-[45px]">
-            <span id="log-text" class="pixel-text text-lg font-bold text-slate-800 leading-none text-center px-2">Cocokkan elemen dengan giliranmu!</span>
+        <div class="flex-none w-full bg-white border-4 border-slate-300 rounded-xl p-1 mb-1 shadow-sm flex items-center justify-center min-h-[35px]">
+            <span id="log-text" class="pixel-text text-lg font-bold text-slate-800 leading-none text-center px-2">Pertarungan dimulai!</span>
         </div>
 
-        <!-- PUZZLE BOARD (DIBESARKAN KARENA PANEL BAWAH DIHAPUS) -->
-        <div class="flex-1 w-full max-w-sm mx-auto flex justify-center pb-4">
-            <div id="board" class="game-board-container w-full h-full max-h-[400px]">
+        <!-- PUZZLE BOARD -->
+        <div class="flex-none w-full max-w-sm mx-auto flex justify-center mb-2">
+            <div id="board" class="game-board-container">
                 <div id="gems-container" class="absolute inset-0"></div>
                 <div id="board-lock" class="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px] z-50 flex items-center justify-center hidden rounded-xl">
                     <span class="bg-white text-slate-800 px-6 py-3 border-4 border-slate-400 rounded-xl font-black uppercase shadow-lg text-lg tracking-widest text-center" id="board-lock-text">MENUNGGU LAWAN</span>
@@ -377,6 +401,38 @@
             </div>
         </div>
 
+        <!-- TACTICAL PANEL -->
+        <div class="flex-none w-full max-w-sm mx-auto flex items-start justify-center mt-1">
+             <div class="tactical-panel">
+                 <div class="flex flex-col items-center">
+                     <span class="text-[9px] font-black text-slate-400 mb-0.5 uppercase">Elemenmu</span>
+                     <div id="tactical-p1-badge" class="flex gap-1"></div>
+                 </div>
+                 <div class="flex flex-col items-center text-center px-1">
+                     <span class="text-[11px] font-black text-slate-700 uppercase tracking-widest">Taktik</span>
+                     <span class="text-[9px] text-slate-500 font-bold leading-tight">Penuhi 10 Energi untuk Ultimate Skill!</span>
+                 </div>
+                 <div class="flex flex-col items-center">
+                     <span class="text-[9px] font-black text-slate-400 mb-0.5 uppercase">Musuh</span>
+                     <div id="tactical-p2-badge" class="flex gap-1"></div>
+                 </div>
+             </div>
+        </div>
+
+    </div>
+
+    <!-- 4. MODAL RESULT & REMATCH -->
+    <div id="game-over" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center hidden">
+        <div class="bg-white p-8 rounded-2xl text-center max-w-sm w-[90%] border-4 border-slate-300">
+            <h2 id="result-title" class="text-6xl font-black mb-2"></h2>
+            <p id="result-subtitle" class="text-slate-500 font-bold mb-4 text-lg"></p>
+            
+            <div class="flex flex-col gap-3 w-full mt-4">
+                <button onclick="requestRematch()" id="btn-rematch" class="w-full py-4 bg-sky-500 hover:bg-sky-600 rounded-xl font-black text-white active:scale-95 shadow-lg transition-all">REMATCH</button>
+                <button onclick="returnToLobby()" class="w-full py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-black active:scale-95 shadow-sm transition-all">KEMBALI KE LOBBY</button>
+            </div>
+            <p id="rematch-status" class="text-xs text-sky-600 mt-3 font-bold animate-pulse hidden">Menunggu persetujuan lawan...</p>
+        </div>
     </div>
 
 <script>
@@ -388,36 +444,27 @@
     const getAnim = (id) => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`;
     const getStatic = (id) => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
 
-    // --- BASIC MOVES ---
-    const basicMovesList = [
-        {name: 'Tackle', power: 30, type: 'normal', class: 'physical'},
-        {name: 'Scratch', power: 30, type: 'normal', class: 'physical'},
-        {name: 'Pound', power: 30, type: 'normal', class: 'physical'},
-        {name: 'Quick Attack', power: 40, type: 'normal', class: 'physical'},
-        {name: 'Bite', power: 35, type: 'dark', class: 'physical'}
-    ];
-
     // --- ABLY & STATE ---
     let ably = null; let channel = null; 
     let myRole = ''; let myTurnId = '';
     let myName = 'Player'; let oppName = 'Enemy';
-    let myAvatar = ''; let oppAvatar = '';
-    let myScore = 0; let oppScore = 0; // SCORE SYSTEM
     
     let poolData = []; let typeRels = {}; 
     let myTeam = []; let oppTeam = [];
     let draftTurn = 'p1';
     let board = [];
     let state = { turn: 'p1', isAnim: false, myActive: 0, oppActive: 0 };
+    let rematchReq = { me: false, opp: false };
     let opponentConnected = true;
     let draftTimer; let draftTimeLeft = 15;
     
     let isDataLoaded = false; 
     let hintTimer = null; 
 
-    // --- AUDIO ---
+    // --- AUDIO & MUTE ---
     let actx; let isMuted = false;
     function initA() { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); }
+    function toggleMute() { isMuted = !isMuted; document.getElementById('btn-mute').innerText = isMuted ? '🔇' : '🔊'; }
     function pT(f, t='sine', d=0.1, v=0.05) { if(!actx || isMuted)return; let o=actx.createOscillator(), g=actx.createGain(); o.type=t; o.frequency.value=f; g.gain.setValueAtTime(v, actx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime+d); o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime+d); }
     function sHit(crit) { if(crit){ pT(800,'square',0.1,0.08); setTimeout(()=>pT(1000,'square',0.2,0.08),50); } else { pT(400,'square',0.1,0.05); setTimeout(()=>pT(600,'square',0.15,0.05),50); } }
     function sFaint() { pT(150, 'sawtooth', 0.4, 0.1); setTimeout(()=>pT(100, 'sawtooth', 0.4, 0.1), 150); }
@@ -433,12 +480,6 @@
     function showLoading(text) { document.getElementById('loading-text').innerText = text; document.getElementById('global-loading').classList.add('show'); }
     function hideLoading() { document.getElementById('global-loading').classList.remove('show'); }
     function getName() { let input = document.getElementById('player-name-input').value.trim(); return input === "" ? (myRole === 'host' ? "HOST" : "GUEST") : input; }
-    
-    function updateLobbyScoreboard() {
-        let p1S = myRole === 'host' ? myScore : oppScore;
-        let p2S = myRole === 'guest' ? myScore : oppScore;
-        document.getElementById('lobby-scoreboard').innerText = `P1 [ ${p1S} - ${p2S} ] P2`;
-    }
 
     // ==========================================
     // 1. LOBBY WAITING ROOM
@@ -459,12 +500,9 @@
     }
 
     async function createRoom() {
-        initA(); myName = getName(); myAvatar = getStatic(Math.floor(Math.random() * 151) + 1);
+        initA(); myName = getName();
         myRole = 'host'; myTurnId = 'p1'; oppName = ''; poolData = []; typeRels = {}; isDataLoaded = false;
         const code = Math.random().toString(36).substring(2, 6).toUpperCase();
-        
-        myScore = 0; oppScore = 0; updateLobbyScoreboard();
-
         document.getElementById('main-menu').classList.add('hidden');
         document.getElementById('waiting-room').classList.remove('hidden'); document.getElementById('waiting-room').classList.add('flex');
         document.getElementById('display-room-code').innerText = code;
@@ -473,7 +511,7 @@
             await initAblyAsync();
             channel = ably.channels.get(`poke-room-${code}`);
             channel.presence.subscribe(() => updateLobbyPresenceUI());
-            channel.presence.enter({ name: myName, role: 'host', avatar: myAvatar }); // KIRIM AVATAR
+            channel.presence.enter({ name: myName, role: 'host' });
             document.getElementById('lobby-status-text').innerText = "Menyiapkan Arena & Kartu...";
             fetchPool().then(success => {
                 if(success) {
@@ -490,13 +528,10 @@
     }
 
     async function joinRoom() {
-        initA(); myName = getName(); myAvatar = getStatic(Math.floor(Math.random() * 151) + 1);
+        initA(); myName = getName();
         const code = document.getElementById('room-code-input').value.toUpperCase();
         if (code.length !== 4) return showToast("Kode harus 4 digit!");
         myRole = 'guest'; myTurnId = 'p2'; oppName = '';
-        
-        myScore = 0; oppScore = 0; updateLobbyScoreboard();
-
         document.getElementById('main-menu').classList.add('hidden');
         document.getElementById('waiting-room').classList.remove('hidden'); document.getElementById('waiting-room').classList.add('flex');
         document.getElementById('display-room-code').innerText = code;
@@ -505,16 +540,13 @@
             await initAblyAsync();
             channel = ably.channels.get(`poke-room-${code}`);
             channel.presence.subscribe(() => updateLobbyPresenceUI());
-            
-            // Listen START_GAME, simpan data, lalu beri tahu host Guest sudah siap
             channel.subscribe('START_GAME', (msg) => {
                 poolData = msg.data.pool; typeRels = msg.data.types;
-                channel.publish('GUEST_READY_DRAFT', {});
                 document.getElementById('lobby-status-text').innerText = "MEMASUKI ARENA...";
                 document.getElementById('lobby-status-text').className = "text-xl font-black text-sky-500 mt-2";
                 setTimeout(startDraft, 1000);
             });
-            channel.presence.enter({ name: myName, role: 'guest', avatar: myAvatar }); // KIRIM AVATAR
+            channel.presence.enter({ name: myName, role: 'guest' });
         } catch(err) { showToast("Gagal Bergabung"); cancelLobby(); }
     }
 
@@ -523,7 +555,7 @@
         s1.className = 'slot-card flex-1'; s2.className = 'slot-card flex-1';
         document.getElementById('slot-1-name').innerText = "KOSONG"; document.getElementById('slot-1-name').className = "font-black text-sm uppercase text-slate-400 truncate w-full px-2";
         document.getElementById('slot-2-name').innerText = "KOSONG"; document.getElementById('slot-2-name').className = "font-black text-sm uppercase text-slate-400 truncate w-full px-2";
-        document.getElementById('slot-1-avatar').src = ''; document.getElementById('slot-2-avatar').src = '';
+        document.querySelector('#slot-1 .avatar-placeholder').innerText = '?'; document.querySelector('#slot-2 .avatar-placeholder').innerText = '?';
         document.getElementById('btn-start-game').classList.add('hidden');
     }
 
@@ -536,19 +568,19 @@
             if(hostData) {
                 s1.classList.add('filled-host'); document.getElementById('slot-1-name').innerText = hostData.name;
                 document.getElementById('slot-1-name').className = "font-black text-sm uppercase text-sky-600 truncate w-full px-2";
-                document.getElementById('slot-1-avatar').src = hostData.avatar || '';
+                document.querySelector('#slot-1 .avatar-placeholder').innerText = hostData.name.charAt(0);
                 if(myRole === 'guest') oppName = hostData.name; 
             }
             const s2 = document.getElementById('slot-2');
             if(guestData) {
                 s2.classList.add('filled-guest'); document.getElementById('slot-2-name').innerText = guestData.name;
                 document.getElementById('slot-2-name').className = "font-black text-sm uppercase text-rose-600 truncate w-full px-2";
-                document.getElementById('slot-2-avatar').src = guestData.avatar || '';
+                document.querySelector('#slot-2 .avatar-placeholder').innerText = guestData.name.charAt(0);
                 if(myRole === 'host') oppName = guestData.name; 
             } else {
                 s2.classList.remove('filled-guest'); document.getElementById('slot-2-name').innerText = "MENUNGGU...";
                 document.getElementById('slot-2-name').className = "font-black text-sm uppercase text-slate-400 truncate w-full px-2 animate-pulse";
-                document.getElementById('slot-2-avatar').src = '';
+                document.querySelector('#slot-2 .avatar-placeholder').innerText = '?';
                 if(myRole === 'host') oppName = '';
             }
             const btnStart = document.getElementById('btn-start-game');
@@ -556,7 +588,7 @@
                 if (hostData && guestData) {
                     if (isDataLoaded) {
                         document.getElementById('lobby-status-text').innerText = "Lawan Ditemukan. Siap Dimulai!";
-                        btnStart.classList.remove('hidden'); btnStart.innerText = "MULAI DRAFT"; btnStart.disabled = false;
+                        btnStart.classList.remove('hidden'); btnStart.innerText = "MULAI BATTLE"; btnStart.disabled = false;
                         btnStart.className = "w-full py-4 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-black text-lg shadow-lg active:scale-95 transition-all uppercase tracking-wider";
                     } else {
                         document.getElementById('lobby-status-text').innerText = "Lawan Ditemukan! Menyelesaikan Loading Data...";
@@ -575,39 +607,15 @@
     function hostStartGame() {
         if (!isDataLoaded || !oppName) return;
         document.getElementById('btn-start-game').innerText = "MEMULAI..."; document.getElementById('btn-start-game').disabled = true;
-        
-        channel.subscribe('GUEST_READY_DRAFT', () => {
-            channel.unsubscribe('GUEST_READY_DRAFT');
-            document.getElementById('lobby-status-text').innerText = "MEMASUKI ARENA..."; document.getElementById('lobby-status-text').className = "text-xl font-black text-sky-500 mt-2";
-            setTimeout(startDraft, 1000);
+        channel.publish('START_GAME', { pool: poolData, types: typeRels }, (err) => {
+            if (err) {
+                showToast("Koneksi gagal mengirim data. Coba lagi.");
+                document.getElementById('btn-start-game').innerText = "MULAI BATTLE"; document.getElementById('btn-start-game').disabled = false;
+            } else {
+                document.getElementById('lobby-status-text').innerText = "MEMASUKI ARENA..."; document.getElementById('lobby-status-text').className = "text-xl font-black text-sky-500 mt-2";
+                setTimeout(startDraft, 1000);
+            }
         });
-
-        channel.publish('START_GAME', { pool: poolData, types: typeRels });
-    }
-
-    function resetGameToLobby() {
-        myTeam = []; oppTeam = []; board = []; draftTurn = 'p1';
-        document.getElementById('p1-deck-slots').innerHTML = '<p id="p1-deck-empty" class="text-xs text-slate-400 italic my-auto mx-auto w-full text-center">Pilih dari pool di atas!</p>';
-        document.getElementById('p2-deck-slots').innerHTML = '<p id="p2-deck-empty" class="text-xs text-slate-400 italic my-auto mx-auto w-full text-center">Menunggu pilihan lawan...</p>';
-        document.getElementById('p1-count').innerText = `0/5`; document.getElementById('p2-count').innerText = `0/5`;
-        
-        document.getElementById('game-container').classList.add('hidden');
-        document.getElementById('draft-screen').style.display = 'none';
-        
-        document.getElementById('waiting-room').classList.remove('hidden');
-        document.getElementById('waiting-room').classList.add('flex');
-        
-        updateLobbyScoreboard();
-
-        if (myRole === 'host') {
-            document.getElementById('lobby-status-text').innerText = "Pilih MULAI DRAFT untuk lanjut!";
-            document.getElementById('lobby-status-text').className = "text-sm font-bold text-slate-500";
-            const btnStart = document.getElementById('btn-start-game');
-            btnStart.classList.remove('hidden'); btnStart.innerText = "MULAI DRAFT"; btnStart.disabled = false;
-        } else {
-            document.getElementById('lobby-status-text').innerText = "Menunggu Host memulai babak selanjutnya...";
-            document.getElementById('lobby-status-text').className = "text-sm font-bold text-slate-500 animate-pulse";
-        }
     }
 
     function cancelLobby() {
@@ -617,10 +625,11 @@
     function setupPresence() {
         channel.presence.subscribe('leave', (member) => { if(member.data && member.data.name === oppName) { opponentConnected = false; updateBoardLock(); showToast("Lawan Terputus!"); } });
         channel.presence.subscribe('enter', (member) => { if(member.data && member.data.name === oppName) { opponentConnected = true; updateBoardLock(); showToast("Lawan Kembali."); } });
+        channel.subscribe('rematch', async (msg) => { if(msg.data.sender !== myRole) { rematchReq.opp = true; checkRematchLogic(); } });
     }
 
     // ==========================================
-    // 2. FETCH POKEAPI (Dengan Basic Attack & Ultimate)
+    // 2. FETCH POKEAPI (Dengan Stats Energy)
     // ==========================================
     async function fetchPool() {
         try {
@@ -634,17 +643,12 @@
                 const bDef = d.stats.find(s=>s.stat.name==='defense').base_stat; const bSpa = d.stats.find(s=>s.stat.name==='special-attack').base_stat;
                 const bSpd = d.stats.find(s=>s.stat.name==='special-defense').base_stat; const bSpe = d.stats.find(s=>s.stat.name==='speed').base_stat;
                 const typesArr = d.types.map(t => t.type.name); typesArr.forEach(t => typesToFetch.add(t));
-                
                 let learnedMove = await fetchAttackMove(d.moves); 
-                let basicMove = basicMovesList[Math.floor(Math.random() * basicMovesList.length)];
-
                 return {
                     id: d.id, name: d.name, types: typesArr, primaryType: typesArr[0],
                     maxHp: Math.floor(bHp * 2) + 50, hp: Math.floor(bHp * 2) + 50, atk: Math.floor(bAtk * 1.5), def: Math.floor(bDef * 1.5), spa: Math.floor(bSpa * 1.5), spd: Math.floor(bSpd * 1.5), spe: Math.floor(bSpe * 1.5),
-                    energy: 0, maxEnergy: 10, 
-                    spriteS: getStatic(d.id), spriteA: getAnim(d.id), 
-                    learnedMove: learnedMove, // ULTIMATE
-                    basicMove: basicMove      // BASIC ATTACK
+                    energy: 0, maxEnergy: 10, // <-- SISTEM ENERGI DITAMBAHKAN
+                    spriteS: getStatic(d.id), spriteA: getAnim(d.id), learnedMove: learnedMove 
                 };
             });
             poolData = await Promise.all(poolPromises);
@@ -656,19 +660,19 @@
     }
 
     async function fetchAttackMove(movesList) {
-        if(!movesList || movesList.length === 0) return { name: 'hyper beam', power: 150, class: 'special', type: 'normal' };
+        if(!movesList || movesList.length === 0) return { name: 'tackle', power: 40, class: 'physical', type: 'normal' };
         for(let i=0; i<4; i++) {
             let rand = movesList[Math.floor(Math.random() * movesList.length)].move;
             try { let res = await fetch(rand.url); let data = await res.json(); if(data.power > 0) return { name: data.name, power: data.power, class: data.damage_class.name, type: data.type.name }; } catch(e) {}
         }
-        return { name: 'hyper beam', power: 150, class: 'special', type: 'normal' }; 
+        return { name: 'tackle', power: 40, class: 'physical', type: 'normal' }; 
     }
 
     // ==========================================
     // 3. DRAFT PICK
     // ==========================================
     function startDraft() {
-        document.getElementById('waiting-room').classList.add('hidden'); document.getElementById('waiting-room').classList.remove('flex');
+        document.getElementById('lobby-screen').classList.add('hidden'); document.getElementById('waiting-room').classList.add('hidden'); document.getElementById('game-over').classList.add('hidden');
         document.getElementById('draft-screen').style.display = 'flex';
         document.getElementById('ui-my-name').innerText = myName; document.getElementById('ui-opp-name').innerText = oppName;
         renderPool(); updateDraftUI(); setupPresence();
@@ -747,14 +751,10 @@
         const gc = document.getElementById('game-container');
         gc.classList.remove('hidden'); gc.classList.add('flex'); 
         
-        // Reset full HP & Energy
-        myTeam.forEach(p => { p.hp = p.maxHp; p.energy = 0; });
-        oppTeam.forEach(p => { p.hp = p.maxHp; p.energy = 0; });
-
         document.getElementById('player-player-name').innerText = myName; document.getElementById('enemy-player-name').innerText = oppName;
         setActive('p1', 0); setActive('p2', 0); state.turn = 'p1'; 
         
-        channel.unsubscribe('board-init'); channel.unsubscribe('attack'); channel.unsubscribe('end-turn'); channel.unsubscribe('heal'); channel.unsubscribe('shuffle'); channel.unsubscribe('game-over');
+        channel.unsubscribe('board-init'); channel.unsubscribe('attack'); channel.unsubscribe('end-turn'); channel.unsubscribe('heal'); channel.unsubscribe('shuffle');
 
         if(myRole === 'host') {
             let newBoard = getValidInitialBoard();
@@ -776,51 +776,33 @@
             board.forEach(r => r.forEach(c => { if(c && c.el) { c.el.classList.add('popping'); } }));
             await sleep(400); renderBoardFromData(msg.data.b); state.isAnim = false; updateBoardLock(); checkBoardState();
         });
-        channel.subscribe('game-over', (msg) => {
-            endGame(msg.data.winner === myRole);
-        });
     }
 
     function setActive(side, idx) {
         const team = side === 'p1' ? myTeam : oppTeam; const poke = team[idx]; const spriteEl = document.getElementById(`${side}-sprite`);
-        if(!poke) return; // safety
-        
         let badgesHtml = poke.types.map(t => `<span class="type-badge-lg" style="background:${TYPE_COLORS[t]||'#777'}">${t.substring(0,3)}</span>`).join('');
         if(side === 'p1') { 
             state.myActive = idx; document.getElementById('player-name').innerText = poke.name; 
-            document.getElementById('player-type-badge').innerHTML = badgesHtml; 
+            document.getElementById('player-type-badge').innerHTML = badgesHtml; document.getElementById('tactical-p1-badge').innerHTML = badgesHtml;
             updateMyStatus();
         } else { 
             state.oppActive = idx; document.getElementById('enemy-name').innerText = poke.name; 
-            document.getElementById('enemy-type-badge').innerHTML = badgesHtml; 
+            document.getElementById('enemy-type-badge').innerHTML = badgesHtml; document.getElementById('tactical-p2-badge').innerHTML = badgesHtml;
             updateOppStatus();
         }
         spriteEl.src = poke.spriteA; spriteEl.onerror = function(){this.src=poke.spriteS;};
     }
 
-    // ANIMASI TAG-TEAM SWITCH DARI PROF
-    async function playSwitchAnimation(side, newIdx) {
-        const spriteEl = document.getElementById(`${side}-sprite`);
-        sFaint(); // Bunyi bola ditarik
-        spriteEl.classList.add('switch-out');
-        await sleep(400);
-        
-        setActive(side, newIdx); // Ganti data
-        
-        spriteEl.classList.remove('switch-out');
-        spriteEl.classList.add('switch-in');
-        pT(600); // Bunyi keluar
-        await sleep(500);
-        spriteEl.classList.remove('switch-in');
-    }
-
     function updateMyStatus() {
-        const poke = myTeam[state.myActive]; if(!poke) return;
+        const poke = myTeam[state.myActive]; 
+        
+        // Update HP
         const hpPct = Math.max(0, (poke.hp / poke.maxHp) * 100);
         const hpBar = document.getElementById('player-hp-bar'); 
         hpBar.style.width = `${hpPct}%`; hpBar.style.backgroundColor = hpPct>50 ? '#10b981' : hpPct>20 ? '#facc15' : '#ef4444';
         document.getElementById('player-hp-text').innerText = `${Math.floor(Math.max(0, poke.hp))}/${poke.maxHp}`;
         
+        // Update Energy
         const epPct = Math.min(100, (poke.energy / poke.maxEnergy) * 100);
         const epBar = document.getElementById('player-ep-bar');
         epBar.style.width = `${epPct}%`;
@@ -831,12 +813,15 @@
     }
 
     function updateOppStatus() {
-        const poke = oppTeam[state.oppActive]; if(!poke) return;
+        const poke = oppTeam[state.oppActive]; 
+        
+        // Update HP
         const hpPct = Math.max(0, (poke.hp / poke.maxHp) * 100);
         const hpBar = document.getElementById('enemy-hp-bar'); 
         hpBar.style.width = `${hpPct}%`; hpBar.style.backgroundColor = hpPct>50 ? '#10b981' : hpPct>20 ? '#facc15' : '#ef4444';
         document.getElementById('enemy-hp-text').innerText = `${Math.floor(Math.max(0, poke.hp))}/${poke.maxHp}`;
         
+        // Update Energy
         const epPct = Math.min(100, (poke.energy / poke.maxEnergy) * 100);
         const epBar = document.getElementById('enemy-ep-bar');
         epBar.style.width = `${epPct}%`;
@@ -874,7 +859,7 @@
     function showEpicMove(moveName) { 
         sEpic(); 
         const el = document.getElementById('epic-move'); 
-        if(!el) return;
+        if(!el) return; // Pengaman Bug Fix
         el.innerText = `${moveName.toUpperCase()}!`; 
         el.classList.remove('show-move'); void el.offsetWidth; el.classList.add('show-move'); 
     }
@@ -1026,32 +1011,21 @@
                 ax+=x; ay+=y;
             });
 
-            if(group.cells.length >= 4) shakeArena(); 
-
             if(group.pIdx === 5) {
                 totalHeal += 40 * group.cells.length;
                 showFloatingDmg(ax/group.cells.length, ay/group.cells.length, `+${40 * group.cells.length}`, false, true);
                 continue;
             }
 
-            // TAG-TEAM DYNAMIC SWITCHING
-            if(state.myActive !== group.pIdx) {
-                let incomingPoke = myTeam[group.pIdx];
-                if (incomingPoke.hp > 0) {
-                    setLog(`Tukar! Maju ${incomingPoke.name}!`);
-                    await playSwitchAnimation('p1', group.pIdx);
-                } else {
-                    setActive('p1', group.pIdx); // Tetap aktif walau mati (untuk membuang batu)
-                }
-            }
-
             let myPoke = myTeam[group.pIdx]; let oppPoke = oppTeam[state.oppActive];
+            if(state.myActive !== group.pIdx) setActive('p1', group.pIdx);
 
             if (myPoke.hp <= 0) {
                 sFaint(); setLog(`Ups! ${myPoke.name} sudah PINGSAN!`);
                 showFloatingDmg(ax/group.cells.length, ay/group.cells.length, "BATU MATI!", false);
                 await sleep(400);
             } else {
+                // TAMBAH ENERGI BERDASARKAN JUMLAH BATU (Match-3 = 3 Energi)
                 let energyGained = group.cells.length;
                 myPoke.energy += energyGained;
                 showFloatingDmg(ax/group.cells.length, ay/group.cells.length, `+${energyGained}⚡`, false, false);
@@ -1059,19 +1033,15 @@
                 let isUltimate = false;
                 if (myPoke.energy >= myPoke.maxEnergy) {
                     isUltimate = true;
-                    myPoke.energy -= myPoke.maxEnergy; 
+                    myPoke.energy -= myPoke.maxEnergy; // Kosongkan sebagian energi untuk ultimate
                 }
                 
-                updateMyStatus(); 
+                updateMyStatus(); // Refresh UI Energi Bar
                 await sleep(200);
 
-                let usedMoveData = isUltimate ? myPoke.learnedMove : myPoke.basicMove;
-                let usedMoveName = usedMoveData.name;
-
-                let atkStat = usedMoveData.class === 'special' ? myPoke.spa : myPoke.atk;
-                let defStat = usedMoveData.class === 'special' ? oppPoke.spd : oppPoke.def;
-                let moveType = usedMoveData.type;
-                let mult = 1; 
+                let atkStat = myPoke.learnedMove.class === 'special' ? myPoke.spa : myPoke.atk;
+                let defStat = myPoke.learnedMove.class === 'special' ? oppPoke.spd : oppPoke.def;
+                let mult = 1; let moveType = myPoke.learnedMove.type;
                 
                 if(typeRels[moveType]) {
                     oppPoke.types.forEach(opT => {
@@ -1082,20 +1052,18 @@
                 }
 
                 let stab = myPoke.types.includes(moveType) ? 1.5 : 1;
-                
-                // NERF PROF: Serangan Dasar didiskon 90% Base ATK-nya!
-                if (!isUltimate) {
-                    atkStat = Math.floor(atkStat * 0.1);
-                }
+                // Damage Dasar
+                let baseDmg = Math.floor((atkStat / defStat) * (myPoke.learnedMove.power / 2) * (group.cells.length/3));
 
-                let baseDmg = Math.floor((atkStat / defStat) * (usedMoveData.power / 2) * (group.cells.length/3));
                 let isCrit = Math.random() < (myPoke.spe / 255); 
                 if (isCrit) baseDmg *= 1.5;
                 
                 let finalDmg = Math.floor(baseDmg * mult * stab * (0.85 + Math.random()*0.3));
+                let usedMoveName = "Serangan Dasar";
 
                 if (isUltimate) {
-                    finalDmg = Math.floor(finalDmg * 2.5); 
+                    finalDmg = Math.floor(finalDmg * 2.5); // ULTIMATE DAMAGE X2.5!
+                    usedMoveName = myPoke.learnedMove.name; 
                     showEpicMove(usedMoveName); 
                     shakeArena();
                     setLog(`🌟 ULTIMATE: ${myPoke.name} menggunakan ${usedMoveName.toUpperCase()}!`);
@@ -1103,7 +1071,7 @@
                 } else {
                     let effectiveness = mult > 1 ? "🔥 Super Effective!" : (mult < 1 ? "💧 Kurang efektif" : "");
                     let critText = isCrit ? "💥 CRITICAL!" : "";
-                    setLog(`⚔️ ${myPoke.name} menggunakan ${usedMoveName}! ${critText} ${effectiveness}`.trim());
+                    setLog(`⚔️ ${myPoke.name} menyerang! ${critText} ${effectiveness}`.trim());
                 }
 
                 finalDmg = Math.max(1, finalDmg);
@@ -1116,20 +1084,22 @@
                 oppPoke.hp -= finalDmg; updateOppStatus();
                 await sleep(300); p1S.classList.remove('attack-lunge-p1'); p2S.classList.remove('hit-flash');
 
+                // Kirim Data Serangan via Ably
                 channel.publish('attack', { 
                     sender: myRole, myActiveIdx: group.pIdx, 
                     damage: finalDmg, isFainted: false, 
                     moveName: usedMoveName, isCrit: isCrit, 
                     isUltimate: isUltimate,
-                    newEnergy: myPoke.energy
+                    newEnergy: myPoke.energy // Sinkronisasi energi ke musuh
                 });
 
+                // LOGIKA AUTO-SWITCH MUSUH 
                 if(oppPoke.hp <= 0) { 
                     sFaint(); setLog(`☠️ ${oppPoke.name} musuh Pingsan!`); 
                     await sleep(500);
                     let nextIdx = oppTeam.findIndex(t => t.hp > 0);
                     if(nextIdx !== -1) {
-                        await playSwitchAnimation('p2', nextIdx);
+                        setActive('p2', nextIdx);
                         oppPoke = oppTeam[nextIdx]; 
                         setLog(`Musuh mengeluarkan ${oppPoke.name}!`);
                         await sleep(600);
@@ -1148,14 +1118,12 @@
             }
         }
 
-        if(oppTeam.every(t=>t.hp<=0)) { 
-            if (myRole === 'host') channel.publish('game-over', { winner: myRole });
-            return; 
-        }
+        if(oppTeam.every(t=>t.hp<=0)) { endGame(true); return; }
 
         await applyGravity(); let nextG = findMatchGroups();
         if(nextG.length>0) { 
-            await sleep(200); await processMyMatches(nextG); 
+            await sleep(200); 
+            await processMyMatches(nextG); // Teruskan Cascade tanpa Bonus Damage (Hanya Panen Energi!)
         }
         else {
             state.turn = myTurnId === 'p1' ? 'p2' : 'p1';
@@ -1166,23 +1134,13 @@
 
     async function processReceivedAttack(data) {
         state.isAnim = true; let oppPokeIdx = data.myActiveIdx; let dmg = data.damage;
-        
-        // TAG-TEAM DYNAMIC SWITCHING (Lawan)
-        if(state.oppActive !== oppPokeIdx) {
-            let incomingPoke = oppTeam[oppPokeIdx];
-            if (incomingPoke.hp > 0) {
-                setLog(`Lawan menukar ke ${incomingPoke.name}!`);
-                await playSwitchAnimation('p2', oppPokeIdx);
-            } else {
-                setActive('p2', oppPokeIdx);
-            }
-        }
-        
+        if(state.oppActive !== oppPokeIdx) setActive('p2', oppPokeIdx);
         let oppPoke = oppTeam[oppPokeIdx]; let myPoke = myTeam[state.myActive];
 
         if(data.isFainted) {
             sFaint(); setLog(`${oppName} membuang batu mati!`);
         } else {
+            // Sinkronisasi Energi Musuh dari Data Host
             oppPoke.energy = data.newEnergy;
             updateOppStatus();
 
@@ -1192,7 +1150,7 @@
                 shakeArena();
                 await sleep(600); 
             } else {
-                setLog(data.isCrit ? `💥 CRITICAL HIT dari lawan!` : `⚔️ Lawan menggunakan ${data.moveName}!`);
+                setLog(data.isCrit ? `💥 CRITICAL HIT dari lawan!` : `⚔️ Lawan menyerang!`);
             }
             
             sHit(data.isCrit || data.isUltimate); 
@@ -1207,16 +1165,14 @@
                 await sleep(500);
                 let nextIdx = myTeam.findIndex(t => t.hp > 0);
                 if(nextIdx !== -1) {
-                    await playSwitchAnimation('p1', nextIdx);
+                    setActive('p1', nextIdx);
                     myPoke = myTeam[nextIdx];
                     setLog(`Maju, ${myPoke.name}!`);
                     await sleep(600);
                 }
             }
         }
-        if(myTeam.every(t=>t.hp<=0)) { 
-            if (myRole === 'guest') channel.publish('game-over', { winner: oppName }); // safety fallback
-        }
+        if(myTeam.every(t=>t.hp<=0)) { endGame(false); }
     }
 
     async function applyGravity() {
@@ -1245,14 +1201,39 @@
     }
 
     // ==========================================
-    // 6. GAME OVER LOGIC (BACK TO LOBBY)
+    // 6. GAME OVER & ROBUST REMATCH
     // ==========================================
-    function endGame(isMyWin) {
+    function endGame(win) {
         state.isAnim = true; clearTimeout(hintTimer); removeHints();
-        if(isMyWin) { myScore++; showToast("🎉 KAMU MENANG! Kembali ke Lobby..."); }
-        else { oppScore++; showToast("💀 KAMU KALAH! Kembali ke Lobby..."); }
-        
-        setTimeout(() => resetGameToLobby(), 2000);
+        const m = document.getElementById('game-over');
+        if(win) { document.getElementById('result-title').innerText="MENANG!"; document.getElementById('result-title').className="text-6xl font-black mb-2 text-emerald-500"; document.getElementById('result-subtitle').innerText="Semua Pokemon musuh kalah!"; }
+        else { document.getElementById('result-title').innerText="KALAH"; document.getElementById('result-title').className="text-6xl font-black mb-2 text-rose-500"; document.getElementById('result-subtitle').innerText="Semua Pokemon-mu pingsan!"; }
+        setTimeout(() => m.classList.remove('hidden'), 1000);
+    }
+
+    function requestRematch() {
+        rematchReq.me = true; const btn = document.getElementById('btn-rematch');
+        btn.innerText = "MENUNGGU PERSETUJUAN..."; btn.disabled = true; btn.classList.replace('bg-sky-500', 'bg-slate-400');
+        document.getElementById('rematch-status').classList.remove('hidden');
+        channel.publish('rematch', { sender: myRole }); checkRematchLogic();
+    }
+
+    async function checkRematchLogic() {
+        if (rematchReq.me && rematchReq.opp) {
+            rematchReq = { me: false, opp: false }; myTeam = []; oppTeam = []; board = []; draftTurn = 'p1';
+            document.getElementById('p1-deck-slots').innerHTML = '<p id="p1-deck-empty" class="text-xs text-slate-400 italic my-auto mx-auto w-full text-center">Pilih dari pool di atas!</p>';
+            document.getElementById('p2-deck-slots').innerHTML = '<p id="p2-deck-empty" class="text-xs text-slate-400 italic my-auto mx-auto w-full text-center">Menunggu pilihan lawan...</p>';
+            document.getElementById('p1-count').innerText = `0/5`; document.getElementById('p2-count').innerText = `0/5`;
+            
+            const btn = document.getElementById('btn-rematch'); btn.innerText = "REMATCH"; btn.disabled = false; btn.classList.replace('bg-slate-400', 'bg-sky-500');
+            document.getElementById('rematch-status').classList.add('hidden'); document.getElementById('game-over').classList.add('hidden'); document.getElementById('game-container').classList.add('hidden');
+            document.getElementById('draft-screen').style.display = 'flex'; document.getElementById('draft-turn-text').innerText = "MEMUAT POOL BARU...";
+
+            if (myRole === 'host') {
+                let success = await fetchPool();
+                if(success) { channel.publish('START_GAME', { pool: poolData, types: typeRels }); startDraft(); }
+            }
+        }
     }
 
     function returnToLobby() { if(channel) { channel.presence.leave(); channel.detach(); } location.reload(); }
