@@ -109,14 +109,22 @@
             flex: 1; display: flex; flex-direction: column; background: #fff;
             border-radius: 0.75rem; border: 3px solid #cbd5e1; padding: 0.5rem;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative; overflow: hidden;
+            transition: all 0.3s ease;
         }
         .fighter-plate.p1 { border-color: #0ea5e9; border-bottom-right-radius: 0; }
         .fighter-plate.p2 { border-color: #f43f5e; border-bottom-left-radius: 0; align-items: flex-end; }
+        
+        /* Indikator Giliran (GLOW) */
+        .fighter-plate.active-turn {
+            border-color: #f59e0b; 
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+            transform: translateY(-2px);
+        }
 
         .hp-bar-bg { width: 100%; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; margin-top: 4px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);}
         .hp-bar-fill { height: 100%; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s; }
         
-        .p2 .hp-bar-bg { transform: scaleX(-1); } /* Musuh darah berkurang dari kiri ke kanan (opsional, tp keren) */
+        .p2 .hp-bar-bg { transform: scaleX(-1); }
 
         .arena-bg {
             background: linear-gradient(180deg, #87ceeb 0%, #e0f6ff 50%, #a7f3d0 50%, #4ade80 100%);
@@ -127,7 +135,10 @@
             padding: 0 10%;
         }
 
-        /* Shadow di bawah kaki pokemon */
+        /* Screen Shake Effect */
+        .arena-shake { animation: shake-arena 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake-arena { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+
         .shadow-ellipse {
             position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
             width: 70px; height: 20px; background: rgba(0,0,0,0.25);
@@ -135,7 +146,6 @@
         }
 
         .sprite-container { position: relative; z-index: 100; padding-bottom: 10px; }
-        /* Player kiri hadap kanan (di mirror), musuh kanan hadap kiri (normal) */
         .p1-pos { transform: scaleX(-1); } 
         .p2-pos { transform: scaleX(1); }
 
@@ -156,7 +166,7 @@
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             font-family: 'VT323', monospace; font-size: 2.2rem; color: #fff;
             text-shadow: 3px 3px 0 #000, -2px -2px 0 #000;
-            white-space: nowrap; z-index: 60; opacity: 0; pointer-events: none;
+            white-space: nowrap; z-index: 120; opacity: 0; pointer-events: none;
         }
         .show-move { animation: slashMove 1.5s ease-out; }
         @keyframes slashMove {
@@ -178,7 +188,7 @@
         .gem-inner { 
             width: 100%; height: 100%; background: #ffffff; border-radius: 0.5rem; 
             border: 2px solid #e2e8f0; display: flex; justify-content: center; align-items: center; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden; transition: all 0.2s;
         }
         .gem-inner.is-potion { background: radial-gradient(circle, #ecfdf5 0%, #a7f3d0 100%); border-color: #34d399; }
 
@@ -186,6 +196,11 @@
         .gem.swiping .gem-inner { border-color: #0ea5e9; transform: scale(1.15); box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3); }
         .gem.popping .gem-inner { transform: scale(0); opacity: 0; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         
+        /* HINT SYSTEM (Glow kuning) */
+        @keyframes pulse-hint { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.08); filter: brightness(1.2); box-shadow: 0 0 12px #facc15; border-color: #facc15;} }
+        .gem.hint-anim { z-index: 15; }
+        .gem.hint-anim .gem-inner { animation: pulse-hint 1.5s infinite; border-color: #facc15; }
+
         .gem img { width: 85%; height: 85%; object-fit: contain; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.15)); }
         
         .floating-dmg { position: absolute; font-family: 'VT323', monospace; font-size: 2.5rem; color: #e11d48; text-shadow: 2px 2px 0 #fff, -1px -1px 0 #fff; pointer-events: none; z-index: 50; animation: floatUp 0.8s forwards ease-out; }
@@ -305,7 +320,7 @@
         <!-- STATUS BARS (TOP) -->
         <div class="top-status-bar">
             <!-- Player 1 (You) -->
-            <div class="fighter-plate p1">
+            <div id="plate-p1" class="fighter-plate p1">
                 <div class="flex justify-between items-center w-full mb-1">
                     <span id="player-player-name" class="text-[10px] font-black text-sky-500 uppercase truncate max-w-[50%]">PLAYER</span>
                     <span class="text-[10px] font-black text-slate-400">Lv50</span>
@@ -322,7 +337,7 @@
             <div class="font-black text-xl italic text-slate-300 pb-2">VS</div>
 
             <!-- Player 2 (Enemy) -->
-            <div class="fighter-plate p2 text-right">
+            <div id="plate-p2" class="fighter-plate p2 text-right">
                 <div class="flex justify-between items-center w-full mb-1 flex-row-reverse">
                     <span id="enemy-player-name" class="text-[10px] font-black text-rose-500 uppercase truncate max-w-[50%]">ENEMY</span>
                     <span class="text-[10px] font-black text-slate-400">Lv50</span>
@@ -336,18 +351,18 @@
             </div>
         </div>
 
-        <!-- ARENA FIELD (Clean & Open) -->
-        <div class="flex-none arena-bg w-full h-[180px] mb-2">
-            <!-- EPIC MOVE TEXT ADDED BACK HERE -->
+        <!-- ARENA FIELD -->
+        <div id="battle-arena" class="flex-none arena-bg w-full h-[180px] mb-2">
+            <!-- EPIC MOVE TEXT -->
             <div id="epic-move" class="epic-move-text"></div>
 
-            <!-- P1 Position (Left) -->
+            <!-- P1 Position -->
             <div class="sprite-container p1-pos" id="p1-container">
                 <div class="shadow-ellipse"></div>
                 <img id="p1-sprite" src="" class="monster-sprite relative" alt="Player">
             </div>
 
-            <!-- P2 Position (Right) -->
+            <!-- P2 Position -->
             <div class="sprite-container p2-pos" id="p2-container">
                 <div class="shadow-ellipse"></div>
                 <img id="p2-sprite" src="" class="monster-sprite relative" alt="Enemy">
@@ -359,7 +374,7 @@
             <span id="log-text" class="pixel-text text-xl font-bold text-slate-800 leading-none text-center">Pertarungan dimulai!</span>
         </div>
 
-        <!-- PUZZLE BOARD (Solid Box) -->
+        <!-- PUZZLE BOARD -->
         <div class="flex-none w-full max-w-sm mx-auto flex justify-center mb-2">
             <div id="board" class="game-board-container">
                 <div id="gems-container" class="absolute inset-0"></div>
@@ -369,7 +384,7 @@
             </div>
         </div>
 
-        <!-- TACTICAL PANEL (Bottom Info) -->
+        <!-- TACTICAL PANEL -->
         <div class="flex-1 w-full max-w-sm mx-auto flex items-start justify-center">
              <div class="tactical-panel w-full">
                  <div class="flex flex-col items-center">
@@ -410,12 +425,10 @@
     const POTION_IMG = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/potion.png';
 
     const getAnim = (id) => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`;
-    // OFFICIAL ARTWORK UNTUK GAMBAR HD!
     const getStatic = (id) => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
 
     // --- ABLY & STATE ---
-    let ably = null;
-    let channel = null; 
+    let ably = null; let channel = null; 
     let myRole = ''; let myTurnId = '';
     let myName = 'Player'; let oppName = 'Enemy';
     
@@ -429,6 +442,7 @@
     let draftTimer; let draftTimeLeft = 15;
     
     let isDataLoaded = false; 
+    let hintTimer = null; // Timer untuk IDLE Hint
 
     // --- AUDIO & MUTE ---
     let actx; let isMuted = false;
@@ -451,7 +465,7 @@
     function getName() { let input = document.getElementById('player-name-input').value.trim(); return input === "" ? (myRole === 'host' ? "HOST" : "GUEST") : input; }
 
     // ==========================================
-    // 1. LOBBY WAITING ROOM (BRIGHT THEME)
+    // 1. LOBBY WAITING ROOM
     // ==========================================
     function initAblyAsync() {
         return new Promise((resolve, reject) => {
@@ -471,23 +485,16 @@
     async function createRoom() {
         initA(); myName = getName();
         myRole = 'host'; myTurnId = 'p1'; oppName = ''; poolData = []; typeRels = {}; isDataLoaded = false;
-        
         const code = Math.random().toString(36).substring(2, 6).toUpperCase();
-
         document.getElementById('main-menu').classList.add('hidden');
-        document.getElementById('waiting-room').classList.remove('hidden');
-        document.getElementById('waiting-room').classList.add('flex');
+        document.getElementById('waiting-room').classList.remove('hidden'); document.getElementById('waiting-room').classList.add('flex');
         document.getElementById('display-room-code').innerText = code;
-        
-        resetLobbyUI();
-        document.getElementById('lobby-status-text').innerText = "Menyiapkan Koneksi...";
-
+        resetLobbyUI(); document.getElementById('lobby-status-text').innerText = "Menyiapkan Koneksi...";
         try {
             await initAblyAsync();
             channel = ably.channels.get(`poke-room-${code}`);
             channel.presence.subscribe(() => updateLobbyPresenceUI());
             channel.presence.enter({ name: myName, role: 'host' });
-
             document.getElementById('lobby-status-text').innerText = "Menyiapkan Arena & Kartu...";
             fetchPool().then(success => {
                 if(success) {
@@ -500,7 +507,6 @@
                     document.getElementById('lobby-status-text').innerText = "Gagal memuat sistem.";
                 }
             });
-
         } catch(err) { showToast("Gagal Membuat Room"); cancelLobby(); }
     }
 
@@ -508,33 +514,22 @@
         initA(); myName = getName();
         const code = document.getElementById('room-code-input').value.toUpperCase();
         if (code.length !== 4) return showToast("Kode harus 4 digit!");
-        
         myRole = 'guest'; myTurnId = 'p2'; oppName = '';
-        
         document.getElementById('main-menu').classList.add('hidden');
-        document.getElementById('waiting-room').classList.remove('hidden');
-        document.getElementById('waiting-room').classList.add('flex');
+        document.getElementById('waiting-room').classList.remove('hidden'); document.getElementById('waiting-room').classList.add('flex');
         document.getElementById('display-room-code').innerText = code;
-
-        resetLobbyUI();
-        document.getElementById('lobby-status-text').innerText = "Mencari Ruangan...";
-
+        resetLobbyUI(); document.getElementById('lobby-status-text').innerText = "Mencari Ruangan...";
         try {
             await initAblyAsync();
             channel = ably.channels.get(`poke-room-${code}`);
-
             channel.presence.subscribe(() => updateLobbyPresenceUI());
-
             channel.subscribe('START_GAME', (msg) => {
-                poolData = msg.data.pool;
-                typeRels = msg.data.types;
+                poolData = msg.data.pool; typeRels = msg.data.types;
                 document.getElementById('lobby-status-text').innerText = "MEMASUKI ARENA...";
                 document.getElementById('lobby-status-text').className = "text-xl font-black text-sky-500 mt-2";
                 setTimeout(startDraft, 1000);
             });
-            
             channel.presence.enter({ name: myName, role: 'guest' });
-
         } catch(err) { showToast("Gagal Bergabung"); cancelLobby(); }
     }
 
@@ -543,8 +538,7 @@
         s1.className = 'slot-card flex-1'; s2.className = 'slot-card flex-1';
         document.getElementById('slot-1-name').innerText = "KOSONG"; document.getElementById('slot-1-name').className = "font-black text-sm uppercase text-slate-400 truncate w-full px-2";
         document.getElementById('slot-2-name').innerText = "KOSONG"; document.getElementById('slot-2-name').className = "font-black text-sm uppercase text-slate-400 truncate w-full px-2";
-        document.querySelector('#slot-1 .avatar-placeholder').innerText = '?';
-        document.querySelector('#slot-2 .avatar-placeholder').innerText = '?';
+        document.querySelector('#slot-1 .avatar-placeholder').innerText = '?'; document.querySelector('#slot-2 .avatar-placeholder').innerText = '?';
         document.getElementById('btn-start-game').classList.add('hidden');
     }
 
@@ -552,101 +546,69 @@
         if(!channel) return;
         channel.presence.get((err, members) => {
             if(err || !members) return;
-
-            let hostData = members.find(m => m.data.role === 'host')?.data;
-            let guestData = members.find(m => m.data.role === 'guest')?.data;
-
+            let hostData = members.find(m => m.data.role === 'host')?.data; let guestData = members.find(m => m.data.role === 'guest')?.data;
             const s1 = document.getElementById('slot-1');
             if(hostData) {
-                s1.classList.add('filled-host');
-                document.getElementById('slot-1-name').innerText = hostData.name;
+                s1.classList.add('filled-host'); document.getElementById('slot-1-name').innerText = hostData.name;
                 document.getElementById('slot-1-name').className = "font-black text-sm uppercase text-sky-600 truncate w-full px-2";
                 document.querySelector('#slot-1 .avatar-placeholder').innerText = hostData.name.charAt(0);
                 if(myRole === 'guest') oppName = hostData.name; 
             }
-
             const s2 = document.getElementById('slot-2');
             if(guestData) {
-                s2.classList.add('filled-guest');
-                document.getElementById('slot-2-name').innerText = guestData.name;
+                s2.classList.add('filled-guest'); document.getElementById('slot-2-name').innerText = guestData.name;
                 document.getElementById('slot-2-name').className = "font-black text-sm uppercase text-rose-600 truncate w-full px-2";
                 document.querySelector('#slot-2 .avatar-placeholder').innerText = guestData.name.charAt(0);
                 if(myRole === 'host') oppName = guestData.name; 
             } else {
-                s2.classList.remove('filled-guest');
-                document.getElementById('slot-2-name').innerText = "MENUNGGU...";
+                s2.classList.remove('filled-guest'); document.getElementById('slot-2-name').innerText = "MENUNGGU...";
                 document.getElementById('slot-2-name').className = "font-black text-sm uppercase text-slate-400 truncate w-full px-2 animate-pulse";
                 document.querySelector('#slot-2 .avatar-placeholder').innerText = '?';
                 if(myRole === 'host') oppName = '';
             }
-
             const btnStart = document.getElementById('btn-start-game');
             if (myRole === 'host') {
                 if (hostData && guestData) {
                     if (isDataLoaded) {
                         document.getElementById('lobby-status-text').innerText = "Lawan Ditemukan. Siap Dimulai!";
-                        btnStart.classList.remove('hidden');
-                        btnStart.innerText = "MULAI BATTLE";
-                        btnStart.disabled = false;
+                        btnStart.classList.remove('hidden'); btnStart.innerText = "MULAI BATTLE"; btnStart.disabled = false;
                         btnStart.className = "w-full py-4 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-black text-lg shadow-lg active:scale-95 transition-all uppercase tracking-wider";
                     } else {
                         document.getElementById('lobby-status-text').innerText = "Lawan Ditemukan! Menyelesaikan Loading Data...";
-                        btnStart.classList.remove('hidden');
-                        btnStart.innerText = "MEMUAT DATA...";
-                        btnStart.disabled = true;
+                        btnStart.classList.remove('hidden'); btnStart.innerText = "MEMUAT DATA..."; btnStart.disabled = true;
                         btnStart.className = "w-full py-4 bg-slate-300 text-slate-500 rounded-xl font-black text-lg shadow-inner cursor-not-allowed uppercase tracking-wider animate-pulse";
                     }
                 } else {
-                    btnStart.classList.add('hidden');
-                    if(isDataLoaded) document.getElementById('lobby-status-text').innerText = "Menunggu Lawan Gabung...";
+                    btnStart.classList.add('hidden'); if(isDataLoaded) document.getElementById('lobby-status-text').innerText = "Menunggu Lawan Gabung...";
                 }
             } else {
-                if (hostData && guestData) {
-                    document.getElementById('lobby-status-text').innerText = "Menunggu Host Memulai Pertandingan...";
-                }
+                if (hostData && guestData) document.getElementById('lobby-status-text').innerText = "Menunggu Host Memulai Pertandingan...";
             }
         });
     }
 
     function hostStartGame() {
         if (!isDataLoaded || !oppName) return;
-        document.getElementById('btn-start-game').innerText = "MEMULAI...";
-        document.getElementById('btn-start-game').disabled = true;
-        
+        document.getElementById('btn-start-game').innerText = "MEMULAI..."; document.getElementById('btn-start-game').disabled = true;
         channel.publish('START_GAME', { pool: poolData, types: typeRels }, (err) => {
             if (err) {
                 showToast("Koneksi gagal mengirim data. Coba lagi.");
-                document.getElementById('btn-start-game').innerText = "MULAI BATTLE";
-                document.getElementById('btn-start-game').disabled = false;
+                document.getElementById('btn-start-game').innerText = "MULAI BATTLE"; document.getElementById('btn-start-game').disabled = false;
             } else {
-                document.getElementById('lobby-status-text').innerText = "MEMASUKI ARENA...";
-                document.getElementById('lobby-status-text').className = "text-xl font-black text-sky-500 mt-2";
+                document.getElementById('lobby-status-text').innerText = "MEMASUKI ARENA..."; document.getElementById('lobby-status-text').className = "text-xl font-black text-sky-500 mt-2";
                 setTimeout(startDraft, 1000);
             }
         });
     }
 
     function cancelLobby() {
-        cleanupMultiplayer();
-        document.getElementById('waiting-room').classList.add('hidden');
-        document.getElementById('waiting-room').classList.remove('flex');
-        document.getElementById('main-menu').classList.remove('hidden');
+        cleanupMultiplayer(); document.getElementById('waiting-room').classList.add('hidden'); document.getElementById('waiting-room').classList.remove('flex'); document.getElementById('main-menu').classList.remove('hidden');
     }
 
     function setupPresence() {
-        channel.presence.subscribe('leave', (member) => {
-            if(member.data && member.data.name === oppName) {
-                opponentConnected = false; updateBoardLock(); showToast("Lawan Terputus!");
-            }
-        });
-        channel.presence.subscribe('enter', (member) => {
-            if(member.data && member.data.name === oppName) {
-                opponentConnected = true; updateBoardLock(); showToast("Lawan Kembali.");
-            }
-        });
-        channel.subscribe('rematch', async (msg) => {
-            if(msg.data.sender !== myRole) { rematchReq.opp = true; checkRematchLogic(); }
-        });
+        channel.presence.subscribe('leave', (member) => { if(member.data && member.data.name === oppName) { opponentConnected = false; updateBoardLock(); showToast("Lawan Terputus!"); } });
+        channel.presence.subscribe('enter', (member) => { if(member.data && member.data.name === oppName) { opponentConnected = true; updateBoardLock(); showToast("Lawan Kembali."); } });
+        channel.subscribe('rematch', async (msg) => { if(msg.data.sender !== myRole) { rematchReq.opp = true; checkRematchLogic(); } });
     }
 
     // ==========================================
@@ -654,62 +616,36 @@
     // ==========================================
     async function fetchPool() {
         try {
-            let ids = new Set();
-            while(ids.size < POOL_SIZE) ids.add(Math.floor(Math.random() * 493) + 1);
-            
+            let ids = new Set(); while(ids.size < POOL_SIZE) ids.add(Math.floor(Math.random() * 493) + 1);
             const promises = Array.from(ids).map(id => fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then(r=>r.ok ? r.json() : null).catch(()=>null));
-            const resRaw = await Promise.all(promises);
-            let res = resRaw.filter(r => r !== null);
-            
-            while(res.length < POOL_SIZE) {
-                let fallback = await fetch(`https://pokeapi.co/api/v2/pokemon/25`).then(r=>r.json()).catch(()=>null);
-                if(fallback) res.push(fallback); else break; 
-            }
-
+            const resRaw = await Promise.all(promises); let res = resRaw.filter(r => r !== null);
+            while(res.length < POOL_SIZE) { let fallback = await fetch(`https://pokeapi.co/api/v2/pokemon/25`).then(r=>r.json()).catch(()=>null); if(fallback) res.push(fallback); else break; }
             let typesToFetch = new Set();
-            
             const poolPromises = res.map(async d => {
-                const bHp = d.stats.find(s=>s.stat.name==='hp').base_stat;
-                const bAtk = d.stats.find(s=>s.stat.name==='attack').base_stat;
-                const bDef = d.stats.find(s=>s.stat.name==='defense').base_stat;
-                const bSpa = d.stats.find(s=>s.stat.name==='special-attack').base_stat;
-                const bSpd = d.stats.find(s=>s.stat.name==='special-defense').base_stat;
-                const bSpe = d.stats.find(s=>s.stat.name==='speed').base_stat;
-                
-                const typesArr = d.types.map(t => t.type.name);
-                typesArr.forEach(t => typesToFetch.add(t));
-
+                const bHp = d.stats.find(s=>s.stat.name==='hp').base_stat; const bAtk = d.stats.find(s=>s.stat.name==='attack').base_stat;
+                const bDef = d.stats.find(s=>s.stat.name==='defense').base_stat; const bSpa = d.stats.find(s=>s.stat.name==='special-attack').base_stat;
+                const bSpd = d.stats.find(s=>s.stat.name==='special-defense').base_stat; const bSpe = d.stats.find(s=>s.stat.name==='speed').base_stat;
+                const typesArr = d.types.map(t => t.type.name); typesArr.forEach(t => typesToFetch.add(t));
                 let learnedMove = await fetchAttackMove(d.moves); 
-
                 return {
                     id: d.id, name: d.name, types: typesArr, primaryType: typesArr[0],
-                    maxHp: Math.floor(bHp * 2) + 50, hp: Math.floor(bHp * 2) + 50,
-                    atk: Math.floor(bAtk * 1.5), def: Math.floor(bDef * 1.5),
-                    spa: Math.floor(bSpa * 1.5), spd: Math.floor(bSpd * 1.5), spe: Math.floor(bSpe * 1.5),
-                    spriteS: getStatic(d.id), spriteA: getAnim(d.id),
-                    learnedMove: learnedMove 
+                    maxHp: Math.floor(bHp * 2) + 50, hp: Math.floor(bHp * 2) + 50, atk: Math.floor(bAtk * 1.5), def: Math.floor(bDef * 1.5), spa: Math.floor(bSpa * 1.5), spd: Math.floor(bSpd * 1.5), spe: Math.floor(bSpe * 1.5),
+                    spriteS: getStatic(d.id), spriteA: getAnim(d.id), learnedMove: learnedMove 
                 };
             });
-
             poolData = await Promise.all(poolPromises);
-
             const tProm = Array.from(typesToFetch).map(t => fetch(`https://pokeapi.co/api/v2/type/${t}`).then(r=>r.json()).catch(()=>null));
             const tRes = (await Promise.all(tProm)).filter(r=>r!==null);
-            tRes.forEach(d => {
-                typeRels[d.name] = { double: d.damage_relations.double_damage_to.map(t=>t.name), half: d.damage_relations.half_damage_to.map(t=>t.name), zero: d.damage_relations.no_damage_to.map(t=>t.name) };
-            });
+            tRes.forEach(d => { typeRels[d.name] = { double: d.damage_relations.double_damage_to.map(t=>t.name), half: d.damage_relations.half_damage_to.map(t=>t.name), zero: d.damage_relations.no_damage_to.map(t=>t.name) }; });
             return true;
-        } catch(e) { console.error(e); return false; }
+        } catch(e) { return false; }
     }
 
     async function fetchAttackMove(movesList) {
         if(!movesList || movesList.length === 0) return { name: 'tackle', power: 40, class: 'physical', type: 'normal' };
         for(let i=0; i<4; i++) {
             let rand = movesList[Math.floor(Math.random() * movesList.length)].move;
-            try {
-                let res = await fetch(rand.url); let data = await res.json();
-                if(data.power > 0) return { name: data.name, power: data.power, class: data.damage_class.name, type: data.type.name }; 
-            } catch(e) {}
+            try { let res = await fetch(rand.url); let data = await res.json(); if(data.power > 0) return { name: data.name, power: data.power, class: data.damage_class.name, type: data.type.name }; } catch(e) {}
         }
         return { name: 'tackle', power: 40, class: 'physical', type: 'normal' }; 
     }
@@ -718,31 +654,19 @@
     // 3. DRAFT PICK
     // ==========================================
     function startDraft() {
-        document.getElementById('lobby-screen').classList.add('hidden'); 
-        document.getElementById('waiting-room').classList.add('hidden');
-        document.getElementById('game-over').classList.add('hidden');
+        document.getElementById('lobby-screen').classList.add('hidden'); document.getElementById('waiting-room').classList.add('hidden'); document.getElementById('game-over').classList.add('hidden');
         document.getElementById('draft-screen').style.display = 'flex';
-        
-        document.getElementById('ui-my-name').innerText = myName;
-        document.getElementById('ui-opp-name').innerText = oppName;
-
-        renderPool(); updateDraftUI();
-        setupPresence();
-
+        document.getElementById('ui-my-name').innerText = myName; document.getElementById('ui-opp-name').innerText = oppName;
+        renderPool(); updateDraftUI(); setupPresence();
         channel.unsubscribe('pick');
         channel.subscribe('pick', (msg) => {
             const { pTurn, pCardId, pIdx } = msg.data;
             if(pTurn !== myTurnId) {
                 const poke = poolData[pIdx]; oppTeam.push(poke);
-                
-                const cardEl = document.getElementById(pCardId);
-                const deckOpp = document.getElementById('p2-deck-slots');
+                const cardEl = document.getElementById(pCardId); const deckOpp = document.getElementById('p2-deck-slots');
                 document.getElementById('p2-deck-empty').style.display = 'none';
-                
                 cardEl.style.borderColor = '#e11d48'; cardEl.style.opacity = '0.6'; cardEl.style.pointerEvents = 'none';
-                deckOpp.appendChild(cardEl);
-                deckOpp.scrollLeft = deckOpp.scrollWidth;
-                
+                deckOpp.appendChild(cardEl); deckOpp.scrollLeft = deckOpp.scrollWidth;
                 document.getElementById('p2-count').innerText = `${oppTeam.length}/5`;
                 draftTurn = myTurnId; updateDraftUI(); pT(600); checkDraftDone();
             }
@@ -754,18 +678,8 @@
         poolData.forEach((p, i) => {
             const card = document.createElement('div'); card.className = 'tcg-card cursor-pointer hover:shadow-md'; card.id = `tcg-card-${i}`;
             card.onclick = () => doPick(i, card.id);
-            
             let badges = p.types.map(t => `<span class="type-badge" style="background:${TYPE_COLORS[t]||'#777'}">${t.substring(0,3)}</span>`).join(' ');
-
-            card.innerHTML = `
-                <div class="flex justify-between items-center mb-1"><span class="text-[10px] font-black uppercase truncate">${p.name}</span><div class="flex gap-1">${badges}</div></div>
-                <div class="tcg-img-wrapper"><img src="${p.spriteS}"></div>
-                <div class="tcg-stats">
-                    <div class="s-hp">HP ${p.maxHp}</div><div class="s-atk">AT ${p.atk}</div>
-                    <div class="s-def">DF ${p.def}</div><div class="s-spa">SA ${p.spa}</div>
-                    <div class="s-spd">SD ${p.spd}</div><div class="s-spe">SP ${p.spe}</div>
-                </div>
-            `;
+            card.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="text-[10px] font-black uppercase truncate">${p.name}</span><div class="flex gap-1">${badges}</div></div><div class="tcg-img-wrapper"><img src="${p.spriteS}"></div><div class="tcg-stats"><div class="s-hp">HP ${p.maxHp}</div><div class="s-atk">AT ${p.atk}</div><div class="s-def">DF ${p.def}</div><div class="s-spa">SA ${p.spa}</div><div class="s-spd">SD ${p.spd}</div><div class="s-spe">SP ${p.spe}</div></div>`;
             grid.appendChild(card);
         });
     }
@@ -774,19 +688,12 @@
         if(draftTurn !== myTurnId || myTeam.length >= 5) return;
         const poke = poolData[idx];
         if(myTeam.some(t=>t.id===poke.id) || oppTeam.some(t=>t.id===poke.id)) return;
-
         pT(600); myTeam.push(poke);
-        
-        const cardEl = document.getElementById(cardId);
-        const deckMy = document.getElementById('p1-deck-slots');
+        const cardEl = document.getElementById(cardId); const deckMy = document.getElementById('p1-deck-slots');
         document.getElementById('p1-deck-empty').style.display = 'none';
-        
         cardEl.style.borderColor = '#0ea5e9'; cardEl.style.boxShadow = '0 0 10px rgba(14, 165, 233, 0.4)'; cardEl.style.pointerEvents = 'none'; cardEl.classList.remove('cursor-pointer');
-        deckMy.appendChild(cardEl);
-        deckMy.scrollLeft = deckMy.scrollWidth;
-        
+        deckMy.appendChild(cardEl); deckMy.scrollLeft = deckMy.scrollWidth;
         document.getElementById('p1-count').innerText = `${myTeam.length}/5`;
-        
         draftTurn = myTurnId === 'p1' ? 'p2' : 'p1'; updateDraftUI();
         channel.publish('pick', { pTurn: myTurnId, pCardId: cardId, pIdx: idx });
         checkDraftDone();
@@ -794,166 +701,166 @@
 
     function updateDraftUI() {
         const txt = document.getElementById('draft-turn-text');
-        if(draftTurn === myTurnId) {
-            txt.innerText = "GILIRANMU! PILIH KARTU"; txt.className = "text-xl font-black uppercase text-sky-500 mt-1";
-        } else {
-            txt.innerText = `MENUNGGU ${oppName}...`; txt.className = "text-xl font-black uppercase text-rose-500 mt-1";
-        }
+        if(draftTurn === myTurnId) { txt.innerText = "GILIRANMU! PILIH KARTU"; txt.className = "text-xl font-black uppercase text-sky-500 mt-1"; } 
+        else { txt.innerText = `MENUNGGU ${oppName}...`; txt.className = "text-xl font-black uppercase text-rose-500 mt-1"; }
         startDraftTimer();
     }
 
     function startDraftTimer() {
         clearInterval(draftTimer); draftTimeLeft = 15;
         const bar = document.getElementById('draft-timer-bar');
-        bar.style.transition = 'none'; bar.style.width = '100%';
-        setTimeout(() => { bar.style.transition = 'width 1s linear'; }, 50);
-
-        draftTimer = setInterval(() => {
-            draftTimeLeft--; bar.style.width = `${(draftTimeLeft/15)*100}%`;
-            if(draftTimeLeft <= 0) {
-                clearInterval(draftTimer);
-                if(draftTurn === myTurnId) autoPick(); 
-            }
-        }, 1000);
+        bar.style.transition = 'none'; bar.style.width = '100%'; setTimeout(() => { bar.style.transition = 'width 1s linear'; }, 50);
+        draftTimer = setInterval(() => { draftTimeLeft--; bar.style.width = `${(draftTimeLeft/15)*100}%`; if(draftTimeLeft <= 0) { clearInterval(draftTimer); if(draftTurn === myTurnId) autoPick(); } }, 1000);
     }
 
     function autoPick() {
-        let available = [];
-        poolData.forEach((p, idx) => { if(!myTeam.some(t=>t.id===p.id) && !oppTeam.some(t=>t.id===p.id)) available.push(idx); });
-        if(available.length > 0) {
-            let randIdx = available[Math.floor(Math.random() * available.length)];
-            doPick(randIdx, `tcg-card-${randIdx}`);
-        }
+        let available = []; poolData.forEach((p, idx) => { if(!myTeam.some(t=>t.id===p.id) && !oppTeam.some(t=>t.id===p.id)) available.push(idx); });
+        if(available.length > 0) { let randIdx = available[Math.floor(Math.random() * available.length)]; doPick(randIdx, `tcg-card-${randIdx}`); }
     }
 
     function checkDraftDone() {
         if(myTeam.length === 5 && oppTeam.length === 5) {
-            clearInterval(draftTimer);
-            document.getElementById('draft-turn-text').innerText = "MEMASUKI ARENA...";
+            clearInterval(draftTimer); document.getElementById('draft-turn-text').innerText = "MEMASUKI ARENA...";
             setTimeout(initBattle, 1500);
         }
     }
 
     // ==========================================
-    // 4. BATTLE ARENA (NEW UI)
+    // 4. BATTLE ARENA LOGIC & AUTO SHUFFLE
     // ==========================================
     function initBattle() {
-        document.getElementById('draft-screen').style.display = 'none'; 
-        document.getElementById('game-container').classList.remove('hidden');
+        document.getElementById('draft-screen').style.display = 'none'; document.getElementById('game-container').classList.remove('hidden');
+        document.getElementById('player-player-name').innerText = myName; document.getElementById('enemy-player-name').innerText = oppName;
+        setActive('p1', 0); setActive('p2', 0); state.turn = 'p1'; 
         
-        document.getElementById('player-player-name').innerText = myName;
-        document.getElementById('enemy-player-name').innerText = oppName;
-
-        setActive('p1', 0); setActive('p2', 0); 
-        state.turn = 'p1'; updateBoardLock();
-        
-        channel.unsubscribe('board-init'); channel.unsubscribe('attack'); channel.unsubscribe('end-turn'); channel.unsubscribe('heal');
+        channel.unsubscribe('board-init'); channel.unsubscribe('attack'); channel.unsubscribe('end-turn'); channel.unsubscribe('heal'); channel.unsubscribe('shuffle');
 
         if(myRole === 'host') {
-            generateBoardData();
-            setTimeout(()=> channel.publish('board-init', { b: board.map(row=>row.map(c=>c.pIdx)) }), 500);
+            let newBoard = getValidInitialBoard();
+            renderBoardFromData(newBoard);
+            setTimeout(()=> channel.publish('board-init', { b: newBoard }), 500);
+            updateBoardLock(); checkBoardState(); // Cek hint
         }
 
-        channel.subscribe('board-init', (msg) => { if(myRole === 'guest') { renderBoardFromData(msg.data.b); updateBoardLock(); } });
+        channel.subscribe('board-init', (msg) => { if(myRole === 'guest') { renderBoardFromData(msg.data.b); updateBoardLock(); checkBoardState(); } });
         channel.subscribe('attack', async (msg) => { if(msg.data.sender !== myRole) await processReceivedAttack(msg.data); });
         channel.subscribe('heal', (msg) => {
-            if(msg.data.sender !== myRole) {
-                let oppPoke = oppTeam[state.oppActive];
-                oppPoke.hp = Math.min(oppPoke.maxHp, oppPoke.hp + msg.data.amount);
-                updateOppHp(); setLog(`Lawan memulihkan HP!`);
-            }
+            if(msg.data.sender !== myRole) { let oppPoke = oppTeam[state.oppActive]; oppPoke.hp = Math.min(oppPoke.maxHp, oppPoke.hp + msg.data.amount); updateOppHp(); setLog(`Lawan memulihkan HP!`); }
         });
         channel.subscribe('end-turn', (msg) => {
-            if(msg.data.nextTurn === myTurnId) { renderBoardFromData(msg.data.boardState); state.turn = myTurnId; updateBoardLock(); state.isAnim = false; }
+            if(msg.data.nextTurn === myTurnId) { renderBoardFromData(msg.data.boardState); state.turn = myTurnId; updateBoardLock(); state.isAnim = false; checkBoardState(); }
+        });
+        channel.subscribe('shuffle', async (msg) => {
+            state.isAnim = true; removeHints(); sEpic();
+            board.forEach(r => r.forEach(c => { if(c && c.el) { c.el.classList.add('popping'); } }));
+            await sleep(400); renderBoardFromData(msg.data.b); state.isAnim = false; updateBoardLock(); checkBoardState();
         });
     }
 
     function setActive(side, idx) {
-        const team = side === 'p1' ? myTeam : oppTeam;
-        const poke = team[idx];
-        const spriteEl = document.getElementById(`${side}-sprite`);
-        
+        const team = side === 'p1' ? myTeam : oppTeam; const poke = team[idx]; const spriteEl = document.getElementById(`${side}-sprite`);
         let badgesHtml = poke.types.map(t => `<span class="type-badge-lg" style="background:${TYPE_COLORS[t]||'#777'}">${t.substring(0,3)}</span>`).join('');
-
         if(side === 'p1') { 
-            state.myActive = idx; 
-            document.getElementById('player-name').innerText = poke.name; 
-            document.getElementById('player-type-badge').innerHTML = badgesHtml;
-            document.getElementById('tactical-p1-badge').innerHTML = badgesHtml; // Tactical Panel
+            state.myActive = idx; document.getElementById('player-name').innerText = poke.name; 
+            document.getElementById('player-type-badge').innerHTML = badgesHtml; document.getElementById('tactical-p1-badge').innerHTML = badgesHtml;
+        } else { 
+            state.oppActive = idx; document.getElementById('enemy-name').innerText = poke.name; 
+            document.getElementById('enemy-type-badge').innerHTML = badgesHtml; document.getElementById('tactical-p2-badge').innerHTML = badgesHtml;
         }
-        else { 
-            state.oppActive = idx; 
-            document.getElementById('enemy-name').innerText = poke.name; 
-            document.getElementById('enemy-type-badge').innerHTML = badgesHtml;
-            document.getElementById('tactical-p2-badge').innerHTML = badgesHtml; // Tactical Panel
-        }
-
         spriteEl.src = poke.spriteA; spriteEl.onerror = function(){this.src=poke.spriteS;};
         if(side === 'p1') updateMyHp(); else updateOppHp();
     }
 
     function updateMyHp() {
         const poke = myTeam[state.myActive]; const pct = Math.max(0, (poke.hp / poke.maxHp) * 100);
-        const bar = document.getElementById('player-hp-bar'); bar.style.width = `${pct}%`;
-        bar.style.backgroundColor = pct>50 ? '#10b981' : pct>20 ? '#facc15' : '#ef4444';
+        const bar = document.getElementById('player-hp-bar'); bar.style.width = `${pct}%`; bar.style.backgroundColor = pct>50 ? '#10b981' : pct>20 ? '#facc15' : '#ef4444';
         document.getElementById('player-hp-text').innerText = `${Math.floor(Math.max(0, poke.hp))}/${poke.maxHp}`;
-        
-        const sprite = document.getElementById('p1-sprite');
-        if(poke.hp <= 0) sprite.classList.add('opacity-0'); else sprite.classList.remove('opacity-0');
+        const sprite = document.getElementById('p1-sprite'); if(poke.hp <= 0) sprite.classList.add('opacity-0'); else sprite.classList.remove('opacity-0');
     }
 
     function updateOppHp() {
         const poke = oppTeam[state.oppActive]; const pct = Math.max(0, (poke.hp / poke.maxHp) * 100);
-        const bar = document.getElementById('enemy-hp-bar'); bar.style.width = `${pct}%`;
-        bar.style.backgroundColor = pct>50 ? '#10b981' : pct>20 ? '#facc15' : '#ef4444';
+        const bar = document.getElementById('enemy-hp-bar'); bar.style.width = `${pct}%`; bar.style.backgroundColor = pct>50 ? '#10b981' : pct>20 ? '#facc15' : '#ef4444';
         document.getElementById('enemy-hp-text').innerText = `${Math.floor(Math.max(0, poke.hp))}/${poke.maxHp}`;
-        
-        const sprite = document.getElementById('p2-sprite');
-        if(poke.hp <= 0) sprite.classList.add('opacity-0'); else sprite.classList.remove('opacity-0');
+        const sprite = document.getElementById('p2-sprite'); if(poke.hp <= 0) sprite.classList.add('opacity-0'); else sprite.classList.remove('opacity-0');
     }
 
     function setLog(txt) { document.getElementById('log-text').innerText = txt; }
     
     function updateBoardLock() {
-        const lockEl = document.getElementById('board-lock');
-        const lockTxt = document.getElementById('board-lock-text');
+        const lockEl = document.getElementById('board-lock'); const lockTxt = document.getElementById('board-lock-text');
         
+        // PENGATURAN GLOW GILIRAN (BUMBU PROF)
+        document.getElementById('plate-p1').classList.remove('active-turn');
+        document.getElementById('plate-p2').classList.remove('active-turn');
+
         if(!opponentConnected) {
-            lockEl.classList.remove('hidden');
-            lockTxt.innerHTML = 'LAWAN TERPUTUS!<br><span class="text-xs">Menunggu kembali...</span>';
+            lockEl.classList.remove('hidden'); lockTxt.innerHTML = 'LAWAN TERPUTUS!<br><span class="text-xs">Menunggu kembali...</span>';
             lockTxt.className = "bg-rose-100 text-rose-800 px-6 py-3 border-4 border-rose-400 rounded-xl font-black uppercase shadow-lg text-lg tracking-widest text-center";
             return;
         }
-        
         lockTxt.innerHTML = 'MENUNGGU LAWAN';
         lockTxt.className = "bg-white text-slate-800 px-6 py-3 border-4 border-slate-400 rounded-xl font-black uppercase shadow-lg text-lg tracking-widest text-center";
 
-        if(state.turn === myTurnId) { lockEl.classList.add('hidden'); setLog("Giliranmu! Geser elemen."); }
-        else { lockEl.classList.remove('hidden'); setLog(`Menunggu pergerakan ${oppName}...`); }
+        if(state.turn === myTurnId) { 
+            lockEl.classList.add('hidden'); setLog("Giliranmu! Geser elemen."); 
+            document.getElementById('plate-p1').classList.add('active-turn'); 
+        } else { 
+            lockEl.classList.remove('hidden'); setLog(`Menunggu pergerakan ${oppName}...`); 
+            document.getElementById('plate-p2').classList.add('active-turn'); 
+        }
     }
 
-    // Epic text float in the middle of arena
-    function showEpicMove(moveName) {
-        sEpic(); const el = document.getElementById('epic-move'); el.innerText = `${moveName.toUpperCase()}!`;
-        el.classList.remove('show-move'); void el.offsetWidth; el.classList.add('show-move');
-    }
+    function showEpicMove(moveName) { sEpic(); const el = document.getElementById('epic-move'); el.innerText = `${moveName.toUpperCase()}!`; el.classList.remove('show-move'); void el.offsetWidth; el.classList.add('show-move'); }
 
     // ==========================================
-    // 5. PUZZLE & HEALING LOGIC (Solid Grid)
+    // 5. PUZZLE, SHUFFLE & HINT ALGORITHM
     // ==========================================
     const boardEl = document.getElementById('board'); const gemsContainer = document.getElementById('gems-container');
 
-    function generateBoardData() {
-        gemsContainer.innerHTML=''; board=[];
-        for (let y=0; y<ROWS; y++) {
-            board[y]=[];
-            for (let x=0; x<COLS; x++) {
-                let pIdx; do { pIdx = Math.random() < 0.05 ? 5 : Math.floor(Math.random() * 5); } 
-                while ((x>=2 && board[y][x-1].pIdx===pIdx && board[y][x-2].pIdx===pIdx) || (y>=2 && board[y-1][x].pIdx===pIdx && board[y-2][x].pIdx===pIdx));
-                const gem = createGem(x, y, pIdx); board[y][x] = { pIdx, el: gem };
+    // Cek ada Match-3 mentah di array 2D
+    function hasAnyMatch(grid) {
+        for(let y=0; y<ROWS; y++) for(let x=0; x<COLS-2; x++) { let v = grid[y][x]; if(v !== -1 && v === grid[y][x+1] && v === grid[y][x+2]) return true; }
+        for(let x=0; x<COLS; x++) for(let y=0; y<ROWS-2; y++) { let v = grid[y][x]; if(v !== -1 && v === grid[y+1][x] && v === grid[y+2][x]) return true; }
+        return false;
+    }
+
+    // Cek apakah ada langkah yang memungkinkan (Auto-Shuffle logic)
+    function checkPossibleMovesTemp(grid) {
+        function swapT(g, x1, y1, x2, y2) { let t=g[y1][x1]; g[y1][x1]=g[y2][x2]; g[y2][x2]=t; }
+        for(let y=0; y<ROWS; y++) {
+            for(let x=0; x<COLS; x++) {
+                if(x < COLS-1) {
+                    swapT(grid, x, y, x+1, y);
+                    if(hasAnyMatch(grid)) { swapT(grid, x, y, x+1, y); return {x1:x,y1:y, x2:x+1,y2:y}; }
+                    swapT(grid, x, y, x+1, y);
+                }
+                if(y < ROWS-1) {
+                    swapT(grid, x, y, x, y+1);
+                    if(hasAnyMatch(grid)) { swapT(grid, x, y, x, y+1); return {x1:x,y1:y, x2:x,y2:y+1}; }
+                    swapT(grid, x, y, x, y+1);
+                }
             }
         }
+        return null;
     }
+
+    function getValidInitialBoard() {
+        let grid = []; let valid = false;
+        while(!valid) {
+            for (let y=0; y<ROWS; y++) {
+                grid[y]=[];
+                for (let x=0; x<COLS; x++) {
+                    let pIdx; do { pIdx = Math.random() < 0.05 ? 5 : Math.floor(Math.random() * 5); } 
+                    while ((x>=2 && grid[y][x-1]===pIdx && grid[y][x-2]===pIdx) || (y>=2 && grid[y-1][x]===pIdx && grid[y-2][x]===pIdx));
+                    grid[y][x] = pIdx;
+                }
+            }
+            valid = checkPossibleMovesTemp(grid) !== null;
+        }
+        return grid;
+    }
+
     function renderBoardFromData(dataMatrix) {
         gemsContainer.innerHTML=''; board=[];
         for (let y=0; y<ROWS; y++) { board[y]=[]; for (let x=0; x<COLS; x++) { const gem = createGem(x, y, dataMatrix[y][x]); board[y][x] = { pIdx: dataMatrix[y][x], el: gem }; } }
@@ -961,19 +868,34 @@
 
     function createGem(x, y, pIdx) {
         const div = document.createElement('div'); div.className = 'gem';
-        const inner = document.createElement('div'); 
-        inner.className = pIdx === 5 ? 'gem-inner is-potion' : 'gem-inner';
-
-        const img = document.createElement('img'); 
-        img.src = pIdx === 5 ? POTION_IMG : myTeam[pIdx].spriteS; // Menggunakan gambar HD
-        img.setAttribute('draggable', 'false'); 
-        
-        inner.appendChild(img);
-        div.appendChild(inner);
-        updatePos(div, x, y); gemsContainer.appendChild(div); return div;
+        const inner = document.createElement('div'); inner.className = pIdx === 5 ? 'gem-inner is-potion' : 'gem-inner';
+        const img = document.createElement('img'); img.src = pIdx === 5 ? POTION_IMG : myTeam[pIdx].spriteS; img.setAttribute('draggable', 'false'); 
+        inner.appendChild(img); div.appendChild(inner); updatePos(div, x, y); gemsContainer.appendChild(div); return div;
     }
-    
     function updatePos(el, x, y) { el.style.left = `${x * 16.666}%`; el.style.top = `${y * 16.666}%`; }
+
+    // HINT SYSTEM
+    function removeHints() { board.forEach(r=>r.forEach(c=>{if(c&&c.el)c.el.classList.remove('hint-anim');})); }
+    function checkBoardState() {
+        let gridMap = board.map(r=>r.map(c=>c.pIdx));
+        let move = checkPossibleMovesTemp(gridMap);
+        
+        if(!move) {
+            state.isAnim = true; // Kunci board
+            setLog("Tidak ada langkah! Mengocok ulang...");
+            if (myRole === 'host') {
+                setTimeout(() => { let newB = getValidInitialBoard(); channel.publish('shuffle', { b: newB }); }, 1500);
+            }
+        } else if (state.turn === myTurnId) {
+            clearTimeout(hintTimer); removeHints();
+            hintTimer = setTimeout(() => {
+                if(state.turn === myTurnId && !state.isAnim) {
+                    board[move.y1][move.x1].el.classList.add('hint-anim');
+                    board[move.y2][move.x2].el.classList.add('hint-anim');
+                }
+            }, 5000); // Hint muncul dalam 5 detik
+        }
+    }
 
     let dStartX=0, dStartY=0, sCol=-1, sRow=-1, isDrag=false;
     function getGridPos(e) {
@@ -983,7 +905,7 @@
     }
     function onDown(e) {
         if(state.isAnim || state.turn !== myTurnId || !opponentConnected) return; 
-        const p = getGridPos(e);
+        const p = getGridPos(e); clearTimeout(hintTimer); removeHints(); // Reset hint saat pemain main
         if(p.x>=0 && p.y>=0) { isDrag=true; dStartX = e.touches?e.touches[0].clientX:e.clientX; dStartY = e.touches?e.touches[0].clientY:e.clientY; sCol=p.x; sRow=p.y; if(board[sRow] && board[sRow][sCol]) board[sRow][sCol].el.classList.add('swiping'); }
     }
     function onMove(e) {
@@ -1002,7 +924,8 @@
     async function trySwap(x1, y1, x2, y2) {
         state.isAnim=true; pT(500); doSwap(x1,y1,x2,y2); await sleep(200);
         let groups = findMatchGroups();
-        if(groups.length>0) { await processMyMatches(groups); } else { pT(200); doSwap(x1,y1,x2,y2); await sleep(200); state.isAnim=false; }
+        if(groups.length>0) { await processMyMatches(groups); } 
+        else { pT(200); doSwap(x1,y1,x2,y2); await sleep(200); state.isAnim=false; checkBoardState(); } // kembalikan, cek hint lagi
     }
     function doSwap(x1,y1,x2,y2) { let t=board[y1][x1]; board[y1][x1]=board[y2][x2]; board[y2][x2]=t; updatePos(board[y1][x1].el,x1,y1); updatePos(board[y2][x2].el,x2,y2); }
 
@@ -1025,6 +948,12 @@
         return Object.keys(groupMap).map(k => ({ pIdx: parseInt(k), cells: Array.from(groupMap[k]).map(s=>{let [x,y]=s.split(','); return {x:+x,y:+y};}) }));
     }
 
+    // ARENA SHAKE (BUMBU PROF)
+    function shakeArena() {
+        const arena = document.getElementById('battle-arena');
+        arena.classList.remove('arena-shake'); void arena.offsetWidth; arena.classList.add('arena-shake');
+    }
+
     async function processMyMatches(groups) {
         for (let group of groups) {
             let ax=0, ay=0;
@@ -1033,11 +962,11 @@
                 ax+=x; ay+=y;
             });
 
+            if(group.cells.length >= 4) shakeArena(); // Extra shake jika combo besar
+
             if(group.pIdx === 5) {
-                let healAmt = 40 * group.cells.length;
-                let myPoke = myTeam[state.myActive];
-                myPoke.hp = Math.min(myPoke.maxHp, myPoke.hp + healAmt);
-                updateMyHp(); sEpic();
+                let healAmt = 40 * group.cells.length; let myPoke = myTeam[state.myActive];
+                myPoke.hp = Math.min(myPoke.maxHp, myPoke.hp + healAmt); updateMyHp(); sEpic();
                 setLog(`PULIH! +${healAmt} HP`);
                 showFloatingDmg(ax/group.cells.length, ay/group.cells.length, `+${healAmt}`, false, true);
                 channel.publish('heal', { amount: healAmt, sender: myRole });
@@ -1055,13 +984,12 @@
                 showFloatingDmg(ax/group.cells.length, ay/group.cells.length, "PINGSAN!", false);
                 await sleep(800);
             } else {
-                usedMoveName = myPoke.learnedMove.name;
-                showEpicMove(usedMoveName); await sleep(600); 
+                usedMoveName = myPoke.learnedMove.name; showEpicMove(usedMoveName); await sleep(600); 
 
                 let atkStat = myPoke.learnedMove.class === 'special' ? myPoke.spa : myPoke.atk;
                 let defStat = myPoke.learnedMove.class === 'special' ? oppPoke.spd : oppPoke.def;
-                
                 let mult = 1; let moveType = myPoke.learnedMove.type;
+                
                 if(typeRels[moveType]) {
                     oppPoke.types.forEach(opT => {
                         if(typeRels[moveType].double.includes(opT)) mult *= 2;
@@ -1074,13 +1002,12 @@
                 let baseDmg = Math.floor((atkStat / defStat) * (myPoke.learnedMove.power / 2) * (group.cells.length/3));
                 
                 isCrit = Math.random() < (myPoke.spe / 255); 
-                if (isCrit) { baseDmg *= 1.5; setLog(`💥 CRITICAL HIT dari ${myPoke.name}!`); }
-                else if (mult > 1) { setLog(`🔥 Super Effective!`); }
+                if (isCrit) { baseDmg *= 1.5; setLog(`💥 CRITICAL HIT dari ${myPoke.name}!`); shakeArena();}
+                else if (mult > 1) { setLog(`🔥 Super Effective!`); shakeArena();}
                 else if (mult < 1) { setLog(`💧 Tidak terlalu efektif...`); }
                 else { setLog(`⚔️ ${myPoke.name} menyerang!`); }
 
                 finalDmg = Math.max(1, Math.floor(baseDmg * mult * stab * (0.85 + Math.random()*0.3)));
-
                 sHit(isCrit); 
                 showFloatingDmg(ax/group.cells.length, ay/group.cells.length, `-${finalDmg}`, isCrit);
                 
@@ -1104,14 +1031,12 @@
         else {
             state.turn = myTurnId === 'p1' ? 'p2' : 'p1';
             channel.publish('end-turn', { nextTurn: state.turn, boardState: board.map(r=>r.map(c=>c.pIdx)) });
-            updateBoardLock(); state.isAnim = false;
+            updateBoardLock(); state.isAnim = false; checkBoardState(); // Cek Deadlock sblm ganti
         }
     }
 
     async function processReceivedAttack(data) {
-        state.isAnim = true;
-        let oppPokeIdx = data.myActiveIdx; let dmg = data.damage;
-        
+        state.isAnim = true; let oppPokeIdx = data.myActiveIdx; let dmg = data.damage;
         if(state.oppActive !== oppPokeIdx) setActive('p2', oppPokeIdx);
         let oppPoke = oppTeam[oppPokeIdx]; let myPoke = myTeam[state.myActive];
 
@@ -1119,18 +1044,15 @@
             sFaint(); setLog(`${oppName} salah langkah!`);
         } else {
             if(data.moveName) { showEpicMove(data.moveName); await sleep(600); }
-
             sHit(data.isCrit); setLog(data.isCrit ? `💥 CRITICAL HIT dari lawan!` : `⚔️ Lawan menyerang!`);
+            if (data.isCrit) shakeArena();
+
             const p1S = document.getElementById('p1-sprite'); const p2S = document.getElementById('p2-sprite');
             p2S.classList.add('attack-lunge-p2'); await sleep(200); p1S.classList.add('hit-flash'); 
-            
             myPoke.hp -= dmg; updateMyHp();
-            
             await sleep(300); p2S.classList.remove('attack-lunge-p2'); p1S.classList.remove('hit-flash'); 
-
             if(myPoke.hp <= 0) { sFaint(); setLog(`☠️ ${myPoke.name} Pingsan! Ganti Pokemon.`); }
         }
-
         if(myTeam.every(t=>t.hp<=0)) { endGame(false); }
     }
 
@@ -1162,48 +1084,34 @@
     // 6. GAME OVER & ROBUST REMATCH
     // ==========================================
     function endGame(win) {
-        state.isAnim = true; const m = document.getElementById('game-over');
+        state.isAnim = true; clearTimeout(hintTimer); removeHints();
+        const m = document.getElementById('game-over');
         if(win) { document.getElementById('result-title').innerText="MENANG!"; document.getElementById('result-title').className="text-6xl font-black mb-2 text-emerald-500"; document.getElementById('result-subtitle').innerText="Semua Pokemon musuh kalah!"; }
         else { document.getElementById('result-title').innerText="KALAH"; document.getElementById('result-title').className="text-6xl font-black mb-2 text-rose-500"; document.getElementById('result-subtitle').innerText="Semua Pokemon-mu pingsan!"; }
         setTimeout(() => m.classList.remove('hidden'), 1000);
     }
 
     function requestRematch() {
-        rematchReq.me = true;
-        const btn = document.getElementById('btn-rematch');
-        btn.innerText = "MENUNGGU PERSETUJUAN...";
-        btn.disabled = true;
-        btn.classList.replace('bg-sky-500', 'bg-slate-400');
+        rematchReq.me = true; const btn = document.getElementById('btn-rematch');
+        btn.innerText = "MENUNGGU PERSETUJUAN..."; btn.disabled = true; btn.classList.replace('bg-sky-500', 'bg-slate-400');
         document.getElementById('rematch-status').classList.remove('hidden');
-        channel.publish('rematch', { sender: myRole });
-        checkRematchLogic();
+        channel.publish('rematch', { sender: myRole }); checkRematchLogic();
     }
 
     async function checkRematchLogic() {
         if (rematchReq.me && rematchReq.opp) {
-            rematchReq = { me: false, opp: false };
-            myTeam = []; oppTeam = []; board = []; draftTurn = 'p1';
-            
+            rematchReq = { me: false, opp: false }; myTeam = []; oppTeam = []; board = []; draftTurn = 'p1';
             document.getElementById('p1-deck-slots').innerHTML = '<p id="p1-deck-empty" class="text-xs text-slate-400 italic my-auto mx-auto w-full text-center">Pilih dari pool di atas!</p>';
             document.getElementById('p2-deck-slots').innerHTML = '<p id="p2-deck-empty" class="text-xs text-slate-400 italic my-auto mx-auto w-full text-center">Menunggu pilihan lawan...</p>';
             document.getElementById('p1-count').innerText = `0/5`; document.getElementById('p2-count').innerText = `0/5`;
             
-            const btn = document.getElementById('btn-rematch');
-            btn.innerText = "REMATCH"; btn.disabled = false;
-            btn.classList.replace('bg-slate-400', 'bg-sky-500');
-            document.getElementById('rematch-status').classList.add('hidden');
-            
-            document.getElementById('game-over').classList.add('hidden');
-            document.getElementById('game-container').classList.add('hidden');
-            document.getElementById('draft-screen').style.display = 'flex';
-            document.getElementById('draft-turn-text').innerText = "MEMUAT POOL BARU...";
+            const btn = document.getElementById('btn-rematch'); btn.innerText = "REMATCH"; btn.disabled = false; btn.classList.replace('bg-slate-400', 'bg-sky-500');
+            document.getElementById('rematch-status').classList.add('hidden'); document.getElementById('game-over').classList.add('hidden'); document.getElementById('game-container').classList.add('hidden');
+            document.getElementById('draft-screen').style.display = 'flex'; document.getElementById('draft-turn-text').innerText = "MEMUAT POOL BARU...";
 
             if (myRole === 'host') {
                 let success = await fetchPool();
-                if(success) {
-                    channel.publish('START_GAME', { pool: poolData, types: typeRels });
-                    startDraft();
-                }
+                if(success) { channel.publish('START_GAME', { pool: poolData, types: typeRels }); startDraft(); }
             }
         }
     }
