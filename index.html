@@ -34,7 +34,7 @@
         #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: #ffffff; padding: 10px 20px; border-radius: 12px; font-size: 0.85rem; font-weight: 800; opacity: 0; transition: opacity 0.3s, transform 0.3s; z-index: 99999; pointer-events: none; width: max-content; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.15);}
         #toast.show { opacity: 1; transform: translate(-50%, 10px); }
 
-        /* --- HELP & SWITCH MODAL --- */
+        /* --- MODALS --- */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px);
             z-index: 150000; display: flex; align-items: center; justify-content: center;
@@ -59,15 +59,6 @@
             transition: all 0.2s; border: 2px solid #cbd5e1; font-size: 1.1rem;
         }
         .btn-help:active { transform: scale(0.9); }
-
-        .btn-switch-poke {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white;
-            padding: 0.1rem 0.5rem; border-radius: 0.25rem; font-size: 0.6rem; font-weight: 900;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2); text-transform: uppercase; letter-spacing: 1px;
-            border: 1px solid #1d4ed8; transition: all 0.2s;
-        }
-        .btn-switch-poke:active { transform: scale(0.9); }
-        .btn-switch-poke:disabled { background: #94a3b8; border-color: #64748b; color: #e2e8f0; box-shadow: none; transform: none; }
 
         /* --- LOBBY WAITING ROOM --- */
         .slot-card {
@@ -134,7 +125,7 @@
         .type-badge { font-family: 'Oswald', sans-serif; font-size: 0.5rem; padding: 0.1rem 0.25rem; border-radius: 0.25rem; color: white; text-transform: uppercase; box-shadow: 0 1px 2px rgba(0,0,0,0.2);}
         .type-badge-lg { font-family: 'Oswald', sans-serif; font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 0.35rem; color: white; text-transform: uppercase; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
 
-        /* --- BATTLE ARENA UI (WITH ENERGY BAR) --- */
+        /* --- BATTLE ARENA UI --- */
         .top-status-bar {
             display: flex; justify-content: space-between; align-items: flex-end; gap: 0.5rem;
             width: 100%; padding: 0.25rem; z-index: 60;
@@ -150,16 +141,21 @@
         .fighter-plate.p2 { border-color: #f43f5e; border-bottom-left-radius: 0; align-items: flex-end; }
         .fighter-plate.active-turn { border-color: #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); transform: translateY(-2px); }
 
-        .hp-bar-bg { width: 100%; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; margin-top: 2px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);}
+        .hp-bar-bg { width: 100%; height: 14px; background: #cbd5e1; border-radius: 7px; overflow: hidden; margin-top: 4px; box-shadow: inset 0 3px 6px rgba(0,0,0,0.25); border: 1px solid #94a3b8;}
         .hp-bar-fill { height: 100%; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s; }
         .p2 .hp-bar-bg { transform: scaleX(-1); }
 
-        /* ENERGY BAR */
-        .ep-bar-bg { width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-top: 2px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);}
-        .ep-bar-fill { height: 100%; background: #facc15; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .ep-bar-fill.full { background: #3b82f6; box-shadow: 0 0 10px #60a5fa; animation: pulse-ep 1s infinite; }
-        @keyframes pulse-ep { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.3); } }
-        .p2 .ep-bar-bg { transform: scaleX(-1); }
+        /* TEAM BAR UI */
+        .team-icon-wrap { 
+            position: relative; width: 28px; height: 28px; border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center; 
+            transition: all 0.2s; background: #fff; 
+        }
+        .team-icon-img { width: 90%; height: 90%; object-fit: cover; border-radius: 50%; transition: filter 0.3s; }
+        .team-icon-wrap.is-active { border: 2px solid #0ea5e9; transform: scale(1.1); box-shadow: 0 0 8px rgba(14,165,233,0.5); z-index: 10; }
+        .team-icon-wrap.is-full { ring: 2px; ring-color: #facc15; animation: pulse-ult 1.5s infinite; cursor: pointer; }
+        .team-icon-wrap.ult-on { background: #fef08a; border-color: #eab308; box-shadow: 0 0 12px #eab308; transform: scale(1.15); }
+        @keyframes pulse-ult { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.3); } }
 
         .arena-bg {
             background: linear-gradient(180deg, #87ceeb 0%, #e0f6ff 50%, #a7f3d0 50%, #4ade80 100%);
@@ -183,7 +179,7 @@
         .p2-flip { transform: scaleX(1); }
 
         .monster-sprite { 
-            image-rendering: pixelated; /* Kembali pakai pixelated karena kita pakai animasi GIF */
+            image-rendering: pixelated; 
             transition: opacity 0.2s ease; 
             max-width: 100%; max-height: 100%; width: auto; height: auto; 
             object-fit: contain; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));
@@ -274,6 +270,18 @@
         <div id="loading-text" class="text-slate-800 font-bold text-base tracking-wider uppercase">Menghubungkan...</div>
     </div>
 
+    <!-- POKEDEX DRAFT MODAL -->
+    <div id="pokedex-modal" class="modal-overlay">
+        <div class="modal-content !max-w-sm p-4">
+            <h3 class="text-lg font-black text-slate-800 uppercase text-center border-b-2 border-slate-200 pb-2 mb-3">Pokedex Data</h3>
+            <div id="pokedex-content">
+                <!-- Info Pokemon akan di render disini -->
+            </div>
+            <button id="btn-pick-pokemon" onclick="confirmPick()" class="mt-4 w-full py-3 bg-emerald-500 hover:bg-emerald-600 active:scale-95 transition-transform text-white font-black rounded-xl uppercase shadow-md">PILIH POKEMON</button>
+            <button onclick="sClick(); closePokedex()" class="mt-2 w-full py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-colors uppercase">TUTUP</button>
+        </div>
+    </div>
+
     <!-- HELP MODAL -->
     <div id="help-modal" class="modal-overlay">
         <div class="modal-content">
@@ -289,21 +297,21 @@
                 <div>
                     <h3 class="font-bold text-sky-600 mb-1 border-b border-slate-200 pb-1">[1] Mekanik RPG & STAB</h3>
                     <ul class="list-disc pl-4 space-y-1">
-                        <li><b>Taktik Elemen:</b> Menyerang kelemahan musuh (Super Effective) memberi damage 2x lipat. Menyerang elemen yang kebal mengurangi setengah damage.</li>
-                        <li><b>Kritikal (Speed):</b> Semakin tinggi kecepatan asli Pokemon, semakin besar kemungkinan mendaratkan pukulan Kritikal (1.5x Damage).</li>
+                        <li><b>Taktik Elemen:</b> Menyerang kelemahan musuh memberi damage 2x lipat. Menyerang elemen kebal mengurangi setengah damage.</li>
+                        <li><b>Kritikal (Speed):</b> Kecepatan asli Pokemon tinggi = kemungkinan mendaratkan kritikal lebih besar.</li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="font-bold text-amber-500 mb-1 border-b border-slate-200 pb-1">[2] Damage, Ultimate & Combo Nerf</h3>
+                    <h3 class="font-bold text-amber-500 mb-1 border-b border-slate-200 pb-1">[2] Ultimate Taktis & Combo Nerf</h3>
                     <ul class="list-disc pl-4 space-y-1">
-                        <li><b>Serangan Biasa:</b> Hanya menghasilkan ~30% kekuatan asli. Gunakan ini untuk saling menyicil HP musuh.</li>
-                        <li><b>Diminishing Combo:</b> (Anti-Hoki) Jika terjadi rentetan *combo* karena batu jatuh, serangan beruntun akan terus dikurangi kekuatannya (100% -> 50% -> 25%). Namun, pengisian EP tetap utuh!</li>
-                        <li><b>Energi & Ultimate:</b> Energi terisi sejumlah batu yang pecah (Misal: Match 4 = +4 Energi). Saat penuh, Pokemon akan melancarkan <b>Jurus Ultimate Asli (100% Full Damage)!</b></li>
+                        <li><b>Serangan Biasa:</b> Menghasilkan 50% kekuatan asli.</li>
+                        <li><b>Diminishing Combo:</b> Rentetan combo akan terus dikurangi kekuatannya (100% -> 50% -> 25%). Namun pengisian energi tetap utuh!</li>
+                        <li><b>Ultimate Manual:</b> Energi terisi dari batu yang pecah. Saat energi penuh, ikon Pokemon di bawah bar HP akan menyala. <b>Tekan ikon tersebut</b> untuk mengaktifkan mode Ultimate, lalu pecahkan batunya untuk melepaskan serangan penuh (100% Damage)!</li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="font-bold text-teal-500 mb-1 border-b border-slate-200 pb-1">[3] Fitur Manual Switch 🔄</h3>
-                    <p>Dalam pertarungan, terdapat tombol <b>SWITCH</b>. Kamu bisa menekan tombol ini untuk mengorbankan giliran menyerangmu demi menarik Pokemon yang aktif dan menukarnya dengan Pokemon cadangan yang memiliki elemen lebih menguntungkan!</p>
+                    <h3 class="font-bold text-teal-500 mb-1 border-b border-slate-200 pb-1">[3] UI Tim & Switch 🔄</h3>
+                    <p>Di bawah bar HP terdapat panel UI Tim. Klik panah `<` atau `>` untuk melihat tim mu atau tim musuh. Klik tombol <b>SWITCH</b> untuk menukar Pokemon aktif dengan cadangan (mengakhiri giliran).</p>
                 </div>
             </div>
             
@@ -330,11 +338,7 @@
         
         <!-- MAIN MENU -->
         <div id="main-menu" class="bg-white border-4 border-slate-300 w-full p-8 rounded-2xl text-center shadow-lg transition-all duration-300 relative">
-            
-            <!-- HELP BUTTON -->
             <button onclick="sClick(); showHelp()" class="btn-help absolute top-4 right-4" title="Cara Bermain">?</button>
-
-            <!-- POKEMON LOGO -->
             <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/International_Pok%C3%A9mon_logo.svg" alt="Pokemon Logo" class="w-64 mx-auto mb-6 drop-shadow-md">
             
             <div class="space-y-4">
@@ -356,8 +360,6 @@
 
         <!-- WAITING ROOM -->
         <div id="waiting-room" class="bg-white border-4 border-slate-300 w-full p-6 rounded-2xl text-center shadow-xl hidden flex-col items-center">
-            
-            <!-- SCOREBOARD HEADER -->
             <div id="lobby-scoreboard" class="hidden w-full flex items-center justify-between bg-slate-800 rounded-xl p-3 mb-4 shadow-inner border-2 border-slate-900">
                 <div class="flex flex-col items-center flex-1">
                     <span id="score-p1-name" class="text-xs font-black text-sky-400 uppercase truncate max-w-full">P1</span>
@@ -378,19 +380,13 @@
             
             <div class="flex justify-between items-center w-full mb-6 px-1 relative gap-2">
                 <div id="slot-1" class="slot-card flex-1">
-                    <div class="avatar-placeholder">
-                        <img id="slot-1-avatar" class="w-full h-full object-cover hidden" src="" alt="Avatar">
-                        <span id="slot-1-initial">?</span>
-                    </div>
+                    <div class="avatar-placeholder"><img id="slot-1-avatar" class="w-full h-full object-cover hidden" src="" alt="Avatar"><span id="slot-1-initial">?</span></div>
                     <span id="slot-1-name" class="font-black text-sm uppercase text-slate-500 truncate w-full px-2">MENUNGGU...</span>
                     <span class="text-[9px] font-bold text-slate-400 bg-white border border-slate-200 px-3 py-0.5 rounded-full mt-1 shadow-sm">HOST</span>
                 </div>
                 <div class="font-black text-2xl italic text-slate-300 px-1">VS</div>
                 <div id="slot-2" class="slot-card flex-1">
-                    <div class="avatar-placeholder">
-                        <img id="slot-2-avatar" class="w-full h-full object-cover hidden" src="" alt="Avatar">
-                        <span id="slot-2-initial">?</span>
-                    </div>
+                    <div class="avatar-placeholder"><img id="slot-2-avatar" class="w-full h-full object-cover hidden" src="" alt="Avatar"><span id="slot-2-initial">?</span></div>
                     <span id="slot-2-name" class="font-black text-sm uppercase text-slate-500 truncate w-full px-2">KOSONG</span>
                     <span class="text-[9px] font-bold text-slate-400 bg-white border border-slate-200 px-3 py-0.5 rounded-full mt-1 shadow-sm">GUEST</span>
                 </div>
@@ -442,7 +438,7 @@
     <!-- 3. BATTLE ARENA UI -->
     <div id="game-container" class="fixed inset-0 bg-slate-50 z-30 flex-col p-2 hidden overflow-y-auto overflow-x-hidden pb-6">
         
-        <!-- STATUS BARS -->
+        <!-- STATUS BARS (HP Only now) -->
         <div class="top-status-bar flex-none mb-0.5">
             <!-- Player 1 -->
             <div id="plate-p1" class="fighter-plate p1">
@@ -457,14 +453,6 @@
                     <div id="player-type-badge" class="flex gap-1"></div>
                 </div>
                 <div class="hp-bar-bg"><div id="player-hp-bar" class="hp-bar-fill bg-emerald-500" style="width:100%"></div></div>
-
-                <!-- ENERGY BAR & SWITCH BTN -->
-                <div class="w-full flex justify-between items-center mt-1">
-                    <span class="text-[8px] font-black text-amber-500 uppercase tracking-widest leading-none">Energi</span>
-                    <button id="btn-switch-p1" onclick="sClick(); openSwitchModal()" class="btn-switch-poke">SWITCH 🔄</button>
-                    <span id="player-ep-text" class="text-[8px] font-black text-amber-600 leading-none">0/10</span>
-                </div>
-                <div class="ep-bar-bg"><div id="player-ep-bar" class="ep-bar-fill bg-amber-400" style="width:0%"></div></div>
             </div>
 
             <!-- VS Icon -->
@@ -483,19 +471,25 @@
                     <div id="enemy-type-badge" class="flex gap-1"></div>
                 </div>
                 <div class="hp-bar-bg"><div id="enemy-hp-bar" class="hp-bar-fill bg-emerald-500" style="width:100%"></div></div>
-
-                <!-- ENERGY BAR -->
-                <div class="w-full flex justify-between items-center mt-1 flex-row-reverse">
-                    <span class="text-[8px] font-black text-amber-500 uppercase tracking-widest leading-none">Energi</span>
-                    <span class="text-[8px] font-black text-slate-300 italic">OPPONENT</span>
-                    <span id="enemy-ep-text" class="text-[8px] font-black text-amber-600 leading-none">0/10</span>
-                </div>
-                <div class="ep-bar-bg"><div id="enemy-ep-bar" class="ep-bar-fill bg-amber-400" style="width:0%"></div></div>
             </div>
         </div>
 
+        <!-- TEAM UI BAR & SWITCH -->
+        <div class="flex-none w-full flex items-center justify-between bg-slate-800 rounded-xl px-2 py-1.5 mb-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] border-2 border-slate-900">
+            <!-- View Toggle -->
+            <button onclick="sClick(); toggleTeamView()" id="btn-toggle-team" class="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 font-black flex items-center justify-center transition-colors shadow-sm">&lt;</button>
+            
+            <!-- Icons -->
+            <div id="team-icons-view" class="flex flex-1 justify-center gap-2 px-2">
+                <!-- Icons populated via JS -->
+            </div>
+            
+            <!-- Switch Button -->
+            <button onclick="sClick(); openSwitchModal()" id="btn-fast-switch" class="px-3 h-8 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] tracking-widest shadow-md uppercase transition-transform active:scale-95 border border-blue-400">SWITCH</button>
+        </div>
+
         <!-- ARENA FIELD -->
-        <div id="battle-arena" class="flex-none arena-bg w-full h-[20vh] min-h-[140px] max-h-[200px] mb-1">
+        <div id="battle-arena" class="flex-none arena-bg w-full h-[20vh] min-h-[140px] max-h-[200px] mb-1 mt-1">
             <div id="epic-move" class="epic-move-text"></div>
 
             <div class="sprite-container p1-container" id="p1-container">
@@ -542,7 +536,6 @@
         { name: 'peck', power: 35, type: 'flying', class: 'physical' }
     ];
 
-    // BALANCED DRAFT POOLS (3 Grass, 3 Fire, 3 Water, 3 Elec, 3 Random)
     const POOL_GRASS = [1,2,3,43,44,45,69,70,71,152,153,154,252,253,254,387,388,389];
     const POOL_FIRE = [4,5,6,37,38,58,59,77,78,155,156,157,255,256,257,390,391,392];
     const POOL_WATER = [7,8,9,54,55,60,61,62,130,131,134,158,159,160,258,259,260,393,394,395];
@@ -558,7 +551,6 @@
         return res;
     }
 
-    // SPRITES: Statics use official artwork (HD). Animated uses Gen 5 Black/White Animated Sprites.
     const getStatic = (id) => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
     const getAnim = (id) => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`;
 
@@ -568,7 +560,6 @@
     let myName = 'Player'; let oppName = 'Enemy';
     let myAvatarId = 25; let oppAvatarId = 4;
     
-    // Scoreboard states
     let myScore = 0; let oppScore = 0;
 
     let poolData = []; let typeRels = {}; 
@@ -577,7 +568,8 @@
     let board = [];
     let state = { turn: 'p1', isAnim: false, myActive: 0, oppActive: 0 };
     let opponentConnected = true;
-    let draftTimer; let draftTimeLeft = 15;
+    let draftTimer; let draftTimeLeft = 30; // UPDATED to 30s
+    let viewingMyTeam = true;
     
     let isDataLoaded = false; 
     let hintTimer = null; 
@@ -607,6 +599,59 @@
     function showHelp() { document.getElementById('help-modal').classList.add('show'); }
     function hideHelp() { document.getElementById('help-modal').classList.remove('show'); }
     
+    // TEAM UI LOGIC
+    function toggleTeamView() {
+        viewingMyTeam = !viewingMyTeam;
+        document.getElementById('btn-toggle-team').innerHTML = viewingMyTeam ? '&lt;' : '&gt;';
+        renderTeamBar();
+    }
+
+    function renderTeamBar() {
+        const container = document.getElementById('team-icons-view');
+        if(!container) return;
+        container.innerHTML = '';
+        if(myTeam.length === 0) return; 
+        
+        const team = viewingMyTeam ? myTeam : oppTeam;
+        const activeIdx = viewingMyTeam ? state.myActive : state.oppActive;
+        
+        team.forEach((p, idx) => {
+            let isDead = p.hp <= 0;
+            let isFull = p.energy >= p.maxEnergy;
+            let isActive = idx === activeIdx;
+            
+            let wrap = document.createElement('div');
+            wrap.className = `team-icon-wrap ${isActive ? 'is-active' : 'border border-slate-400 opacity-80'}`;
+            if(isDead) wrap.classList.add('opacity-40');
+            
+            let energyPct = Math.min(100, (p.energy / p.maxEnergy) * 100);
+            let grayscale = isDead ? 100 : (100 - energyPct);
+            
+            let img = document.createElement('img');
+            img.src = p.spriteS;
+            img.className = 'team-icon-img';
+            img.style.filter = `grayscale(${grayscale}%)`;
+            wrap.appendChild(img);
+            
+            if (isFull && !isDead) {
+                wrap.classList.add('is-full');
+                if (p.ultReady) wrap.classList.add('ult-on');
+                
+                if (viewingMyTeam) {
+                    wrap.onclick = () => {
+                        sClick();
+                        p.ultReady = !p.ultReady;
+                        renderTeamBar();
+                        if(p.ultReady) showToast(`Mode Ultimate ${p.name.toUpperCase()} ON! Match batunya!`);
+                    };
+                }
+            }
+            container.appendChild(wrap);
+        });
+        
+        document.getElementById('btn-fast-switch').style.display = viewingMyTeam ? 'flex' : 'none';
+    }
+
     // Switch Modal Logic
     function openSwitchModal() {
         if(state.turn !== myTurnId || state.isAnim) return showToast("Bukan giliranmu atau masih animasi!");
@@ -644,7 +689,6 @@
         state.isAnim = true;
         clearTimeout(hintTimer); removeHints();
         
-        // Broadcast switch event
         channel.publish('manual-switch', { sender: myRole, newActive: idxTarget });
 
         const p1S = document.getElementById('p1-sprite');
@@ -656,7 +700,6 @@
         setLog(`[SISTEM] Kamu menukar dengan ${myTeam[idxTarget].name}! Giliran berakhir.`);
         await sleep(600); p1S.classList.remove('switch-in');
         
-        // Pass turn
         state.turn = myTurnId === 'p1' ? 'p2' : 'p1';
         channel.publish('end-turn', { nextTurn: state.turn, boardState: board.map(r=>r.map(c=>c.pIdx)) });
         updateBoardLock(); state.isAnim = false; checkBoardState();
@@ -684,7 +727,7 @@
         initA(); myName = getName();
         myRole = 'host'; myTurnId = 'p1'; oppName = ''; poolData = []; typeRels = {}; isDataLoaded = false;
         myScore = 0; oppScore = 0;
-        myAvatarId = Math.floor(Math.random() * 493) + 1; // Random Avatar 1-493
+        myAvatarId = Math.floor(Math.random() * 493) + 1; 
         
         const code = Math.random().toString(36).substring(2, 6).toUpperCase();
         document.getElementById('main-menu').classList.add('hidden');
@@ -831,14 +874,12 @@
     // ==========================================
     async function fetchPool() {
         try {
-            // Balanced generation
             let ids = [];
             ids = ids.concat(getRandomFrom(POOL_GRASS, 3));
             ids = ids.concat(getRandomFrom(POOL_FIRE, 3));
             ids = ids.concat(getRandomFrom(POOL_WATER, 3));
             ids = ids.concat(getRandomFrom(POOL_ELEC, 3));
             
-            // Fill 3 randoms ensuring no duplicate
             let usedSet = new Set(ids);
             while(ids.length < POOL_SIZE) {
                 let rId = Math.floor(Math.random() * 493) + 1;
@@ -861,12 +902,11 @@
 
                 return {
                     id: d.id, name: d.name, types: typesArr, primaryType: typesArr[0],
-                    // Standard Base Stats directly passed (HP scaled for playability)
                     maxHp: Math.floor(bHp * 2) + 50, hp: Math.floor(bHp * 2) + 50, atk: bAtk, def: bDef, spa: bSpa, spd: bSpd, spe: bSpe,
-                    energy: 0, maxEnergy: 10,
-                    spriteS: getStatic(d.id), spriteA: getAnim(d.id), // spriteA for Battle Animation, spriteS for HD Art
-                    learnedMove: learnedMove, // Ultimate 
-                    basicMove: basicMoveAssigned // Basic attack
+                    energy: 0, maxEnergy: 10, ultReady: false,
+                    spriteS: getStatic(d.id), spriteA: getAnim(d.id),
+                    learnedMove: learnedMove,
+                    basicMove: basicMoveAssigned
                 };
             });
             poolData = await Promise.all(poolPromises);
@@ -874,7 +914,6 @@
             const tRes = (await Promise.all(tProm)).filter(r=>r!==null);
             tRes.forEach(d => { typeRels[d.name] = { double: d.damage_relations.double_damage_to.map(t=>t.name), half: d.damage_relations.half_damage_to.map(t=>t.name), zero: d.damage_relations.no_damage_to.map(t=>t.name) }; });
             
-            // Shuffle Pool just for display variance
             for(let i=poolData.length-1; i>0; i--){ const j=Math.floor(Math.random()*(i+1)); [poolData[i],poolData[j]]=[poolData[j],poolData[i]]; }
             return true;
         } catch(e) { return false; }
@@ -890,8 +929,11 @@
     }
 
     // ==========================================
-    // 3. DRAFT PICK
+    // 3. DRAFT PICK & POKEDEX
     // ==========================================
+    let selectedDraftIdx = -1;
+    let selectedDraftCardId = '';
+
     function startDraft() {
         document.getElementById('lobby-screen').classList.add('hidden'); document.getElementById('waiting-room').classList.add('hidden'); 
         document.getElementById('draft-screen').style.display = 'flex';
@@ -904,7 +946,7 @@
                 const poke = poolData[pIdx]; oppTeam.push(poke);
                 const cardEl = document.getElementById(pCardId); const deckOpp = document.getElementById('p2-deck-slots');
                 document.getElementById('p2-deck-empty').style.display = 'none';
-                cardEl.style.borderColor = '#e11d48'; cardEl.style.opacity = '0.6'; cardEl.style.pointerEvents = 'none';
+                cardEl.style.borderColor = '#e11d48'; cardEl.style.opacity = '0.6'; 
                 deckOpp.appendChild(cardEl); deckOpp.scrollLeft = deckOpp.scrollWidth;
                 document.getElementById('p2-count').innerText = `${oppTeam.length}/5`;
                 draftTurn = myTurnId; updateDraftUI(); pT(600); checkDraftDone();
@@ -916,11 +958,64 @@
         const grid = document.getElementById('pool-grid'); grid.innerHTML = '';
         poolData.forEach((p, i) => {
             const card = document.createElement('div'); card.className = 'tcg-card cursor-pointer hover:shadow-md'; card.id = `tcg-card-${i}`;
-            card.onclick = () => { sClick(); doPick(i, card.id); };
+            card.onclick = () => { doPickClick(i, card.id); };
             let badges = p.types.map(t => `<span class="type-badge" style="background:${TYPE_COLORS[t]||'#777'}">${t.substring(0,3)}</span>`).join(' ');
             card.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="text-[10px] font-black uppercase truncate">${p.name}</span><div class="flex gap-1">${badges}</div></div><div class="tcg-img-wrapper"><img src="${p.spriteS}"></div><div class="tcg-stats"><div class="s-hp">HP ${p.maxHp}</div><div class="s-atk">AT ${p.atk}</div><div class="s-def">DF ${p.def}</div><div class="s-spa">SA ${p.spa}</div><div class="s-spd">SD ${p.spd}</div><div class="s-spe">SP ${p.spe}</div></div>`;
             grid.appendChild(card);
         });
+    }
+
+    function doPickClick(idx, cardId) {
+        sClick();
+        const poke = poolData[idx];
+        selectedDraftIdx = idx;
+        selectedDraftCardId = cardId;
+        
+        let isPicked = myTeam.some(t=>t.id===poke.id) || oppTeam.some(t=>t.id===poke.id);
+        let badges = poke.types.map(t => `<span class="type-badge-lg" style="background:${TYPE_COLORS[t]||'#777'}">${t.substring(0,3)}</span>`).join(' ');
+        
+        document.getElementById('pokedex-content').innerHTML = `
+            <div class="flex items-center gap-4 mb-4">
+                <img src="${poke.spriteA}" class="w-24 h-24 object-contain pixel-text drop-shadow-md" onerror="this.src='${poke.spriteS}'">
+                <div>
+                    <h3 class="text-xl font-black uppercase text-slate-800">${poke.name}</h3>
+                    <div class="flex gap-1 mt-1">${badges}</div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-sm font-bold text-slate-600 bg-slate-100 p-3 rounded-xl border-2 border-slate-200">
+                <div>HP: <span class="text-emerald-600">${poke.maxHp}</span></div>
+                <div>ATK: <span class="text-rose-600">${poke.atk}</span></div>
+                <div>DEF: <span class="text-blue-600">${poke.def}</span></div>
+                <div>SPA: <span class="text-rose-400">${poke.spa}</span></div>
+                <div>SPD: <span class="text-blue-400">${poke.spd}</span></div>
+                <div>SPE: <span class="text-amber-500">${poke.spe}</span></div>
+            </div>
+            <div class="mt-3 p-2 bg-amber-50 border-2 border-amber-200 rounded-lg">
+                <div class="text-xs font-black text-amber-600 uppercase">Ultimate:</div>
+                <div class="font-bold text-slate-700">${poke.learnedMove.name.toUpperCase()} (Power: ${poke.learnedMove.power})</div>
+            </div>
+        `;
+        
+        const btnPick = document.getElementById('btn-pick-pokemon');
+        if(isPicked || draftTurn !== myTurnId || myTeam.length >= 5) {
+            btnPick.style.display = 'none';
+        } else {
+            btnPick.style.display = 'block';
+        }
+        
+        document.getElementById('pokedex-modal').classList.add('show');
+    }
+
+    function confirmPick() {
+        if(selectedDraftIdx !== -1 && draftTurn === myTurnId && myTeam.length < 5) {
+            sClick();
+            doPick(selectedDraftIdx, selectedDraftCardId);
+            closePokedex();
+        }
+    }
+
+    function closePokedex() {
+        document.getElementById('pokedex-modal').classList.remove('show');
     }
 
     function doPick(idx, cardId) {
@@ -930,7 +1025,7 @@
         pT(600); myTeam.push(poke);
         const cardEl = document.getElementById(cardId); const deckMy = document.getElementById('p1-deck-slots');
         document.getElementById('p1-deck-empty').style.display = 'none';
-        cardEl.style.borderColor = '#0ea5e9'; cardEl.style.boxShadow = '0 0 10px rgba(14, 165, 233, 0.4)'; cardEl.style.pointerEvents = 'none'; cardEl.classList.remove('cursor-pointer');
+        cardEl.style.borderColor = '#0ea5e9'; cardEl.style.boxShadow = '0 0 10px rgba(14, 165, 233, 0.4)'; cardEl.classList.remove('cursor-pointer');
         deckMy.appendChild(cardEl); deckMy.scrollLeft = deckMy.scrollWidth;
         document.getElementById('p1-count').innerText = `${myTeam.length}/5`;
         draftTurn = myTurnId === 'p1' ? 'p2' : 'p1'; updateDraftUI();
@@ -946,10 +1041,10 @@
     }
 
     function startDraftTimer() {
-        clearInterval(draftTimer); draftTimeLeft = 15;
+        clearInterval(draftTimer); draftTimeLeft = 30; // UPDATED to 30s
         const bar = document.getElementById('draft-timer-bar');
-        bar.style.transition = 'none'; bar.style.width = '100%'; setTimeout(() => { bar.style.transition = 'width 1s linear'; }, 50);
-        draftTimer = setInterval(() => { draftTimeLeft--; bar.style.width = `${(draftTimeLeft/15)*100}%`; if(draftTimeLeft <= 0) { clearInterval(draftTimer); if(draftTurn === myTurnId) autoPick(); } }, 1000);
+        bar.style.transition = 'none'; bar.style.width = '100%'; setTimeout(() => { bar.style.transition = `width ${draftTimeLeft}s linear`; }, 50);
+        draftTimer = setInterval(() => { draftTimeLeft--; bar.style.width = `${(draftTimeLeft/30)*100}%`; if(draftTimeLeft <= 0) { clearInterval(draftTimer); if(draftTurn === myTurnId) autoPick(); } }, 1000);
     }
 
     function autoPick() {
@@ -973,7 +1068,7 @@
         gc.classList.remove('hidden'); gc.classList.add('flex'); 
         
         document.getElementById('player-player-name').innerText = myName; document.getElementById('enemy-player-name').innerText = oppName;
-        setActive('p1', 0); setActive('p2', 0); state.turn = 'p1'; 
+        setActive('p1', 0); setActive('p2', 0); state.turn = 'p1'; viewingMyTeam = true;
         
         channel.unsubscribe('board-init'); channel.unsubscribe('attack'); channel.unsubscribe('end-turn'); channel.unsubscribe('heal'); channel.unsubscribe('shuffle'); channel.unsubscribe('switch-sync'); channel.unsubscribe('manual-switch');
 
@@ -999,7 +1094,6 @@
         });
         channel.subscribe('switch-sync', async (msg) => {
             if(msg.data.sender !== myRole) {
-                // Musuh ganti pokemon karena diserang match dari luar pokemon aktif (auto-switch sebelum serang)
                 let oppPokeIdx = msg.data.newActive;
                 if(state.oppActive !== oppPokeIdx) {
                     const p2S = document.getElementById('p2-sprite');
@@ -1012,7 +1106,6 @@
         });
         channel.subscribe('manual-switch', async (msg) => {
             if(msg.data.sender !== myRole) {
-                // Musuh melakukan manual switch (mengorbankan giliran)
                 state.isAnim = true;
                 let oppPokeIdx = msg.data.newActive;
                 const p2S = document.getElementById('p2-sprite');
@@ -1038,53 +1131,38 @@
             document.getElementById('enemy-type-badge').innerHTML = badgesHtml;
             updateOppStatus();
         }
-        // Gunakan animasi Gif. Kalau gagal load/error, fallback ke Static Image.
         spriteEl.src = poke.spriteA; spriteEl.onerror = function(){this.src=poke.spriteS;};
     }
 
     function updateMyStatus() {
         const poke = myTeam[state.myActive]; 
-        
         const hpPct = Math.max(0, (poke.hp / poke.maxHp) * 100);
         const hpBar = document.getElementById('player-hp-bar'); 
         hpBar.style.width = `${hpPct}%`; hpBar.style.backgroundColor = hpPct>50 ? '#10b981' : hpPct>20 ? '#facc15' : '#ef4444';
         document.getElementById('player-hp-text').innerText = `${Math.floor(Math.max(0, poke.hp))}/${poke.maxHp}`;
         
-        const epPct = Math.min(100, (poke.energy / poke.maxEnergy) * 100);
-        const epBar = document.getElementById('player-ep-bar');
-        epBar.style.width = `${epPct}%`;
-        if (epPct >= 100) epBar.classList.add('full'); else epBar.classList.remove('full');
-        document.getElementById('player-ep-text').innerText = `${Math.min(poke.energy, poke.maxEnergy)}/${poke.maxEnergy}`;
-
         const sprite = document.getElementById('p1-sprite'); if(poke.hp <= 0) sprite.classList.add('opacity-0'); else sprite.classList.remove('opacity-0');
+        renderTeamBar(); // UPDATE TEAM BAR
     }
 
     function updateOppStatus() {
         const poke = oppTeam[state.oppActive]; 
-        
         const hpPct = Math.max(0, (poke.hp / poke.maxHp) * 100);
         const hpBar = document.getElementById('enemy-hp-bar'); 
         hpBar.style.width = `${hpPct}%`; hpBar.style.backgroundColor = hpPct>50 ? '#10b981' : hpPct>20 ? '#facc15' : '#ef4444';
         document.getElementById('enemy-hp-text').innerText = `${Math.floor(Math.max(0, poke.hp))}/${poke.maxHp}`;
-        
-        const epPct = Math.min(100, (poke.energy / poke.maxEnergy) * 100);
-        const epBar = document.getElementById('enemy-ep-bar');
-        epBar.style.width = `${epPct}%`;
-        if (epPct >= 100) epBar.classList.add('full'); else epBar.classList.remove('full');
-        document.getElementById('enemy-ep-text').innerText = `${Math.min(poke.energy, poke.maxEnergy)}/${poke.maxEnergy}`;
 
         const sprite = document.getElementById('p2-sprite'); if(poke.hp <= 0) sprite.classList.add('opacity-0'); else sprite.classList.remove('opacity-0');
+        renderTeamBar(); // UPDATE TEAM BAR
     }
 
     function setLog(txt) { document.getElementById('log-text').innerHTML = txt; }
     
     function updateBoardLock() {
         const lockEl = document.getElementById('board-lock'); const lockTxt = document.getElementById('board-lock-text');
-        
         document.getElementById('plate-p1').classList.remove('active-turn');
         document.getElementById('plate-p2').classList.remove('active-turn');
-        
-        const btnSwitch = document.getElementById('btn-switch-p1');
+        const btnSwitch = document.getElementById('btn-fast-switch');
 
         if(!opponentConnected) {
             btnSwitch.disabled = true;
@@ -1223,7 +1301,6 @@
         state.isAnim=true; pT(500); doSwap(x1,y1,x2,y2); await sleep(200);
         let groups = findMatchGroups();
         if(groups.length>0) { 
-            // Mulai Rantai Combo (Combo Chain = 0)
             await processMyMatches(groups, 0); 
         } 
         else { pT(200); doSwap(x1,y1,x2,y2); await sleep(200); state.isAnim=false; checkBoardState(); } 
@@ -1254,7 +1331,6 @@
         arena.classList.remove('arena-shake'); void arena.offsetWidth; arena.classList.add('arena-shake');
     }
 
-    // DIMINISHING RETURN COMBO LOGIC INCORPORATED
     async function processMyMatches(groups, comboChain) {
         let totalHeal = 0;
 
@@ -1265,7 +1341,6 @@
                 ax+=x; ay+=y;
             });
 
-            // POTION BALANCE: Heal 5% of Max HP per matched gem
             if(group.pIdx === 5) {
                 let activeMyPoke = myTeam[state.myActive];
                 let healAmount = Math.floor(activeMyPoke.maxHp * 0.05 * group.cells.length);
@@ -1282,7 +1357,7 @@
                 p1S.classList.add('switch-out');
                 sSwitch();
                 await sleep(300);
-                setActive('p1', group.pIdx); // Update sprite dan info bar
+                setActive('p1', group.pIdx); 
                 p1S.classList.remove('switch-out');
                 p1S.classList.add('switch-in');
                 channel.publish('switch-sync', { sender: myRole, newActive: group.pIdx });
@@ -1296,31 +1371,32 @@
                 await sleep(400);
             } else {
                 let energyGained = group.cells.length;
-                myPoke.energy += energyGained; // Energi nambah sesuai jumlah batu persis
-                showFloatingDmg(ax/group.cells.length, ay/group.cells.length, `+${energyGained} EP`, false, false);
-                
                 let isUltimate = false;
-                if (myPoke.energy >= myPoke.maxEnergy) {
+                
+                // ULTIMATE MANUAL LOGIC
+                if (myPoke.energy >= myPoke.maxEnergy && myPoke.ultReady) {
                     isUltimate = true;
-                    myPoke.energy -= myPoke.maxEnergy; 
+                    myPoke.energy = 0; // Consume
+                    myPoke.ultReady = false;
+                } else {
+                    myPoke.energy = Math.min(myPoke.maxEnergy, myPoke.energy + energyGained);
                 }
                 
+                if(!isUltimate) { showFloatingDmg(ax/group.cells.length, ay/group.cells.length, `+${energyGained} EP`, false, false); }
                 updateMyStatus();
                 await sleep(200);
 
-                // COMPLEX RPG DAMAGE FORMULA
                 let currentMove = isUltimate ? myPoke.learnedMove : myPoke.basicMove;
                 let isPhysical = currentMove.class === 'physical';
                 
                 let atkStat = isPhysical ? myPoke.atk : myPoke.spa;
                 let defStat = isPhysical ? oppPoke.def : oppPoke.spd;
                 
-                // NERF SERANGAN BIASA: Dibagi 3.3 (Alias sisa ~30% kekuatan)
+                // NERF SERANGAN BIASA: Dibagi 2 (Sisa 50% kekuatan - UPDATED)
                 if (!isUltimate) {
-                    atkStat = atkStat / 3.3;
+                    atkStat = atkStat / 2.0;
                 }
                 
-                // Multiplier (Kelemahan Tipe)
                 let mult = 1; let moveType = currentMove.type;
                 if(typeRels[moveType]) {
                     oppPoke.types.forEach(opT => {
@@ -1330,30 +1406,20 @@
                     });
                 }
 
-                // STAB (Same Type Attack Bonus)
                 let stab = myPoke.types.includes(moveType) ? 1.5 : 1;
-                
-                // PokeAPI Standard Damage Gen 5 (Level 50 standard)
-                let levelMod = 22; // Untuk Level 50
+                let levelMod = 22; 
                 let baseDmg = Math.floor(((levelMod * currentMove.power * (atkStat / defStat)) / 50) + 2);
-                
-                // Match Bonus (Combo Gem length)
                 let matchBonus = 1 + ((group.cells.length - 3) * 0.25);
                 
-                // Critical Hit berdasar stat Spe
-                let critChance = Math.min(myPoke.spe / 255, 0.5); // Caps at 50%
+                let critChance = Math.min(myPoke.spe / 255, 0.5); 
                 let isCrit = Math.random() < critChance; 
                 let critMod = isCrit ? 1.5 : 1;
                 
-                // Roll Kerusakan Random 0.85 - 1.00
                 let rngRoll = 0.85 + Math.random() * 0.15;
+                let comboPenalty = Math.max(0.25, Math.pow(0.5, comboChain)); 
 
-                // DIMINISHING RETURN PADA COMBO BERUNTUN (ANTI HOKI)
-                let comboPenalty = Math.max(0.25, Math.pow(0.5, comboChain)); // Maksimal sisa 25%
-
-                // Total Final Kerusakan
                 let finalDmg = Math.floor(baseDmg * matchBonus * mult * stab * critMod * rngRoll * comboPenalty);
-                finalDmg = Math.max(1, finalDmg); // Minimal 1 damage
+                finalDmg = Math.max(1, finalDmg); 
                 
                 let usedMoveName = currentMove.name;
 
@@ -1421,7 +1487,6 @@
         await applyGravity(); let nextG = findMatchGroups();
         if(nextG.length>0) { 
             await sleep(200); 
-            // Tambahkan comboChain + 1 untuk iterasi selanjutnya (men-trigger diminishing return)
             await processMyMatches(nextG, comboChain + 1);
         }
         else {
@@ -1434,7 +1499,6 @@
     async function processReceivedAttack(data) {
         state.isAnim = true; let oppPokeIdx = data.myActiveIdx; let dmg = data.damage;
         
-        // --- ANIMASI SWITCH MUSUH KETIKA MENDAPAT SERANGAN DARI POKEMON YANG BERBEDA ---
         if(state.oppActive !== oppPokeIdx) {
             const p2S = document.getElementById('p2-sprite');
             p2S.classList.add('switch-out'); sSwitch(); await sleep(300);
@@ -1519,15 +1583,13 @@
     async function endGame(win) {
         state.isAnim = true; clearTimeout(hintTimer); removeHints();
         
-        // Show immediate visual text over battle log
         setLog(win ? "MENANG! Semua musuh tumbang!" : "KALAH! Timmu telah dihabisi!");
         document.getElementById('log-text').className = win ? "pixel-text text-xl font-bold text-emerald-500 leading-none text-center px-2 w-full break-words" : "pixel-text text-xl font-bold text-rose-500 leading-none text-center px-2 w-full break-words";
 
         if(win) myScore++; else oppScore++;
 
-        await sleep(3000); // Tunggu 3 detik sebelum dibawa ke lobby
+        await sleep(3000);
 
-        // RESET
         myTeam = []; oppTeam = []; board = []; draftTurn = 'p1';
         document.getElementById('p1-deck-slots').innerHTML = '<p id="p1-deck-empty" class="text-xs text-slate-400 italic my-auto mx-auto w-full text-center">Pilih dari pool di atas!</p>';
         document.getElementById('p2-deck-slots').innerHTML = '<p id="p2-deck-empty" class="text-xs text-slate-400 italic my-auto mx-auto w-full text-center">Menunggu pilihan lawan...</p>';
@@ -1538,7 +1600,6 @@
         document.getElementById('game-container').classList.remove('flex');
         document.getElementById('waiting-room').classList.remove('hidden');
 
-        // UPDATE SCOREBOARD
         document.getElementById('lobby-scoreboard').classList.remove('hidden');
         document.getElementById('lobby-scoreboard').classList.add('flex');
         document.getElementById('score-p1-name').innerText = myName;
