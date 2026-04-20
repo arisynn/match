@@ -34,16 +34,17 @@
         #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: #ffffff; padding: 10px 20px; border-radius: 12px; font-size: 0.85rem; font-weight: 800; opacity: 0; transition: opacity 0.3s, transform 0.3s; z-index: 99999; pointer-events: none; width: max-content; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.15);}
         #toast.show { opacity: 1; transform: translate(-50%, 10px); }
 
-        /* --- LOBBY WAITING ROOM --- */
+        /* --- LOBBY WAITING ROOM (BRIGHT THEME) --- */
         .slot-card {
-            background: #fff; border: 4px solid #cbd5e1; border-radius: 1rem; 
+            background: #f8fafc; border: 3px dashed #cbd5e1; border-radius: 1rem; 
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 140px; width: 45%; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            height: 140px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
             position: relative; overflow: hidden; transition: all 0.3s ease;
         }
-        .slot-card.filled-host { border-color: #0ea5e9; background: #f0f9ff; }
-        .slot-card.filled-guest { border-color: #f43f5e; background: #fff1f2; }
-        .avatar-placeholder { width: 60px; height: 60px; background: #e2e8f0; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2rem; color: #94a3b8; margin-bottom: 0.5rem; }
+        .slot-card.filled-host { border: 4px solid #0ea5e9; background: #f0f9ff; box-shadow: 0 10px 15px -3px rgba(14, 165, 233, 0.2); }
+        .slot-card.filled-guest { border: 4px solid #f43f5e; background: #fff1f2; box-shadow: 0 10px 15px -3px rgba(244, 63, 94, 0.2); }
+        
+        .avatar-placeholder { width: 60px; height: 60px; background: #e2e8f0; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2rem; color: #94a3b8; margin-bottom: 0.5rem; font-weight: 900;}
         .filled-host .avatar-placeholder { background: #bae6fd; color: #0284c7; }
         .filled-guest .avatar-placeholder { background: #fecdd3; color: #e11d48; }
 
@@ -166,7 +167,7 @@
         @keyframes floatUp { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 20% { transform: translate(-50%, -80%) scale(1.2); opacity: 1; } 100% { transform: translate(-50%, -120px) scale(1); opacity: 0; } }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen relative max-w-md mx-auto bg-slate-50">
+<body class="flex flex-col items-center justify-center min-h-screen relative max-w-md mx-auto bg-slate-100">
 
     <div id="toast"></div>
 
@@ -192,46 +193,55 @@
                 </div>
 
                 <div class="p-3 bg-sky-50 border-2 border-sky-200 rounded-xl">
-                    <button onclick="createRoom()" class="w-full py-3 bg-sky-500 hover:bg-sky-600 text-white rounded-lg font-black active:scale-95 transition-transform">BUAT ROOM</button>
+                    <button onclick="createRoom()" class="w-full py-3 bg-sky-500 hover:bg-sky-600 text-white rounded-lg font-black active:scale-95 transition-transform shadow-md">BUAT ROOM</button>
                 </div>
                 <div class="flex items-center space-x-2"><hr class="flex-1 border-slate-300"><span class="text-[10px] font-black text-slate-400">ATAU</span><hr class="flex-1 border-slate-300"></div>
                 <div class="p-3 bg-rose-50 border-2 border-rose-200 rounded-xl">
                     <input type="text" id="room-code-input" placeholder="KODE 4 DIGIT" maxlength="4" class="w-full p-2 border-2 border-slate-300 rounded-lg mb-2 text-center text-xl font-black uppercase outline-none focus:border-rose-400">
-                    <button onclick="joinRoom()" class="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-lg font-black active:scale-95 transition-transform">GABUNG ROOM</button>
+                    <button onclick="joinRoom()" class="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-lg font-black active:scale-95 transition-transform shadow-md">GABUNG ROOM</button>
                 </div>
             </div>
         </div>
 
-        <!-- WAITING ROOM LOBBY (MLBB STYLE) -->
-        <div id="waiting-room" class="bg-slate-800 border-4 border-slate-700 w-full p-6 rounded-2xl text-center shadow-2xl hidden flex-col items-center">
-            <div class="bg-slate-900 px-4 py-2 rounded-lg border-2 border-slate-700 mb-6 w-full relative overflow-hidden">
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">KODE RUANGAN</span>
-                <span id="display-room-code" class="text-4xl font-black text-white tracking-[0.2em] relative z-10">....</span>
+        <!-- WAITING ROOM LOBBY (BRIGHT TCG STYLE) -->
+        <div id="waiting-room" class="bg-white border-4 border-slate-300 w-full p-6 rounded-2xl text-center shadow-xl hidden flex-col items-center">
+            
+            <h2 class="text-xl font-black text-slate-700 uppercase mb-4 tracking-wider">Ruang Persiapan</h2>
+
+            <!-- Room Code Badge -->
+            <div class="bg-sky-50 px-6 py-3 rounded-xl border-2 border-sky-200 mb-6 w-full relative overflow-hidden shadow-sm">
+                <span class="text-[10px] font-bold text-sky-600 uppercase tracking-widest block mb-1">KODE RUANGAN</span>
+                <span id="display-room-code" class="text-5xl font-black text-sky-500 tracking-[0.2em] relative z-10">....</span>
             </div>
 
-            <div class="flex justify-between items-center w-full mb-8 px-2 relative">
+            <!-- Player Slots -->
+            <div class="flex justify-between items-center w-full mb-6 px-1 relative gap-2">
                 <!-- SLOT 1: HOST -->
-                <div id="slot-1" class="slot-card">
+                <div id="slot-1" class="slot-card flex-1">
                     <div class="avatar-placeholder">?</div>
-                    <span id="slot-1-name" class="font-black text-sm uppercase text-slate-500">MENGHUBUNGKAN...</span>
-                    <span class="text-[9px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full mt-1">HOST</span>
+                    <span id="slot-1-name" class="font-black text-sm uppercase text-slate-500 truncate w-full px-2">MENUNGGU...</span>
+                    <span class="text-[9px] font-bold text-slate-400 bg-white border border-slate-200 px-3 py-0.5 rounded-full mt-1 shadow-sm">HOST</span>
                 </div>
 
-                <div class="font-black text-3xl italic text-slate-400 px-2">VS</div>
+                <div class="font-black text-2xl italic text-slate-300 px-1">VS</div>
 
                 <!-- SLOT 2: GUEST -->
-                <div id="slot-2" class="slot-card">
+                <div id="slot-2" class="slot-card flex-1">
                     <div class="avatar-placeholder">?</div>
-                    <span id="slot-2-name" class="font-black text-sm uppercase text-slate-500">KOSONG</span>
-                    <span class="text-[9px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full mt-1">GUEST</span>
+                    <span id="slot-2-name" class="font-black text-sm uppercase text-slate-500 truncate w-full px-2">KOSONG</span>
+                    <span class="text-[9px] font-bold text-slate-400 bg-white border border-slate-200 px-3 py-0.5 rounded-full mt-1 shadow-sm">GUEST</span>
                 </div>
             </div>
 
-            <p id="lobby-status-text" class="text-sm font-bold text-slate-300 mb-4 animate-pulse">Menyiapkan Ruangan...</p>
+            <!-- Status Message -->
+            <div class="bg-slate-50 border border-slate-200 w-full py-2 rounded-lg mb-6">
+                <p id="lobby-status-text" class="text-sm font-bold text-slate-500 animate-pulse">Menyiapkan Koneksi...</p>
+            </div>
 
-            <div class="w-full space-y-2">
-                <button id="btn-start-game" onclick="hostStartGame()" class="hidden w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-lg shadow-lg active:scale-95 transition-all uppercase tracking-wider">MULAI BATTLE</button>
-                <button onclick="cancelLobby()" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl font-bold text-sm transition-colors border border-slate-600">TINGGALKAN ROOM</button>
+            <!-- Actions -->
+            <div class="w-full space-y-3">
+                <button id="btn-start-game" onclick="hostStartGame()" class="hidden w-full py-4 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-black text-lg shadow-lg active:scale-95 transition-all uppercase tracking-wider">MULAI BATTLE</button>
+                <button onclick="cancelLobby()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold text-sm transition-colors border-2 border-slate-300 active:scale-95">BATAL & KELUAR</button>
             </div>
         </div>
     </div>
@@ -357,7 +367,7 @@
     let opponentConnected = true;
     let draftTimer; let draftTimeLeft = 15;
     
-    let isDataLoaded = false; // Flag untuk memastikan kartu API selesai diunduh host
+    let isDataLoaded = false; 
 
     // --- AUDIO & MUTE ---
     let actx; let isMuted = false;
@@ -380,7 +390,7 @@
     function getName() { let input = document.getElementById('player-name-input').value.trim(); return input === "" ? (myRole === 'host' ? "HOST" : "GUEST") : input; }
 
     // ==========================================
-    // 1. LOBBY WAITING ROOM (MLBB STYLE)
+    // 1. LOBBY WAITING ROOM (BRIGHT THEME)
     // ==========================================
 
     function initAblyAsync() {
@@ -404,7 +414,6 @@
         
         const code = Math.random().toString(36).substring(2, 6).toUpperCase();
 
-        // Transisi Layar Utama ke Lobby
         document.getElementById('main-menu').classList.add('hidden');
         document.getElementById('waiting-room').classList.remove('hidden');
         document.getElementById('waiting-room').classList.add('flex');
@@ -416,21 +425,16 @@
         try {
             await initAblyAsync();
             channel = ably.channels.get(`poke-room-${code}`);
-            
-            // Listen Presence untuk Update UI Lobby
             channel.presence.subscribe(() => updateLobbyPresenceUI());
-            
-            // Masuk sebagai Host
             channel.presence.enter({ name: myName, role: 'host' });
 
-            // Sambil menunggu teman, Host ngeload kartu API di background
             document.getElementById('lobby-status-text').innerText = "Menyiapkan Arena & Kartu...";
             fetchPool().then(success => {
                 if(success) {
                     isDataLoaded = true;
                     document.getElementById('lobby-status-text').innerText = "Menunggu Lawan Gabung...";
-                    document.getElementById('lobby-status-text').classList.replace('text-slate-300', 'text-sky-300');
-                    updateLobbyPresenceUI(); // Re-evaluasi tombol MULAI
+                    document.getElementById('lobby-status-text').classList.replace('text-slate-500', 'text-sky-600');
+                    updateLobbyPresenceUI(); 
                 } else {
                     showToast("Gagal memuat kartu. Silakan keluar dan buat room lagi.");
                     document.getElementById('lobby-status-text').innerText = "Gagal memuat sistem.";
@@ -447,7 +451,6 @@
         
         myRole = 'guest'; myTurnId = 'p2'; oppName = '';
         
-        // Transisi Layar Utama ke Lobby
         document.getElementById('main-menu').classList.add('hidden');
         document.getElementById('waiting-room').classList.remove('hidden');
         document.getElementById('waiting-room').classList.add('flex');
@@ -460,19 +463,16 @@
             await initAblyAsync();
             channel = ably.channels.get(`poke-room-${code}`);
 
-            // Listen Presence untuk Update UI Lobby
             channel.presence.subscribe(() => updateLobbyPresenceUI());
 
-            // Listen Perintah Mulai Game dari Host
             channel.subscribe('START_GAME', (msg) => {
                 poolData = msg.data.pool;
                 typeRels = msg.data.types;
                 document.getElementById('lobby-status-text').innerText = "MEMASUKI ARENA...";
-                document.getElementById('lobby-status-text').className = "text-xl font-black text-emerald-400 mt-2";
+                document.getElementById('lobby-status-text').className = "text-xl font-black text-sky-500 mt-2";
                 setTimeout(startDraft, 1000);
             });
             
-            // Masuk sebagai Guest
             channel.presence.enter({ name: myName, role: 'guest' });
 
         } catch(err) { showToast("Gagal Bergabung"); cancelLobby(); }
@@ -480,15 +480,14 @@
 
     function resetLobbyUI() {
         const s1 = document.getElementById('slot-1'); const s2 = document.getElementById('slot-2');
-        s1.className = 'slot-card'; s2.className = 'slot-card';
-        document.getElementById('slot-1-name').innerText = "KOSONG"; document.getElementById('slot-1-name').className = "font-black text-sm uppercase text-slate-500";
-        document.getElementById('slot-2-name').innerText = "KOSONG"; document.getElementById('slot-2-name').className = "font-black text-sm uppercase text-slate-500";
+        s1.className = 'slot-card flex-1'; s2.className = 'slot-card flex-1';
+        document.getElementById('slot-1-name').innerText = "KOSONG"; document.getElementById('slot-1-name').className = "font-black text-sm uppercase text-slate-400 truncate w-full px-2";
+        document.getElementById('slot-2-name').innerText = "KOSONG"; document.getElementById('slot-2-name').className = "font-black text-sm uppercase text-slate-400 truncate w-full px-2";
         document.querySelector('#slot-1 .avatar-placeholder').innerText = '?';
         document.querySelector('#slot-2 .avatar-placeholder').innerText = '?';
         document.getElementById('btn-start-game').classList.add('hidden');
     }
 
-    // Fungsi Utama Ruang Tunggu
     function updateLobbyPresenceUI() {
         if(!channel) return;
         channel.presence.get((err, members) => {
@@ -497,59 +496,53 @@
             let hostData = members.find(m => m.data.role === 'host')?.data;
             let guestData = members.find(m => m.data.role === 'guest')?.data;
 
-            // Update Slot 1 (Host)
             const s1 = document.getElementById('slot-1');
             if(hostData) {
                 s1.classList.add('filled-host');
                 document.getElementById('slot-1-name').innerText = hostData.name;
-                document.getElementById('slot-1-name').className = "font-black text-sm uppercase text-sky-600";
+                document.getElementById('slot-1-name').className = "font-black text-sm uppercase text-sky-600 truncate w-full px-2";
                 document.querySelector('#slot-1 .avatar-placeholder').innerText = hostData.name.charAt(0);
-                if(myRole === 'guest') oppName = hostData.name; // Guest simpan nama Host
+                if(myRole === 'guest') oppName = hostData.name; 
             }
 
-            // Update Slot 2 (Guest)
             const s2 = document.getElementById('slot-2');
             if(guestData) {
                 s2.classList.add('filled-guest');
                 document.getElementById('slot-2-name').innerText = guestData.name;
-                document.getElementById('slot-2-name').className = "font-black text-sm uppercase text-rose-600";
+                document.getElementById('slot-2-name').className = "font-black text-sm uppercase text-rose-600 truncate w-full px-2";
                 document.querySelector('#slot-2 .avatar-placeholder').innerText = guestData.name.charAt(0);
-                if(myRole === 'host') oppName = guestData.name; // Host simpan nama Guest
+                if(myRole === 'host') oppName = guestData.name; 
             } else {
                 s2.classList.remove('filled-guest');
                 document.getElementById('slot-2-name').innerText = "MENUNGGU...";
-                document.getElementById('slot-2-name').className = "font-black text-sm uppercase text-slate-500 animate-pulse";
+                document.getElementById('slot-2-name').className = "font-black text-sm uppercase text-slate-400 truncate w-full px-2 animate-pulse";
                 document.querySelector('#slot-2 .avatar-placeholder').innerText = '?';
                 if(myRole === 'host') oppName = '';
             }
 
-            // Atur Tombol Mulai (Hanya untuk Host)
             const btnStart = document.getElementById('btn-start-game');
             if (myRole === 'host') {
                 if (hostData && guestData) {
                     if (isDataLoaded) {
-                        // Kedua pemain siap & Kartu siap
                         document.getElementById('lobby-status-text').innerText = "Lawan Ditemukan. Siap Dimulai!";
                         btnStart.classList.remove('hidden');
                         btnStart.innerText = "MULAI BATTLE";
                         btnStart.disabled = false;
-                        btnStart.className = "w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-lg shadow-lg active:scale-95 transition-all uppercase tracking-wider";
+                        btnStart.className = "w-full py-4 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-black text-lg shadow-lg active:scale-95 transition-all uppercase tracking-wider";
                     } else {
-                        // Lawan sdh masuk, tapi host belum selesai load API
                         document.getElementById('lobby-status-text').innerText = "Lawan Ditemukan! Menyelesaikan Loading Data...";
                         btnStart.classList.remove('hidden');
                         btnStart.innerText = "MEMUAT DATA...";
                         btnStart.disabled = true;
-                        btnStart.className = "w-full py-4 bg-slate-500 text-slate-300 rounded-xl font-black text-lg shadow-inner cursor-not-allowed uppercase tracking-wider animate-pulse";
+                        btnStart.className = "w-full py-4 bg-slate-300 text-slate-500 rounded-xl font-black text-lg shadow-inner cursor-not-allowed uppercase tracking-wider animate-pulse";
                     }
                 } else {
                     btnStart.classList.add('hidden');
                     if(isDataLoaded) document.getElementById('lobby-status-text').innerText = "Menunggu Lawan Gabung...";
                 }
             } else {
-                // Untuk Guest
                 if (hostData && guestData) {
-                    document.getElementById('lobby-status-text').innerText = "Menunggu Host Memulai...";
+                    document.getElementById('lobby-status-text').innerText = "Menunggu Host Memulai Pertandingan...";
                 }
             }
         });
@@ -560,12 +553,18 @@
         document.getElementById('btn-start-game').innerText = "MEMULAI...";
         document.getElementById('btn-start-game').disabled = true;
         
-        // Host broadcast event START dengan membawa data lengkap
-        channel.publish('START_GAME', { pool: poolData, types: typeRels });
-        
-        document.getElementById('lobby-status-text').innerText = "MEMASUKI ARENA...";
-        document.getElementById('lobby-status-text').className = "text-xl font-black text-emerald-400 mt-2";
-        setTimeout(startDraft, 1000);
+        // PUBLISH PAYLOAD YANG SUDAH DIREDUKSI UKURANNYA!
+        channel.publish('START_GAME', { pool: poolData, types: typeRels }, (err) => {
+            if (err) {
+                showToast("Koneksi gagal mengirim data. Coba lagi.");
+                document.getElementById('btn-start-game').innerText = "MULAI BATTLE";
+                document.getElementById('btn-start-game').disabled = false;
+            } else {
+                document.getElementById('lobby-status-text').innerText = "MEMASUKI ARENA...";
+                document.getElementById('lobby-status-text').className = "text-xl font-black text-sky-500 mt-2";
+                setTimeout(startDraft, 1000);
+            }
+        });
     }
 
     function cancelLobby() {
@@ -592,7 +591,7 @@
     }
 
     // ==========================================
-    // 2. FETCH POKEAPI
+    // 2. FETCH POKEAPI (DENGAN REDUKSI PAYLOAD)
     // ==========================================
     async function fetchPool() {
         try {
@@ -609,7 +608,10 @@
             }
 
             let typesToFetch = new Set();
-            poolData = res.map(d => {
+            
+            // KUNCI PERBAIKAN: Resolve move SEBELUM disimpan di poolData!
+            // Menghindari pengiriman rawMoves yang sangat besar (bisa 100KB+ per message Ably)
+            const poolPromises = res.map(async d => {
                 const bHp = d.stats.find(s=>s.stat.name==='hp').base_stat;
                 const bAtk = d.stats.find(s=>s.stat.name==='attack').base_stat;
                 const bDef = d.stats.find(s=>s.stat.name==='defense').base_stat;
@@ -620,15 +622,19 @@
                 const typesArr = d.types.map(t => t.type.name);
                 typesArr.forEach(t => typesToFetch.add(t));
 
+                let learnedMove = await fetchAttackMove(d.moves); // Pre-calculate!
+
                 return {
                     id: d.id, name: d.name, types: typesArr, primaryType: typesArr[0],
                     maxHp: Math.floor(bHp * 2) + 50, hp: Math.floor(bHp * 2) + 50,
                     atk: Math.floor(bAtk * 1.5), def: Math.floor(bDef * 1.5),
                     spa: Math.floor(bSpa * 1.5), spd: Math.floor(bSpd * 1.5), spe: Math.floor(bSpe * 1.5),
                     spriteS: getStatic(d.id), spriteA: getAnim(d.id),
-                    rawMoves: d.moves, learnedMove: null
+                    learnedMove: learnedMove // <-- HANYA INI YANG DISIMPAN, rawMoves DIBUANG!
                 };
             });
+
+            poolData = await Promise.all(poolPromises);
 
             const tProm = Array.from(typesToFetch).map(t => fetch(`https://pokeapi.co/api/v2/type/${t}`).then(r=>r.json()).catch(()=>null));
             const tRes = (await Promise.all(tProm)).filter(r=>r!==null);
@@ -640,6 +646,7 @@
     }
 
     async function fetchAttackMove(movesList) {
+        if(!movesList || movesList.length === 0) return { name: 'tackle', power: 40, class: 'physical', type: 'normal' };
         for(let i=0; i<4; i++) {
             let rand = movesList[Math.floor(Math.random() * movesList.length)].move;
             try {
@@ -655,6 +662,7 @@
     // ==========================================
     function startDraft() {
         document.getElementById('lobby-screen').classList.add('hidden'); 
+        document.getElementById('waiting-room').classList.add('hidden');
         document.getElementById('game-over').classList.add('hidden');
         document.getElementById('draft-screen').style.display = 'flex';
         
@@ -662,8 +670,6 @@
         document.getElementById('ui-opp-name').innerText = oppName;
 
         renderPool(); updateDraftUI();
-        
-        // Mulai memantau presence untuk in-game (Koneksi putus/nyambung)
         setupPresence();
 
         channel.unsubscribe('pick');
@@ -767,8 +773,7 @@
         if(myTeam.length === 5 && oppTeam.length === 5) {
             clearInterval(draftTimer);
             document.getElementById('draft-turn-text').innerText = "MEMASUKI ARENA...";
-            document.getElementById('draft-turn-text').className = "text-xl font-black uppercase text-sky-500 mt-1";
-            setTimeout(initBattle, 1500); // Keduanya transisi otomatis ke Arena tanpa perlu di sync lagi, karena data pick sdh terjamin sinkron
+            setTimeout(initBattle, 1500);
         }
     }
 
@@ -982,7 +987,7 @@
                 showFloatingDmg(ax/group.cells.length, ay/group.cells.length, "PINGSAN!", false);
                 await sleep(800);
             } else {
-                if(!myPoke.learnedMove) myPoke.learnedMove = await fetchAttackMove(myPoke.rawMoves);
+                // MENGGUNAKAN JURUS YANG SUDAH DI-PRECALCULATE
                 usedMoveName = myPoke.learnedMove.name;
                 showEpicMove(usedMoveName); await sleep(600); 
 
