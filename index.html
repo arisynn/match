@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=VT323&family=Oswald:wght@500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=VT323&family=Oswald:wght@500;700;900&display=swap');
 
         body, html {
             height: 100%; margin: 0;
@@ -83,6 +83,11 @@
         .avatar-placeholder { width: 60px; height: 60px; background: #e2e8f0; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2rem; color: #94a3b8; margin-bottom: 0.5rem; font-weight: 900; overflow: hidden;}
         .filled-host .avatar-placeholder { background: #bae6fd; color: #0284c7; }
         .filled-guest .avatar-placeholder { background: #fecdd3; color: #e11d48; }
+
+        /* Gen Buttons Custom Scroll */
+        .gen-scroll::-webkit-scrollbar { display: none; }
+        .gen-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        .gen-btn { flex: 0 0 auto; min-width: max-content; }
 
         /* --- DRAFT PICK UI --- */
         #draft-screen { display: flex; flex-direction: column; height: 100%; width: 100%; background: #e2e8f0; gap: 4px; padding: 4px;}
@@ -214,13 +219,26 @@
             border-radius: 50%; filter: blur(2px); z-index: 1; margin-top: -8px;
         }
 
-        /* --- EPIC CUT-IN ANIMATION FOR ULTIMATE --- */
+        /* --- EPIC CUT-IN ULTIMATE OVERLAY --- */
         #cutin-overlay { transition: opacity 0.2s ease; }
+        
         .cutin-band {
-            background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 50%, #0ea5e9 100%);
-            border-top: 4px solid #fde047; border-bottom: 4px solid #fde047;
-            transform: skewY(-4deg) translateX(100%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(90deg, rgba(15,23,42,0.9) 0%, rgba(30,41,59,0.9) 50%, rgba(15,23,42,0.9) 100%);
+            border-top: 6px solid #fde047; border-bottom: 6px solid #fde047;
+            transform: skewY(-6deg) translateX(100%); 
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            height: 180px; width: 100%; position: relative;
+        }
+
+        .cutin-active {
+            transform: skewY(-6deg) translateX(0) !important;
+            opacity: 1 !important;
+        }
+
+        .cutin-exit {
+            transform: skewY(-6deg) translateX(-100%) !important;
+            opacity: 0 !important;
         }
 
         /* --- ANIMATIONS --- */
@@ -327,7 +345,7 @@
                     <h3 class="font-bold text-amber-500 mb-1 border-b border-slate-200 pb-1">[2] Combo & Ultimate Instan</h3>
                     <ul class="list-disc pl-4 space-y-1">
                         <li><b>Diminishing Combo:</b> Rentetan combo berturut akan dikurangi kekuatannya (100% -> 50% -> 25%). Namun energi tetap terisi penuh!</li>
-                        <li><b>Ultimate Taktis:</b> Saat energi Pokemon terisi, ikonnya akan <b>BERSINAR</b>. <b>Klik ikon tersebut</b> untuk secara INSTAN melesatkan Ultimate ke lawan! Ingat, menembakkan Ultimate akan otomatis mengakhiri giliranmu.</li>
+                        <li><b>Ultimate Taktis:</b> Saat energi Pokemon terisi, ikonnya akan <b>BERSINAR</b>. <b>Klik ikon tersebut</b> untuk secara INSTAN melesatkan Ultimate (Jurus Elemen Kuat) ke lawan! Ingat, menembakkan Ultimate akan otomatis mengakhiri giliranmu.</li>
                     </ul>
                 </div>
             </div>
@@ -408,24 +426,16 @@
                 </div>
             </div>
             
-            <!-- HOST GEN SELECTOR UI -->
+            <!-- HOST GEN SELECTOR UI (PILLS) -->
             <div id="host-gen-selector" class="w-full mb-4 hidden z-50">
-                <div class="relative w-full">
-                    <button onclick="sClick(); toggleGenMenu()" id="btn-gen-select" class="w-full flex justify-between items-center bg-sky-50 border-2 border-sky-300 p-3 rounded-xl shadow-sm text-sm font-bold uppercase text-sky-700 transition-colors active:scale-95">
-                        <div class="flex flex-col items-start">
-                            <span class="text-[10px] text-sky-500 font-black tracking-widest leading-none mb-1">GENERASI POKEMON</span>
-                            <span id="gen-select-text">Acak Semua (Gen 1-5)</span>
-                        </div>
-                        <span id="gen-select-icon" class="transform transition-transform text-sky-500 text-xl leading-none">▼</span>
-                    </button>
-                    <div id="gen-menu-list" class="hidden absolute top-full left-0 w-full mt-2 bg-white border-2 border-sky-200 rounded-xl shadow-xl flex flex-col overflow-hidden text-left z-[100]">
-                        <div onclick="sClick(); selectGen('all', 'Acak Semua (Gen 1-5)')" class="p-3 border-b border-slate-100 hover:bg-sky-100 text-sm font-bold text-slate-600 hover:text-sky-700 cursor-pointer uppercase transition-colors">Acak Semua (Gen 1-5)</div>
-                        <div onclick="sClick(); selectGen('1', 'Generasi 1 (Kanto)')" class="p-3 border-b border-slate-100 hover:bg-sky-100 text-sm font-bold text-slate-600 hover:text-sky-700 cursor-pointer uppercase transition-colors">Generasi 1 (Kanto)</div>
-                        <div onclick="sClick(); selectGen('2', 'Generasi 2 (Johto)')" class="p-3 border-b border-slate-100 hover:bg-sky-100 text-sm font-bold text-slate-600 hover:text-sky-700 cursor-pointer uppercase transition-colors">Generasi 2 (Johto)</div>
-                        <div onclick="sClick(); selectGen('3', 'Generasi 3 (Hoenn)')" class="p-3 border-b border-slate-100 hover:bg-sky-100 text-sm font-bold text-slate-600 hover:text-sky-700 cursor-pointer uppercase transition-colors">Generasi 3 (Hoenn)</div>
-                        <div onclick="sClick(); selectGen('4', 'Generasi 4 (Sinnoh)')" class="p-3 border-b border-slate-100 hover:bg-sky-100 text-sm font-bold text-slate-600 hover:text-sky-700 cursor-pointer uppercase transition-colors">Generasi 4 (Sinnoh)</div>
-                        <div onclick="sClick(); selectGen('5', 'Generasi 5 (Unova)')" class="p-3 hover:bg-sky-100 text-sm font-bold text-slate-600 hover:text-sky-700 cursor-pointer uppercase transition-colors">Generasi 5 (Unova)</div>
-                    </div>
+                <label class="block text-xs font-black text-slate-500 mb-2 text-left px-1 uppercase tracking-wider">Pilih Generasi Pool:</label>
+                <div class="flex gap-2 overflow-x-auto pb-2 px-1 snap-x gen-scroll" id="gen-btn-container">
+                    <button onclick="sClick(); selectGen('all', this)" class="gen-btn flex-none px-4 py-2 bg-sky-500 text-white rounded-xl font-bold text-sm shadow-md transition-all active:scale-95 border-2 border-sky-600">ALL</button>
+                    <button onclick="sClick(); selectGen('1', this)" class="gen-btn flex-none px-4 py-2 bg-white border-2 border-slate-200 text-slate-500 rounded-xl font-bold text-sm transition-all active:scale-95">GEN 1</button>
+                    <button onclick="sClick(); selectGen('2', this)" class="gen-btn flex-none px-4 py-2 bg-white border-2 border-slate-200 text-slate-500 rounded-xl font-bold text-sm transition-all active:scale-95">GEN 2</button>
+                    <button onclick="sClick(); selectGen('3', this)" class="gen-btn flex-none px-4 py-2 bg-white border-2 border-slate-200 text-slate-500 rounded-xl font-bold text-sm transition-all active:scale-95">GEN 3</button>
+                    <button onclick="sClick(); selectGen('4', this)" class="gen-btn flex-none px-4 py-2 bg-white border-2 border-slate-200 text-slate-500 rounded-xl font-bold text-sm transition-all active:scale-95">GEN 4</button>
+                    <button onclick="sClick(); selectGen('5', this)" class="gen-btn flex-none px-4 py-2 bg-white border-2 border-slate-200 text-slate-500 rounded-xl font-bold text-sm transition-all active:scale-95">GEN 5</button>
                 </div>
             </div>
 
@@ -580,17 +590,19 @@
     <!-- EPIC CUT-IN ULTIMATE OVERLAY -->
     <div id="cutin-overlay" class="fixed inset-0 z-[200000] pointer-events-none flex items-center justify-center overflow-hidden hidden">
         <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm"></div>
-        <div id="cutin-band" class="cutin-band relative w-full h-40 flex items-center opacity-0">
-            <img id="cutin-img" src="" class="absolute right-10 h-64 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] scale-125 z-10">
-            <div class="pl-8 text-white font-black italic uppercase text-4xl font-['Oswald'] drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] z-20">
-                <span id="cutin-name" class="tracking-widest">PIKACHU</span><br>
-                <span class="text-yellow-300 text-2xl tracking-[0.2em]">ULTIMATE STRIKE!</span>
+        <div id="cutin-band" class="cutin-band relative w-full h-48 flex items-center opacity-0 overflow-visible">
+            <!-- POKEMON CENTERED -->
+            <img id="cutin-img" src="" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[40%] h-56 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] scale-150 z-10 origin-bottom">
+            <!-- TEXT AT BOTTOM -->
+            <div class="absolute w-full bottom-2 text-center text-white font-black italic uppercase text-4xl font-['Oswald'] drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] z-20">
+                <span id="cutin-name" class="tracking-widest text-xl opacity-80 block mb-[-8px]">PIKACHU</span>
+                <span id="cutin-move" class="text-yellow-300 text-3xl tracking-[0.1em]">ULTIMATE STRIKE!</span>
             </div>
         </div>
     </div>
 
 <script>
-    // --- FULLSCREEN TOGGLE ---
+    // --- FULLSCREEN TOGGLE DENGAN PORTRAIT LOCK ---
     function toggleFullScreen() {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().then(() => {
@@ -614,6 +626,28 @@
     const ROWS = 6; const COLS = 6; const POOL_SIZE = 15;
     const TYPE_COLORS = { normal:'#A8A77A', fire:'#EE8130', water:'#6390F0', electric:'#F7D02C', grass:'#7AC74C', ice:'#96D9D6', fighting:'#C22E28', poison:'#A33EA1', ground:'#E2BF65', flying:'#A98FF3', psychic:'#F95587', bug:'#A6B91A', rock:'#B6A136', ghost:'#735797', dragon:'#6F35FC', dark:'#705898', steel:'#B7B7CE', fairy:'#D685AD' };
     
+    // THEMATIC MOVES UNTUK STAB SESUAI ELEMEN (Menghindari API call berat)
+    const THEMATIC_MOVES = {
+        normal: { basic: {name: 'Tackle', power: 40, class: 'physical'}, ult: {name: 'Hyper Beam', power: 150, class: 'special'} },
+        fire: { basic: {name: 'Ember', power: 40, class: 'special'}, ult: {name: 'Flamethrower', power: 90, class: 'special'} },
+        water: { basic: {name: 'Water Gun', power: 40, class: 'special'}, ult: {name: 'Hydro Pump', power: 110, class: 'special'} },
+        grass: { basic: {name: 'Vine Whip', power: 45, class: 'physical'}, ult: {name: 'Solar Beam', power: 120, class: 'special'} },
+        electric: { basic: {name: 'Thunder Shock', power: 40, class: 'special'}, ult: {name: 'Thunderbolt', power: 90, class: 'special'} },
+        ice: { basic: {name: 'Powder Snow', power: 40, class: 'special'}, ult: {name: 'Ice Beam', power: 90, class: 'special'} },
+        fighting: { basic: {name: 'Mach Punch', power: 40, class: 'physical'}, ult: {name: 'Close Combat', power: 120, class: 'physical'} },
+        poison: { basic: {name: 'Poison Sting', power: 35, class: 'physical'}, ult: {name: 'Sludge Bomb', power: 90, class: 'special'} },
+        ground: { basic: {name: 'Mud-Slap', power: 20, class: 'special'}, ult: {name: 'Earthquake', power: 100, class: 'physical'} },
+        flying: { basic: {name: 'Peck', power: 35, class: 'physical'}, ult: {name: 'Brave Bird', power: 120, class: 'physical'} },
+        psychic: { basic: {name: 'Confusion', power: 50, class: 'special'}, ult: {name: 'Psychic', power: 90, class: 'special'} },
+        bug: { basic: {name: 'Bug Bite', power: 60, class: 'physical'}, ult: {name: 'Megahorn', power: 120, class: 'physical'} },
+        rock: { basic: {name: 'Rock Throw', power: 50, class: 'physical'}, ult: {name: 'Stone Edge', power: 100, class: 'physical'} },
+        ghost: { basic: {name: 'Lick', power: 30, class: 'physical'}, ult: {name: 'Shadow Ball', power: 80, class: 'special'} },
+        dragon: { basic: {name: 'Dragon Breath', power: 60, class: 'special'}, ult: {name: 'Outrage', power: 120, class: 'physical'} },
+        dark: { basic: {name: 'Bite', power: 60, class: 'physical'}, ult: {name: 'Dark Pulse', power: 80, class: 'special'} },
+        steel: { basic: {name: 'Metal Claw', power: 50, class: 'physical'}, ult: {name: 'Iron Tail', power: 100, class: 'physical'} },
+        fairy: { basic: {name: 'Fairy Wind', power: 40, class: 'special'}, ult: {name: 'Moonblast', power: 95, class: 'special'} }
+    };
+
     // DYNAMIC ARENA BACKGROUND MAP
     const TYPE_BGS = {
         normal: 'linear-gradient(180deg, #e2e8f0 0%, #f8fafc 50%, #cbd5e1 50%, #94a3b8 100%)',
@@ -629,13 +663,6 @@
     };
 
     const POTION_IMG = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/potion.png';
-    const BASIC_MOVES = [
-        { name: 'tackle', power: 40, type: 'normal', class: 'physical' },
-        { name: 'scratch', power: 40, type: 'normal', class: 'physical' },
-        { name: 'pound', power: 40, type: 'normal', class: 'physical' },
-        { name: 'quick-attack', power: 40, type: 'normal', class: 'physical' },
-        { name: 'peck', power: 35, type: 'flying', class: 'physical' }
-    ];
 
     const getStatic = (id) => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
     const getAnim = (id) => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`;
@@ -661,8 +688,6 @@
     let hintTimer = null; 
     
     let battleLogHistory = [];
-    
-    let isGenMenuOpen = false;
     let selectedGen = 'all';
 
     // --- AUDIO ---
@@ -703,24 +728,15 @@
     }
     function closeLogHistory() { document.getElementById('log-history-modal').classList.remove('show'); }
     
-    // CUSTOM ACCORDION DROPDOWN
-    function toggleGenMenu() {
-        isGenMenuOpen = !isGenMenuOpen;
-        const menu = document.getElementById('gen-menu-list');
-        const icon = document.getElementById('gen-select-icon');
-        if (isGenMenuOpen) {
-            menu.classList.remove('hidden');
-            icon.style.transform = 'rotate(180deg)';
-        } else {
-            menu.classList.add('hidden');
-            icon.style.transform = 'rotate(0deg)';
-        }
-    }
-
-    async function selectGen(val, text) {
+    // GEN SELECT BUTTONS (Pills Style)
+    async function selectGen(val, btnEl) {
         selectedGen = val;
-        document.getElementById('gen-select-text').innerText = text;
-        toggleGenMenu();
+        // Update active class
+        const container = document.getElementById('gen-btn-container');
+        Array.from(container.children).forEach(btn => {
+            btn.className = "gen-btn flex-none px-4 py-2 bg-white border-2 border-slate-200 text-slate-500 rounded-xl font-bold text-sm transition-all active:scale-95";
+        });
+        btnEl.className = "gen-btn flex-none px-4 py-2 bg-sky-500 text-white rounded-xl font-bold text-sm shadow-md transition-all active:scale-95 border-2 border-sky-600";
         
         if (myRole !== 'host') return;
         
@@ -729,7 +745,8 @@
         const btnStart = document.getElementById('btn-start-game');
         btnStart.disabled = true;
         btnStart.innerText = "MEMUAT DATA...";
-        btnStart.className = "w-full py-4 bg-slate-300 text-slate-500 rounded-xl font-black text-lg shadow-inner cursor-not-allowed uppercase tracking-wider animate-pulse";
+        btnStart.className = "hidden w-full py-4 bg-slate-300 text-slate-500 rounded-xl font-black text-lg shadow-inner cursor-not-allowed uppercase tracking-wider animate-pulse";
+        if(oppName) btnStart.classList.remove('hidden');
         
         let success = await fetchPool();
         if (success) {
@@ -740,7 +757,7 @@
             document.getElementById('lobby-status-text').innerText = "Gagal memuat sistem.";
         }
     }
-    
+
     // TEAM UI LOGIC
     function toggleTeamView() {
         viewingMyTeam = !viewingMyTeam;
@@ -949,8 +966,14 @@
         document.getElementById('btn-start-game').classList.add('hidden');
         
         document.getElementById('host-gen-selector').classList.add('hidden');
-        selectedGen = 'all'; document.getElementById('gen-select-text').innerText = 'Acak Semua (Gen 1-5)';
-        if(isGenMenuOpen) toggleGenMenu();
+        selectedGen = 'all'; 
+        // Reset pills
+        const container = document.getElementById('gen-btn-container');
+        if(container) {
+            Array.from(container.children).forEach((btn, i) => {
+                btn.className = i===0 ? "gen-btn flex-none px-4 py-2 bg-sky-500 text-white rounded-xl font-bold text-sm shadow-md transition-all active:scale-95 border-2 border-sky-600" : "gen-btn flex-none px-4 py-2 bg-white border-2 border-slate-200 text-slate-500 rounded-xl font-bold text-sm transition-all active:scale-95";
+            });
+        }
     }
 
     function updateLobbyPresenceUI() {
@@ -1030,7 +1053,7 @@
     }
 
     // ==========================================
-    // 2. FETCH POKEAPI (Generation Selectable)
+    // 2. FETCH POKEAPI (Generation Selectable & STAB MOVES)
     // ==========================================
     async function fetchPool() {
         try {
@@ -1061,11 +1084,14 @@
                 const bSpd = d.stats.find(s=>s.stat.name==='special-defense').base_stat; const bSpe = d.stats.find(s=>s.stat.name==='speed').base_stat;
                 const typesArr = d.types.map(t => t.type.name); typesArr.forEach(t => typesToFetch.add(t));
                 
-                let learnedMove = await fetchAttackMove(d.moves); 
-                let basicMoveAssigned = BASIC_MOVES[Math.floor(Math.random() * BASIC_MOVES.length)];
+                let pType = typesArr[0];
+                let movesConfig = THEMATIC_MOVES[pType] || THEMATIC_MOVES['normal'];
+                
+                let basicMoveAssigned = { name: movesConfig.basic.name, power: movesConfig.basic.power, type: pType, class: movesConfig.basic.class };
+                let learnedMove = { name: movesConfig.ult.name, power: movesConfig.ult.power, type: pType, class: movesConfig.ult.class };
 
                 return {
-                    id: d.id, name: d.name, types: typesArr, primaryType: typesArr[0],
+                    id: d.id, name: d.name, types: typesArr, primaryType: pType,
                     maxHp: Math.floor(bHp * 2) + 50, hp: Math.floor(bHp * 2) + 50, atk: bAtk, def: bDef, spa: bSpa, spd: bSpd, spe: bSpe,
                     energy: 0, maxEnergy: 10, ultReady: false,
                     spriteS: getStatic(d.id), spriteA: getAnim(d.id),
@@ -1081,15 +1107,6 @@
             for(let i=poolData.length-1; i>0; i--){ const j=Math.floor(Math.random()*(i+1)); [poolData[i],poolData[j]]=[poolData[j],poolData[i]]; }
             return true;
         } catch(e) { return false; }
-    }
-
-    async function fetchAttackMove(movesList) {
-        if(!movesList || movesList.length === 0) return { name: 'hyper-beam', power: 100, class: 'special', type: 'normal' };
-        for(let i=0; i<4; i++) {
-            let rand = movesList[Math.floor(Math.random() * movesList.length)].move;
-            try { let res = await fetch(rand.url); let data = await res.json(); if(data.power >= 60) return { name: data.name, power: data.power, class: data.damage_class.name, type: data.type.name }; } catch(e) {}
-        }
-        return { name: 'hyper-beam', power: 100, class: 'special', type: 'normal' }; 
     }
 
     // ==========================================
@@ -1337,30 +1354,38 @@
         renderTeamBar(); // UPDATE TEAM BAR
     }
 
-    // EPIC CUT-IN ANIMATION HANDLER
-    function showUltimateCutin(poke) {
-        sEpic();
-        const overlay = document.getElementById('cutin-overlay');
-        const band = document.getElementById('cutin-band');
-        document.getElementById('cutin-img').src = poke.spriteA;
-        document.getElementById('cutin-img').onerror = function(){this.src=poke.spriteS;};
-        document.getElementById('cutin-name').innerText = poke.name;
+    // EPIC CUT-IN ANIMATION HANDLER (DENGAN TEMA WARNA ELEMEN)
+    function showUltimateCutin(pokeName, spriteUrl, spriteUrlFallback, moveName, type) {
+        return new Promise(resolve => {
+            sEpic();
+            const overlay = document.getElementById('cutin-overlay');
+            const band = document.getElementById('cutin-band');
+            document.getElementById('cutin-img').src = spriteUrl;
+            document.getElementById('cutin-img').onerror = function(){this.src=spriteUrlFallback;};
+            document.getElementById('cutin-name').innerText = pokeName;
+            document.getElementById('cutin-move').innerText = moveName + "!";
 
-        overlay.classList.remove('hidden');
-        
-        requestAnimationFrame(() => {
-            band.style.opacity = '1';
-            band.style.transform = 'skewY(-4deg) translateX(0)';
-        });
+            // DYNAMIC BANNER COLOR BASED ON TYPE
+            let typeColor = TYPE_COLORS[type] || '#fde047';
+            band.style.borderTopColor = typeColor;
+            band.style.borderBottomColor = typeColor;
 
-        setTimeout(() => {
-            band.style.transform = 'skewY(-4deg) translateX(-100%)';
-            band.style.opacity = '0';
+            overlay.classList.remove('hidden');
+            
+            requestAnimationFrame(() => {
+                band.classList.remove('cutin-exit');
+                band.classList.add('cutin-active');
+            });
+
             setTimeout(() => {
-                overlay.classList.add('hidden');
-                band.style.transform = 'skewY(-4deg) translateX(100%)'; 
-            }, 300);
-        }, 1200);
+                band.classList.remove('cutin-active');
+                band.classList.add('cutin-exit');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    resolve();
+                }, 400);
+            }, 1400);
+        });
     }
 
     // INSTANT ULTIMATE LOGIC
@@ -1380,14 +1405,13 @@
             await sleep(300); p1S.classList.remove('switch-in');
         }
 
-        // Tampilkan Animasi Cut-in Epic
-        showUltimateCutin(myPoke);
-        await sleep(1500); 
+        // Tampilkan Animasi Cut-in Epic (Di sisi kita)
+        let currentMove = myPoke.learnedMove;
+        await showUltimateCutin(myPoke.name, myPoke.spriteA, myPoke.spriteS, currentMove.name, myPoke.primaryType);
 
         myPoke.energy = 0; updateMyStatus(); // Consume Energy
 
         let oppPoke = oppTeam[state.oppActive];
-        let currentMove = myPoke.learnedMove;
         let isPhysical = currentMove.class === 'physical';
         let atkStat = isPhysical ? myPoke.atk : myPoke.spa;
         let defStat = isPhysical ? oppPoke.def : oppPoke.spd;
@@ -1830,12 +1854,17 @@
             let critText = data.isCrit ? " [CRITICAL!]" : "";
             let moveNameUpper = data.moveName.toUpperCase();
 
+            // TAMPILKAN CUT-IN DI LAYAR KITA SAAT LAWAN ULTIMATE
+            if(data.isUltimate) {
+                await showUltimateCutin(oppPoke.name, oppPoke.spriteA, oppPoke.spriteS, data.moveName, oppPoke.primaryType);
+            }
+
             if (data.effCode === 0) {
                 logHtml = `<span class="text-slate-500 font-bold">[IMUN]</span> Serangan lawan gagal!`;
                 logPlain = `[SERANG] Lawan menggunakan ${moveNameUpper} ke ${myPoke.name}, tapi IMUN (Damage 0)!`;
             } else {
                 if(data.isUltimate) { 
-                    showEpicMove(data.moveName); shakeArena(); await sleep(600);
+                    shakeArena();
                     logHtml = `<span class='text-rose-600 font-black'>[ULTI LAWAN]</span> => ${dmg} DMG!${effHtml}<br>${critHtml}${comboHtml}`;
                     logPlain = `[ULTIMATE LAWAN] ${oppPoke.name} melesatkan ${moveNameUpper} memberikan ${dmg} damage ke ${myPoke.name}.${effText}${critText}`;
                 } else {
