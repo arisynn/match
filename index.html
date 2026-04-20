@@ -125,7 +125,7 @@
         .type-badge { font-family: 'Oswald', sans-serif; font-size: 0.5rem; padding: 0.1rem 0.25rem; border-radius: 0.25rem; color: white; text-transform: uppercase; box-shadow: 0 1px 2px rgba(0,0,0,0.2);}
         .type-badge-lg { font-family: 'Oswald', sans-serif; font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 0.35rem; color: white; text-transform: uppercase; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
 
-        /* --- BATTLE ARENA UI --- */
+        /* --- BATTLE ARENA UI (SLIM PLATES) --- */
         .top-status-bar {
             display: flex; justify-content: space-between; align-items: flex-end; gap: 0.5rem;
             width: 100%; padding: 0.25rem; z-index: 60;
@@ -133,7 +133,7 @@
 
         .fighter-plate {
             flex: 1; display: flex; flex-direction: column; background: #fff;
-            border-radius: 0.75rem; border: 3px solid #cbd5e1; padding: 0.5rem;
+            border-radius: 0.75rem; border: 3px solid #cbd5e1; padding: 0.25rem 0.5rem;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative; overflow: hidden;
             transition: all 0.3s ease;
         }
@@ -141,27 +141,48 @@
         .fighter-plate.p2 { border-color: #f43f5e; border-bottom-left-radius: 0; align-items: flex-end; }
         .fighter-plate.active-turn { border-color: #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); transform: translateY(-2px); }
 
-        .hp-bar-bg { width: 100%; height: 14px; background: #cbd5e1; border-radius: 7px; overflow: hidden; margin-top: 4px; box-shadow: inset 0 3px 6px rgba(0,0,0,0.25); border: 1px solid #94a3b8;}
+        .hp-bar-bg { width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-top: 2px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);}
         .hp-bar-fill { height: 100%; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s; }
         .p2 .hp-bar-bg { transform: scaleX(-1); }
 
-        /* TEAM BAR UI */
+        /* ENERGY BAR */
+        .ep-bar-bg { width: 100%; height: 4px; background: #e2e8f0; border-radius: 2px; overflow: hidden; margin-top: 2px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);}
+        .ep-bar-fill { height: 100%; background: #facc15; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .ep-bar-fill.full { background: #3b82f6; box-shadow: 0 0 5px #60a5fa; animation: pulse-ep 1s infinite; }
+        @keyframes pulse-ep { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.3); } }
+        .p2 .ep-bar-bg { transform: scaleX(-1); }
+
+        /* TEAM BAR UI (SYMMETRICAL) */
+        .team-bar-container { position: relative; display: flex; align-items: center; justify-content: center; height: 44px; }
+        
         .team-icon-wrap { 
-            position: relative; width: 28px; height: 28px; border-radius: 50%; 
+            position: relative; width: 30px; height: 30px; border-radius: 50%; 
             display: flex; justify-content: center; align-items: center; 
-            transition: all 0.2s; background: #fff; 
+            transition: all 0.2s; background: #fff; pointer-events: auto; 
         }
-        .team-icon-img { width: 90%; height: 90%; object-fit: cover; border-radius: 50%; transition: filter 0.3s; }
+        .team-icon-img { width: 90%; height: 90%; object-fit: cover; border-radius: 50%; transition: filter 0.3s; pointer-events: none; }
         .team-icon-wrap.is-active { border: 2px solid #0ea5e9; transform: scale(1.1); box-shadow: 0 0 8px rgba(14,165,233,0.5); z-index: 10; }
-        .team-icon-wrap.is-full { ring: 2px; ring-color: #facc15; animation: pulse-ult 1.5s infinite; cursor: pointer; }
-        .team-icon-wrap.ult-on { background: #fef08a; border-color: #eab308; box-shadow: 0 0 12px #eab308; transform: scale(1.15); }
-        @keyframes pulse-ult { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.3); } }
+        
+        /* SUPER GLOW ANIMATIONS FOR ULTIMATE */
+        @keyframes superGlow {
+            0% { box-shadow: 0 0 8px #facc15; border-color: #facc15; filter: brightness(1.1); transform: scale(1.05); }
+            100% { box-shadow: 0 0 20px #fde047, 0 0 30px #fde047; border-color: #fef08a; filter: brightness(1.3); transform: scale(1.15); }
+        }
+        .team-icon-wrap.is-full { animation: superGlow 0.8s infinite alternate; cursor: pointer; z-index: 20; }
+        
+        @keyframes ultReadyGlow {
+            0% { box-shadow: 0 0 10px #06b6d4; border-color: #22d3ee; filter: brightness(1.2); transform: scale(1.15); }
+            100% { box-shadow: 0 0 25px #22d3ee, 0 0 40px #67e8f9; border-color: #a5f3fc; filter: brightness(1.5); transform: scale(1.25); }
+        }
+        .team-icon-wrap.ult-on { animation: ultReadyGlow 0.5s infinite alternate; background: #ecfeff; }
 
         .arena-bg {
+            /* Dynamic background - transition applied for smooth element changes */
             background: linear-gradient(180deg, #87ceeb 0%, #e0f6ff 50%, #a7f3d0 50%, #4ade80 100%);
             border-radius: 1rem; border: 4px solid #fff;
             box-shadow: inset 0 8px 16px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
             position: relative; overflow: hidden;
+            transition: background 1s ease;
         }
 
         .arena-shake { animation: shake-arena 0.4s cubic-bezier(.36,.07,.19,.97) both; }
@@ -258,7 +279,12 @@
         .floating-crit { font-size: 3.5rem; color: #f59e0b; text-shadow: 3px 3px 0 #b45309, -1px -1px 0 #fff; z-index: 55; }
         .floating-energy { color: #3b82f6; text-shadow: 2px 2px 0 #fff, -1px -1px 0 #fff; font-size: 2rem; }
         .floating-heal { color: #10b981; text-shadow: 2px 2px 0 #fff, -1px -1px 0 #fff; }
+        
+        /* COMBO TEXT ANIMATION */
+        .floating-combo { font-size: 3.5rem; color: #a855f7; text-shadow: 3px 3px 0 #fff, -2px -2px 0 #fff; z-index: 60; font-style: italic; animation: popCombo 1.2s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
         @keyframes floatUp { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 20% { transform: translate(-50%, -80%) scale(1.2); opacity: 1; } 100% { transform: translate(-50%, -120px) scale(1); opacity: 0; } }
+        @keyframes popCombo { 0% { transform: translate(-50%, -50%) scale(0.1); opacity: 0; } 30% { transform: translate(-50%, -60%) scale(1.4); opacity: 1; } 80% { transform: translate(-50%, -60%) scale(1.1); opacity: 1; } 100% { transform: translate(-50%, -100px) scale(1); opacity: 0; } }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen relative max-w-md mx-auto bg-slate-100">
@@ -274,9 +300,7 @@
     <div id="pokedex-modal" class="modal-overlay">
         <div class="modal-content !max-w-sm p-4">
             <h3 class="text-lg font-black text-slate-800 uppercase text-center border-b-2 border-slate-200 pb-2 mb-3">Pokedex Data</h3>
-            <div id="pokedex-content">
-                <!-- Info Pokemon akan di render disini -->
-            </div>
+            <div id="pokedex-content"></div>
             <button id="btn-pick-pokemon" onclick="confirmPick()" class="mt-4 w-full py-3 bg-emerald-500 hover:bg-emerald-600 active:scale-95 transition-transform text-white font-black rounded-xl uppercase shadow-md">PILIH POKEMON</button>
             <button onclick="sClick(); closePokedex()" class="mt-2 w-full py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-colors uppercase">TUTUP</button>
         </div>
@@ -306,7 +330,7 @@
                     <ul class="list-disc pl-4 space-y-1">
                         <li><b>Serangan Biasa:</b> Menghasilkan 50% kekuatan asli.</li>
                         <li><b>Diminishing Combo:</b> Rentetan combo akan terus dikurangi kekuatannya (100% -> 50% -> 25%). Namun pengisian energi tetap utuh!</li>
-                        <li><b>Ultimate Manual:</b> Energi terisi dari batu yang pecah. Saat energi penuh, ikon Pokemon di bawah bar HP akan menyala. <b>Tekan ikon tersebut</b> untuk mengaktifkan mode Ultimate, lalu pecahkan batunya untuk melepaskan serangan penuh (100% Damage)!</li>
+                        <li><b>Ultimate Manual:</b> Energi terisi dari batu yang pecah. Saat energi penuh, ikon Pokemon di bawah bar HP akan <b>BERSINAR TERANG</b>. Tekan ikon tersebut untuk mengaktifkan mode Ultimate, lalu pecahkan batunya untuk melepaskan serangan penuh (100% Damage)!</li>
                     </ul>
                 </div>
                 <div>
@@ -438,7 +462,7 @@
     <!-- 3. BATTLE ARENA UI -->
     <div id="game-container" class="fixed inset-0 bg-slate-50 z-30 flex-col p-2 hidden overflow-y-auto overflow-x-hidden pb-6">
         
-        <!-- STATUS BARS (HP Only now) -->
+        <!-- STATUS BARS (Slimmed down) -->
         <div class="top-status-bar flex-none mb-0.5">
             <!-- Player 1 -->
             <div id="plate-p1" class="fighter-plate p1">
@@ -452,7 +476,15 @@
                     <span id="player-hp-text" class="text-[10px] font-black text-slate-600">0/0</span>
                     <div id="player-type-badge" class="flex gap-1"></div>
                 </div>
+                <!-- SLIM HP BAR -->
                 <div class="hp-bar-bg"><div id="player-hp-bar" class="hp-bar-fill bg-emerald-500" style="width:100%"></div></div>
+
+                <div class="w-full flex justify-between items-center mt-1">
+                    <span class="text-[8px] font-black text-amber-500 uppercase tracking-widest leading-none">Energi</span>
+                    <span id="player-ep-text" class="text-[8px] font-black text-amber-600 leading-none">0/10</span>
+                </div>
+                <!-- SLIM EP BAR -->
+                <div class="ep-bar-bg"><div id="player-ep-bar" class="ep-bar-fill bg-amber-400" style="width:0%"></div></div>
             </div>
 
             <!-- VS Icon -->
@@ -470,26 +502,35 @@
                     <span id="enemy-hp-text" class="text-[10px] font-black text-slate-600">0/0</span>
                     <div id="enemy-type-badge" class="flex gap-1"></div>
                 </div>
+                <!-- SLIM HP BAR -->
                 <div class="hp-bar-bg"><div id="enemy-hp-bar" class="hp-bar-fill bg-emerald-500" style="width:100%"></div></div>
+
+                <div class="w-full flex justify-between items-center mt-1 flex-row-reverse">
+                    <span class="text-[8px] font-black text-amber-500 uppercase tracking-widest leading-none">Energi</span>
+                    <span class="text-[8px] font-black text-slate-300 italic">OPPONENT</span>
+                    <span id="enemy-ep-text" class="text-[8px] font-black text-amber-600 leading-none">0/10</span>
+                </div>
+                <!-- SLIM EP BAR -->
+                <div class="ep-bar-bg"><div id="enemy-ep-bar" class="ep-bar-fill bg-amber-400" style="width:0%"></div></div>
             </div>
         </div>
 
-        <!-- TEAM UI BAR & SWITCH -->
-        <div class="flex-none w-full flex items-center justify-between bg-slate-800 rounded-xl px-2 py-1.5 mb-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] border-2 border-slate-900">
-            <!-- View Toggle -->
-            <button onclick="sClick(); toggleTeamView()" id="btn-toggle-team" class="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 font-black flex items-center justify-center transition-colors shadow-sm">&lt;</button>
+        <!-- TEAM UI BAR & SWITCH (Symmetrical) -->
+        <div class="flex-none w-full bg-slate-800 rounded-xl mb-1 shadow-inner border-2 border-slate-900 team-bar-container">
+            <!-- View Toggle (Absolute Left) -->
+            <button onclick="sClick(); toggleTeamView()" id="btn-toggle-team" class="absolute left-2 w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 font-black flex items-center justify-center shadow-sm transition-colors">&lt;</button>
             
-            <!-- Icons -->
-            <div id="team-icons-view" class="flex flex-1 justify-center gap-2 px-2">
+            <!-- Icons (Centered perfectly) -->
+            <div id="team-icons-view" class="flex justify-center gap-2 px-2 z-10">
                 <!-- Icons populated via JS -->
             </div>
             
-            <!-- Switch Button -->
-            <button onclick="sClick(); openSwitchModal()" id="btn-fast-switch" class="px-3 h-8 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] tracking-widest shadow-md uppercase transition-transform active:scale-95 border border-blue-400">SWITCH</button>
+            <!-- Switch Button (Absolute Right) -->
+            <button onclick="sClick(); openSwitchModal()" id="btn-fast-switch" class="absolute right-2 px-3 h-8 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] tracking-widest shadow-md uppercase transition-transform active:scale-95 border border-blue-400">SWITCH</button>
         </div>
 
         <!-- ARENA FIELD -->
-        <div id="battle-arena" class="flex-none arena-bg w-full h-[20vh] min-h-[140px] max-h-[200px] mb-1 mt-1">
+        <div id="battle-arena" class="flex-none arena-bg w-full h-[20vh] min-h-[140px] max-h-[200px] mb-1">
             <div id="epic-move" class="epic-move-text"></div>
 
             <div class="sprite-container p1-container" id="p1-container">
@@ -527,6 +568,21 @@
     // --- CONFIG & DATA ---
     const ROWS = 6; const COLS = 6; const POOL_SIZE = 15;
     const TYPE_COLORS = { normal:'#A8A77A', fire:'#EE8130', water:'#6390F0', electric:'#F7D02C', grass:'#7AC74C', ice:'#96D9D6', fighting:'#C22E28', poison:'#A33EA1', ground:'#E2BF65', flying:'#A98FF3', psychic:'#F95587', bug:'#A6B91A', rock:'#B6A136', ghost:'#735797', dragon:'#6F35FC', dark:'#705898', steel:'#B7B7CE', fairy:'#D685AD' };
+    
+    // DYNAMIC ARENA BACKGROUND MAP (Tambahan fitur)
+    const TYPE_BGS = {
+        normal: 'linear-gradient(180deg, #e2e8f0 0%, #f8fafc 50%, #cbd5e1 50%, #94a3b8 100%)',
+        fire: 'linear-gradient(180deg, #fca5a5 0%, #fee2e2 50%, #f87171 50%, #ef4444 100%)',
+        water: 'linear-gradient(180deg, #93c5fd 0%, #dbeafe 50%, #60a5fa 50%, #3b82f6 100%)',
+        grass: 'linear-gradient(180deg, #86efac 0%, #dcfce7 50%, #4ade80 50%, #22c55e 100%)',
+        electric: 'linear-gradient(180deg, #fde047 0%, #fef9c3 50%, #facc15 50%, #eab308 100%)',
+        poison: 'linear-gradient(180deg, #d8b4fe 0%, #f3e8ff 50%, #c084fc 50%, #a855f7 100%)',
+        bug: 'linear-gradient(180deg, #bef264 0%, #ecfccb 50%, #a3e635 50%, #84cc16 100%)',
+        flying: 'linear-gradient(180deg, #bae6fd 0%, #e0f2fe 50%, #7dd3fc 50%, #38bdf8 100%)',
+        ground: 'linear-gradient(180deg, #fcd34d 0%, #fef3c7 50%, #fbbf24 50%, #f59e0b 100%)',
+        default: 'linear-gradient(180deg, #87ceeb 0%, #e0f6ff 50%, #a7f3d0 50%, #4ade80 100%)'
+    };
+
     const POTION_IMG = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/potion.png';
     const BASIC_MOVES = [
         { name: 'tackle', power: 40, type: 'normal', class: 'physical' },
@@ -568,7 +624,7 @@
     let board = [];
     let state = { turn: 'p1', isAnim: false, myActive: 0, oppActive: 0 };
     let opponentConnected = true;
-    let draftTimer; let draftTimeLeft = 30; // UPDATED to 30s
+    let draftTimer; let draftTimeLeft = 30; 
     let viewingMyTeam = true;
     
     let isDataLoaded = false; 
@@ -633,23 +689,35 @@
             img.style.filter = `grayscale(${grayscale}%)`;
             wrap.appendChild(img);
             
+            // LOGIC KLIK ULTIMATE - DIJAMIN BISA DIKLIK!
             if (isFull && !isDead) {
                 wrap.classList.add('is-full');
                 if (p.ultReady) wrap.classList.add('ult-on');
                 
                 if (viewingMyTeam) {
-                    wrap.onclick = () => {
+                    wrap.onclick = (e) => {
+                        e.stopPropagation(); // Biar gampang keklik
                         sClick();
                         p.ultReady = !p.ultReady;
                         renderTeamBar();
-                        if(p.ultReady) showToast(`Mode Ultimate ${p.name.toUpperCase()} ON! Match batunya!`);
+                        if(p.ultReady) showToast(`Mode Ultimate ${p.name.toUpperCase()} SIAP! Match elemennya!`);
+                        else showToast(`Ultimate Batal.`);
                     };
                 }
             }
             container.appendChild(wrap);
         });
         
-        document.getElementById('btn-fast-switch').style.display = viewingMyTeam ? 'flex' : 'none';
+        document.getElementById('btn-fast-switch').style.display = viewingMyTeam ? 'block' : 'none';
+    }
+
+    // Dynamic Arena Background Updater
+    function updateArenaBg() {
+        let activePoke = myTeam[state.myActive];
+        if(!activePoke) return;
+        let pType = activePoke.primaryType;
+        let bgStr = TYPE_BGS[pType] || TYPE_BGS.default;
+        document.getElementById('battle-arena').style.background = bgStr;
     }
 
     // Switch Modal Logic
@@ -946,7 +1014,7 @@
                 const poke = poolData[pIdx]; oppTeam.push(poke);
                 const cardEl = document.getElementById(pCardId); const deckOpp = document.getElementById('p2-deck-slots');
                 document.getElementById('p2-deck-empty').style.display = 'none';
-                cardEl.style.borderColor = '#e11d48'; cardEl.style.opacity = '0.6'; 
+                cardEl.style.borderColor = '#e11d48'; cardEl.style.opacity = '0.6'; cardEl.style.pointerEvents = 'none';
                 deckOpp.appendChild(cardEl); deckOpp.scrollLeft = deckOpp.scrollWidth;
                 document.getElementById('p2-count').innerText = `${oppTeam.length}/5`;
                 draftTurn = myTurnId; updateDraftUI(); pT(600); checkDraftDone();
@@ -1025,7 +1093,7 @@
         pT(600); myTeam.push(poke);
         const cardEl = document.getElementById(cardId); const deckMy = document.getElementById('p1-deck-slots');
         document.getElementById('p1-deck-empty').style.display = 'none';
-        cardEl.style.borderColor = '#0ea5e9'; cardEl.style.boxShadow = '0 0 10px rgba(14, 165, 233, 0.4)'; cardEl.classList.remove('cursor-pointer');
+        cardEl.style.borderColor = '#0ea5e9'; cardEl.style.boxShadow = '0 0 10px rgba(14, 165, 233, 0.4)'; cardEl.style.pointerEvents = 'none'; cardEl.classList.remove('cursor-pointer');
         deckMy.appendChild(cardEl); deckMy.scrollLeft = deckMy.scrollWidth;
         document.getElementById('p1-count').innerText = `${myTeam.length}/5`;
         draftTurn = myTurnId === 'p1' ? 'p2' : 'p1'; updateDraftUI();
@@ -1041,7 +1109,7 @@
     }
 
     function startDraftTimer() {
-        clearInterval(draftTimer); draftTimeLeft = 30; // UPDATED to 30s
+        clearInterval(draftTimer); draftTimeLeft = 30; 
         const bar = document.getElementById('draft-timer-bar');
         bar.style.transition = 'none'; bar.style.width = '100%'; setTimeout(() => { bar.style.transition = `width ${draftTimeLeft}s linear`; }, 50);
         draftTimer = setInterval(() => { draftTimeLeft--; bar.style.width = `${(draftTimeLeft/30)*100}%`; if(draftTimeLeft <= 0) { clearInterval(draftTimer); if(draftTurn === myTurnId) autoPick(); } }, 1000);
@@ -1126,6 +1194,7 @@
             state.myActive = idx; document.getElementById('player-name').innerText = poke.name; 
             document.getElementById('player-type-badge').innerHTML = badgesHtml;
             updateMyStatus();
+            updateArenaBg(); // DYNAMIC BACKGROUND
         } else { 
             state.oppActive = idx; document.getElementById('enemy-name').innerText = poke.name; 
             document.getElementById('enemy-type-badge').innerHTML = badgesHtml;
@@ -1136,10 +1205,17 @@
 
     function updateMyStatus() {
         const poke = myTeam[state.myActive]; 
+        
         const hpPct = Math.max(0, (poke.hp / poke.maxHp) * 100);
         const hpBar = document.getElementById('player-hp-bar'); 
         hpBar.style.width = `${hpPct}%`; hpBar.style.backgroundColor = hpPct>50 ? '#10b981' : hpPct>20 ? '#facc15' : '#ef4444';
         document.getElementById('player-hp-text').innerText = `${Math.floor(Math.max(0, poke.hp))}/${poke.maxHp}`;
+
+        const epPct = Math.min(100, (poke.energy / poke.maxEnergy) * 100);
+        const epBar = document.getElementById('player-ep-bar');
+        epBar.style.width = `${epPct}%`;
+        if (epPct >= 100) epBar.classList.add('full'); else epBar.classList.remove('full');
+        document.getElementById('player-ep-text').innerText = `${Math.min(poke.energy, poke.maxEnergy)}/${poke.maxEnergy}`;
         
         const sprite = document.getElementById('p1-sprite'); if(poke.hp <= 0) sprite.classList.add('opacity-0'); else sprite.classList.remove('opacity-0');
         renderTeamBar(); // UPDATE TEAM BAR
@@ -1147,10 +1223,17 @@
 
     function updateOppStatus() {
         const poke = oppTeam[state.oppActive]; 
+        
         const hpPct = Math.max(0, (poke.hp / poke.maxHp) * 100);
         const hpBar = document.getElementById('enemy-hp-bar'); 
         hpBar.style.width = `${hpPct}%`; hpBar.style.backgroundColor = hpPct>50 ? '#10b981' : hpPct>20 ? '#facc15' : '#ef4444';
         document.getElementById('enemy-hp-text').innerText = `${Math.floor(Math.max(0, poke.hp))}/${poke.maxHp}`;
+
+        const epPct = Math.min(100, (poke.energy / poke.maxEnergy) * 100);
+        const epBar = document.getElementById('enemy-ep-bar');
+        epBar.style.width = `${epPct}%`;
+        if (epPct >= 100) epBar.classList.add('full'); else epBar.classList.remove('full');
+        document.getElementById('enemy-ep-text').innerText = `${Math.min(poke.energy, poke.maxEnergy)}/${poke.maxEnergy}`;
 
         const sprite = document.getElementById('p2-sprite'); if(poke.hp <= 0) sprite.classList.add('opacity-0'); else sprite.classList.remove('opacity-0');
         renderTeamBar(); // UPDATE TEAM BAR
@@ -1333,6 +1416,11 @@
 
     async function processMyMatches(groups, comboChain) {
         let totalHeal = 0;
+        
+        // FITUR TAMBAHAN: Munculkan Text Besar bila ini adalah Combo!
+        if(comboChain > 0) {
+            showFloatingDmg(COLS/2, ROWS/2, `COMBO x${comboChain+1}!`, false, false, true);
+        }
 
         for (let group of groups) {
             let ax=0, ay=0;
@@ -1392,7 +1480,7 @@
                 let atkStat = isPhysical ? myPoke.atk : myPoke.spa;
                 let defStat = isPhysical ? oppPoke.def : oppPoke.spd;
                 
-                // NERF SERANGAN BIASA: Dibagi 2 (Sisa 50% kekuatan - UPDATED)
+                // NERF SERANGAN BIASA: Dibagi 2
                 if (!isUltimate) {
                     atkStat = atkStat / 2.0;
                 }
@@ -1569,12 +1657,13 @@
         if(moved) await sleep(200);
     }
 
-    function showFloatingDmg(x, y, txt, isCrit, isHeal = false) {
+    function showFloatingDmg(x, y, txt, isCrit, isHeal = false, isCombo = false) {
         const el=document.createElement('div'); el.innerText=txt;
-        if(txt.includes('EP')) el.className = 'floating-dmg floating-energy';
+        if(isCombo) el.className = 'floating-dmg floating-combo';
+        else if(txt.includes('EP')) el.className = 'floating-dmg floating-energy';
         else el.className = isHeal ? 'floating-dmg floating-heal' : (isCrit ? 'floating-dmg floating-crit' : 'floating-dmg');
         const r=boardEl.getBoundingClientRect(); el.style.left=`${x*(r.width/COLS)+(r.width/COLS/2)}px`; el.style.top=`${y*(r.height/ROWS)+(r.height/ROWS/2)}px`;
-        boardEl.appendChild(el); setTimeout(()=>el.remove(), 1000);
+        boardEl.appendChild(el); setTimeout(()=>el.remove(), 1200);
     }
 
     // ==========================================
