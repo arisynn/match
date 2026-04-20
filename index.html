@@ -292,6 +292,23 @@
         </div>
     </div>
 
+    <!-- 5. ERROR SCREEN -->
+    <div id="error-screen" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[200000] flex flex-col items-center justify-center hidden">
+        <div class="bg-white p-6 rounded-2xl max-w-sm w-[90%] border-4 border-rose-500 shadow-2xl flex flex-col gap-4">
+            <div class="text-center">
+                <h2 class="text-3xl font-black text-rose-600 uppercase">SYSTEM ERROR</h2>
+                <p id="error-context" class="text-slate-500 font-bold text-sm mt-1">Terjadi Kesalahan</p>
+            </div>
+            <div class="bg-slate-100 rounded-lg p-3 overflow-y-auto border-2 border-slate-200 relative max-h-[40vh]">
+                <pre id="error-details" class="text-[10px] text-slate-700 font-mono whitespace-pre-wrap break-all"></pre>
+            </div>
+            <div class="flex flex-col gap-2 w-full mt-2">
+                <button onclick="copyError()" id="btn-copy-error" class="w-full py-3 bg-slate-800 hover:bg-slate-900 rounded-xl font-black text-white active:scale-95 shadow-md transition-all">📋 SALIN ERROR</button>
+                <button onclick="returnToLobby()" class="w-full py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-black active:scale-95 shadow-sm transition-all">KEMBALI KE LOBBY</button>
+            </div>
+        </div>
+    </div>
+
 <script>
     // --- CONFIG & DATA ---
     const ROWS = 6; const COLS = 6; const POOL_SIZE = 15;
@@ -335,6 +352,58 @@
     function showLoading(text) { document.getElementById('loading-text').innerText = text; document.getElementById('global-loading').classList.add('show'); }
     function hideLoading() { document.getElementById('global-loading').classList.remove('show'); }
     function getName() { let input = document.getElementById('player-name-input').value.trim(); return input === "" ? (myRole === 'host' ? "HOST" : "GUEST") : input; }
+
+    // --- ERROR HANDLER SYSTEM ---
+    function showErrorScreen(error, context) {
+        hideLoading();
+        cleanupMultiplayer();
+        
+        // Sembunyikan semua layar yang sedang aktif
+        document.getElementById('lobby-screen').classList.add('hidden');
+        document.getElementById('draft-screen').style.display = 'none';
+        document.getElementById('game-container').classList.add('hidden');
+        document.getElementById('game-over').classList.add('hidden');
+
+        // Tampilkan layar Error
+        const errScreen = document.getElementById('error-screen');
+        errScreen.classList.remove('hidden');
+        document.getElementById('error-context').innerText = context || "Terjadi Kesalahan Kritis";
+
+        // Parsing error agar rapi
+        let errString = "";
+        if (error instanceof Error) {
+            errString = `${error.name}: ${error.message}\n\nTrace:\n${error.stack || 'Tidak ada trace'}`;
+        } else if (typeof error === 'object') {
+            try { errString = JSON.stringify(error, null, 2); } catch(e) { errString = String(error); }
+        } else {
+            errString = String(error);
+        }
+
+        document.getElementById('error-details').innerText = errString;
+    }
+
+    function copyError() {
+        const errText = document.getElementById('error-details').innerText;
+        const btn = document.getElementById('btn-copy-error');
+        
+        // Gunakan eksekusi command bawaan (ramah iFrame & Canvas)
+        const textarea = document.createElement('textarea');
+        textarea.value = errText;
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            btn.innerText = "✅ TERSALIN!";
+            btn.classList.replace('bg-slate-800', 'bg-emerald-600');
+            setTimeout(() => {
+                btn.innerText = "📋 SALIN ERROR";
+                btn.classList.replace('bg-emerald-600', 'bg-slate-800');
+            }, 2000);
+        } catch (err) { 
+            showToast("Gagal menyalin error ke clipboard."); 
+        }
+        document.body.removeChild(textarea);
+    }
 
     // ==========================================
     // 1. MULTIPLAYER HANDSHAKE (SISTEM SEDERHANA & TANGGUH)
@@ -387,14 +456,16 @@
             // 2. HOST MULAI DOWNLOAD KARTU
             document.getElementById('lobby-sync-msg').innerText = "Memuat database kartu...";
             let success = await fetchPool();
-            if(!success) { hideLoading(); showToast("Gagal memuat kartu."); cancelLobby(); return; }
+            if(!success) { 
+                throw new Error("Gagal mengunduh kartu dari PokeAPI. Cek koneksi internet atau server PokeAPI sedang terganggu."); 
+            }
 
             // 3. HOST SELESAI DOWNLOAD, TUNGGU TAMU
             document.getElementById('lobby-sync-msg').innerText = "Menunggu lawan bergabung...";
             hideLoading();
             checkHostReady(); // Cek apakah tamu sudah nunggu duluan
 
-        } catch(err) { hideLoading(); showToast('Koneksi gagal.'); cancelLobby(); }
+        } catch(err) { showErrorScreen(err, "GAGAL MEMBUAT ROOM"); }
     }
 
     function checkHostReady() {
@@ -447,12 +518,11 @@
             joinTimeoutTimer = setTimeout(() => {
                 if(!isHandshakeDone) {
                     clearInterval(guestJoinInterval);
-                    hideLoading(); showToast('Room tidak ada / Host belum siap.');
-                    cancelLobby();
+                    showErrorScreen(new Error("Timeout (15 Detik): Host tidak merespon.\n\nKemungkinan:\n1. Kode Room Salah.\n2. Host sudah menutup game.\n3. Host masih terjebak loading kartu (Koneksi host lambat)."), "ROOM TIDAK DITEMUKAN");
                 }
             }, 15000);
 
-        } catch(err) { hideLoading(); showToast('Koneksi gagal.'); cancelLobby(); }
+        } catch(err) { showErrorScreen(err, "GAGAL GABUNG KE ROOM"); }
     }
 
     function cancelLobby() {
