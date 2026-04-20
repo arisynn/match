@@ -99,7 +99,7 @@
         .type-badge { font-family: 'Oswald', sans-serif; font-size: 0.5rem; padding: 0.1rem 0.25rem; border-radius: 0.25rem; color: white; text-transform: uppercase; box-shadow: 0 1px 2px rgba(0,0,0,0.2);}
         .type-badge-lg { font-family: 'Oswald', sans-serif; font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 0.35rem; color: white; text-transform: uppercase; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
 
-        /* --- BATTLE ARENA UI BARU --- */
+        /* --- BATTLE ARENA UI --- */
         .top-status-bar {
             display: flex; justify-content: space-between; align-items: flex-end; gap: 0.5rem;
             width: 100%; padding: 0.25rem; z-index: 60;
@@ -114,16 +114,10 @@
         .fighter-plate.p1 { border-color: #0ea5e9; border-bottom-right-radius: 0; }
         .fighter-plate.p2 { border-color: #f43f5e; border-bottom-left-radius: 0; align-items: flex-end; }
         
-        /* Indikator Giliran (GLOW) */
-        .fighter-plate.active-turn {
-            border-color: #f59e0b; 
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
-            transform: translateY(-2px);
-        }
+        .fighter-plate.active-turn { border-color: #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); transform: translateY(-2px); }
 
         .hp-bar-bg { width: 100%; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; margin-top: 4px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);}
         .hp-bar-fill { height: 100%; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s; }
-        
         .p2 .hp-bar-bg { transform: scaleX(-1); }
 
         .arena-bg {
@@ -131,32 +125,43 @@
             border-radius: 1rem; border: 4px solid #fff;
             box-shadow: inset 0 8px 16px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
             position: relative; overflow: hidden;
-            display: flex; justify-content: space-between; align-items: flex-end;
-            padding: 0 10%;
         }
 
-        /* Screen Shake Effect */
         .arena-shake { animation: shake-arena 0.4s cubic-bezier(.36,.07,.19,.97) both; }
         @keyframes shake-arena { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
 
-        .shadow-ellipse {
-            position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
-            width: 70px; height: 20px; background: rgba(0,0,0,0.25);
-            border-radius: 50%; filter: blur(2px); z-index: 30;
+        /* PERBAIKAN SPRITE SCALING & POSITIONING */
+        .sprite-container {
+            position: absolute; bottom: 8px; z-index: 100;
+            height: 85%; width: 40%; /* Membatasi luas masing-masing pokemon agar tidak bertabrakan */
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
         }
+        .p1-container { left: 5%; }
+        .p2-container { right: 5%; }
 
-        .sprite-container { position: relative; z-index: 100; padding-bottom: 10px; }
-        .p1-pos { transform: scaleX(-1); } 
-        .p2-pos { transform: scaleX(1); }
+        .p1-flip { transform: scaleX(-1); }
+        .p2-flip { transform: scaleX(1); }
 
         .monster-sprite { 
             image-rendering: pixelated; transition: opacity 0.2s ease; 
-            height: 110px; object-fit: contain; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));
+            max-width: 100%; max-height: 100%; width: auto; height: auto; /* Mempertahankan rasio asli */
+            object-fit: contain; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));
+            position: relative; z-index: 2;
         }
 
+        .shadow-ellipse {
+            width: 80%; max-width: 70px; height: 15px; background: rgba(0,0,0,0.25);
+            border-radius: 50%; filter: blur(2px); z-index: 1; margin-top: -8px;
+        }
+
+        /* Animasi Attack Menyesuaikan Flip */
         .attack-lunge-p1 { animation: lunge-r 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
         .attack-lunge-p2 { animation: lunge-l 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        
+        /* lunge-r: Karena img P1 di-flip (scaleX -1), untuk maju ke kanan layar (arah P2), 
+           kita perlu translateX negatif di sumbu lokalnya */
         @keyframes lunge-r { 0%, 100% { transform: scaleX(-1) translateX(0); } 50% { transform: scaleX(-1) translateX(-40px); } }
+        /* lunge-l: img P2 tidak di-flip (scaleX 1), maju ke kiri butuh translateX negatif */
         @keyframes lunge-l { 0%, 100% { transform: scaleX(1) translateX(0); } 50% { transform: scaleX(1) translateX(-40px); } }
         
         .hit-flash { animation: hit 0.4s ease; }
@@ -176,7 +181,23 @@
             100% { transform: translate(100%, -50%) skewX(20deg); opacity: 0; }
         }
 
-        /* --- PUZZLE BOARD (SOLID GRID HD) --- */
+        /* COMBO TEXT EFFECT */
+        .combo-text {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-family: 'VT323', monospace; font-size: 3.5rem; color: #a855f7;
+            text-shadow: 3px 3px 0 #fff, -2px -2px 0 #fff; z-index: 150;
+            pointer-events: none; white-space: nowrap;
+        }
+        .show-combo { animation: comboPop 1.5s forwards ease-out; }
+        @keyframes comboPop {
+            0% { transform: translate(-50%, -50%) scale(0.3) rotate(-10deg); opacity: 0; }
+            15% { transform: translate(-50%, -50%) scale(1.2) rotate(5deg); opacity: 1; }
+            30% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+            80% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+            100% { transform: translate(-50%, -80%) scale(1.1); opacity: 0; }
+        }
+
+        /* --- PUZZLE BOARD --- */
         .game-board-container {
             width: 100%; aspect-ratio: 1 / 1; position: relative;
             background: #cbd5e1; border-radius: 1rem; border: 4px solid #fff;
@@ -196,7 +217,6 @@
         .gem.swiping .gem-inner { border-color: #0ea5e9; transform: scale(1.15); box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3); }
         .gem.popping .gem-inner { transform: scale(0); opacity: 0; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         
-        /* HINT SYSTEM (Glow kuning) */
         @keyframes pulse-hint { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.08); filter: brightness(1.2); box-shadow: 0 0 12px #facc15; border-color: #facc15;} }
         .gem.hint-anim { z-index: 15; }
         .gem.hint-anim .gem-inner { animation: pulse-hint 1.5s infinite; border-color: #facc15; }
@@ -211,8 +231,8 @@
         /* --- TACTICAL PANEL --- */
         .tactical-panel {
             background: #fff; border-radius: 1rem; border: 4px solid #e2e8f0;
-            padding: 0.5rem 1rem; display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 0.25rem 0.5rem; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); width: 100%;
         }
     </style>
 </head>
@@ -225,13 +245,12 @@
         <div id="loading-text" class="text-slate-800 font-bold text-base tracking-wider uppercase">Menghubungkan...</div>
     </div>
 
-    <!-- GLOBAL MUTE BUTTON -->
     <button id="btn-mute" onclick="toggleMute()" class="fixed top-4 right-4 z-[100] bg-white border-2 border-slate-300 rounded-full w-10 h-10 flex items-center justify-center text-xl shadow-md transition-transform active:scale-95">🔊</button>
 
     <!-- 1. MAIN MENU & LOBBY ROOM -->
     <div id="lobby-screen" class="fixed inset-0 bg-slate-100 z-50 flex flex-col items-center justify-center p-6">
         
-        <!-- MAIN MENU (CREATE / JOIN) -->
+        <!-- MAIN MENU -->
         <div id="main-menu" class="bg-white border-4 border-slate-300 w-full p-8 rounded-2xl text-center shadow-lg transition-all duration-300">
             <h1 class="text-4xl font-black text-slate-800 mb-6 uppercase leading-tight">Master<br><span class="text-sky-500">Battle</span></h1>
             
@@ -252,7 +271,7 @@
             </div>
         </div>
 
-        <!-- WAITING ROOM LOBBY -->
+        <!-- WAITING ROOM -->
         <div id="waiting-room" class="bg-white border-4 border-slate-300 w-full p-6 rounded-2xl text-center shadow-xl hidden flex-col items-center">
             <h2 class="text-xl font-black text-slate-700 uppercase mb-4 tracking-wider">Ruang Persiapan</h2>
             <div class="bg-sky-50 px-6 py-3 rounded-xl border-2 border-sky-200 mb-6 w-full relative overflow-hidden shadow-sm">
@@ -314,12 +333,12 @@
         </div>
     </div>
 
-    <!-- 3. BATTLE ARENA UI BARU -->
-    <div id="game-container" class="fixed inset-0 bg-slate-50 z-30 flex flex-col p-2 hidden">
+    <!-- 3. BATTLE ARENA UI (SCROLLABLE & RESPONSIVE) -->
+    <div id="game-container" class="fixed inset-0 bg-slate-50 z-30 flex-col p-2 hidden overflow-y-auto overflow-x-hidden pb-6">
         
-        <!-- STATUS BARS (TOP) -->
-        <div class="top-status-bar">
-            <!-- Player 1 (You) -->
+        <!-- STATUS BARS -->
+        <div class="top-status-bar flex-none mb-0.5">
+            <!-- Player 1 -->
             <div id="plate-p1" class="fighter-plate p1">
                 <div class="flex justify-between items-center w-full mb-1">
                     <span id="player-player-name" class="text-[10px] font-black text-sky-500 uppercase truncate max-w-[50%]">PLAYER</span>
@@ -336,7 +355,7 @@
             <!-- VS Icon -->
             <div class="font-black text-xl italic text-slate-300 pb-2">VS</div>
 
-            <!-- Player 2 (Enemy) -->
+            <!-- Player 2 -->
             <div id="plate-p2" class="fighter-plate p2 text-right">
                 <div class="flex justify-between items-center w-full mb-1 flex-row-reverse">
                     <span id="enemy-player-name" class="text-[10px] font-black text-rose-500 uppercase truncate max-w-[50%]">ENEMY</span>
@@ -351,27 +370,27 @@
             </div>
         </div>
 
-        <!-- ARENA FIELD -->
-        <div id="battle-arena" class="flex-none arena-bg w-full h-[180px] mb-2">
-            <!-- EPIC MOVE TEXT -->
+        <!-- ARENA FIELD (Dynamic Height & Scaled Distance) -->
+        <div id="battle-arena" class="flex-none arena-bg w-full h-[20vh] min-h-[140px] max-h-[200px] mb-1">
+            <!-- EPIC MOVE / COMBO TEXT -->
             <div id="epic-move" class="epic-move-text"></div>
 
-            <!-- P1 Position -->
-            <div class="sprite-container p1-pos" id="p1-container">
+            <!-- P1 Position (Left Box) -->
+            <div class="sprite-container p1-container" id="p1-container">
+                <img id="p1-sprite" src="" class="monster-sprite p1-flip" alt="Player">
                 <div class="shadow-ellipse"></div>
-                <img id="p1-sprite" src="" class="monster-sprite relative" alt="Player">
             </div>
 
-            <!-- P2 Position -->
-            <div class="sprite-container p2-pos" id="p2-container">
+            <!-- P2 Position (Right Box) -->
+            <div class="sprite-container p2-container" id="p2-container">
+                <img id="p2-sprite" src="" class="monster-sprite p2-flip" alt="Enemy">
                 <div class="shadow-ellipse"></div>
-                <img id="p2-sprite" src="" class="monster-sprite relative" alt="Enemy">
             </div>
         </div>
 
         <!-- BATTLE LOG -->
-        <div class="flex-none w-full bg-white border-4 border-slate-300 rounded-xl p-2 mb-2 shadow-sm flex items-center justify-center min-h-[45px]">
-            <span id="log-text" class="pixel-text text-xl font-bold text-slate-800 leading-none text-center">Pertarungan dimulai!</span>
+        <div class="flex-none w-full bg-white border-4 border-slate-300 rounded-xl p-1 mb-1 shadow-sm flex items-center justify-center min-h-[35px]">
+            <span id="log-text" class="pixel-text text-lg font-bold text-slate-800 leading-none text-center">Pertarungan dimulai!</span>
         </div>
 
         <!-- PUZZLE BOARD -->
@@ -384,19 +403,19 @@
             </div>
         </div>
 
-        <!-- TACTICAL PANEL -->
-        <div class="flex-1 w-full max-w-sm mx-auto flex items-start justify-center">
-             <div class="tactical-panel w-full">
+        <!-- TACTICAL PANEL (Compact) -->
+        <div class="flex-none w-full max-w-sm mx-auto flex items-start justify-center mt-1">
+             <div class="tactical-panel">
                  <div class="flex flex-col items-center">
-                     <span class="text-[9px] font-black text-slate-400 mb-1 uppercase">Elemenmu</span>
+                     <span class="text-[9px] font-black text-slate-400 mb-0.5 uppercase">Elemenmu</span>
                      <div id="tactical-p1-badge" class="flex gap-1"></div>
                  </div>
-                 <div class="flex flex-col items-center text-center px-2">
-                     <span class="text-xs font-black text-slate-700 uppercase tracking-widest">Taktik</span>
-                     <span class="text-[10px] text-slate-500 font-bold leading-tight">Cocokkan elemenmu untuk memicu Serangan!</span>
+                 <div class="flex flex-col items-center text-center px-1">
+                     <span class="text-[11px] font-black text-slate-700 uppercase tracking-widest">Taktik</span>
+                     <span class="text-[9px] text-slate-500 font-bold leading-tight">Cocokkan elemenmu untuk Serangan Epik!</span>
                  </div>
                  <div class="flex flex-col items-center">
-                     <span class="text-[9px] font-black text-slate-400 mb-1 uppercase">Musuh</span>
+                     <span class="text-[9px] font-black text-slate-400 mb-0.5 uppercase">Musuh</span>
                      <div id="tactical-p2-badge" class="flex gap-1"></div>
                  </div>
              </div>
@@ -442,7 +461,7 @@
     let draftTimer; let draftTimeLeft = 15;
     
     let isDataLoaded = false; 
-    let hintTimer = null; // Timer untuk IDLE Hint
+    let hintTimer = null; 
 
     // --- AUDIO & MUTE ---
     let actx; let isMuted = false;
@@ -726,10 +745,13 @@
     }
 
     // ==========================================
-    // 4. BATTLE ARENA LOGIC & AUTO SHUFFLE
+    // 4. BATTLE ARENA LOGIC
     // ==========================================
     function initBattle() {
-        document.getElementById('draft-screen').style.display = 'none'; document.getElementById('game-container').classList.remove('hidden');
+        document.getElementById('draft-screen').style.display = 'none'; 
+        const gc = document.getElementById('game-container');
+        gc.classList.remove('hidden'); gc.classList.add('flex'); // Pastikan menjadi flex container
+        
         document.getElementById('player-player-name').innerText = myName; document.getElementById('enemy-player-name').innerText = oppName;
         setActive('p1', 0); setActive('p2', 0); state.turn = 'p1'; 
         
@@ -739,7 +761,7 @@
             let newBoard = getValidInitialBoard();
             renderBoardFromData(newBoard);
             setTimeout(()=> channel.publish('board-init', { b: newBoard }), 500);
-            updateBoardLock(); checkBoardState(); // Cek hint
+            updateBoardLock(); checkBoardState(); 
         }
 
         channel.subscribe('board-init', (msg) => { if(myRole === 'guest') { renderBoardFromData(msg.data.b); updateBoardLock(); checkBoardState(); } });
@@ -790,7 +812,6 @@
     function updateBoardLock() {
         const lockEl = document.getElementById('board-lock'); const lockTxt = document.getElementById('board-lock-text');
         
-        // PENGATURAN GLOW GILIRAN (BUMBU PROF)
         document.getElementById('plate-p1').classList.remove('active-turn');
         document.getElementById('plate-p2').classList.remove('active-turn');
 
@@ -812,20 +833,25 @@
     }
 
     function showEpicMove(moveName) { sEpic(); const el = document.getElementById('epic-move'); el.innerText = `${moveName.toUpperCase()}!`; el.classList.remove('show-move'); void el.offsetWidth; el.classList.add('show-move'); }
+    
+    // BUMBU PROF: EFEK COMBO MULTIPLIER
+    function showFloatingCombo(txt) {
+        const el = document.createElement('div'); el.innerText = txt; el.className = 'combo-text show-combo';
+        document.getElementById('battle-arena').appendChild(el);
+        setTimeout(() => el.remove(), 1500);
+    }
 
     // ==========================================
-    // 5. PUZZLE, SHUFFLE & HINT ALGORITHM
+    // 5. PUZZLE, SHUFFLE, HINT & COMBO ALGORITHM
     // ==========================================
     const boardEl = document.getElementById('board'); const gemsContainer = document.getElementById('gems-container');
 
-    // Cek ada Match-3 mentah di array 2D
     function hasAnyMatch(grid) {
         for(let y=0; y<ROWS; y++) for(let x=0; x<COLS-2; x++) { let v = grid[y][x]; if(v !== -1 && v === grid[y][x+1] && v === grid[y][x+2]) return true; }
         for(let x=0; x<COLS; x++) for(let y=0; y<ROWS-2; y++) { let v = grid[y][x]; if(v !== -1 && v === grid[y+1][x] && v === grid[y+2][x]) return true; }
         return false;
     }
 
-    // Cek apakah ada langkah yang memungkinkan (Auto-Shuffle logic)
     function checkPossibleMovesTemp(grid) {
         function swapT(g, x1, y1, x2, y2) { let t=g[y1][x1]; g[y1][x1]=g[y2][x2]; g[y2][x2]=t; }
         for(let y=0; y<ROWS; y++) {
@@ -874,15 +900,14 @@
     }
     function updatePos(el, x, y) { el.style.left = `${x * 16.666}%`; el.style.top = `${y * 16.666}%`; }
 
-    // HINT SYSTEM
     function removeHints() { board.forEach(r=>r.forEach(c=>{if(c&&c.el)c.el.classList.remove('hint-anim');})); }
     function checkBoardState() {
         let gridMap = board.map(r=>r.map(c=>c.pIdx));
         let move = checkPossibleMovesTemp(gridMap);
         
         if(!move) {
-            state.isAnim = true; // Kunci board
-            setLog("Tidak ada langkah! Mengocok ulang...");
+            state.isAnim = true; 
+            setLog("Macet! Mengocok ulang area...");
             if (myRole === 'host') {
                 setTimeout(() => { let newB = getValidInitialBoard(); channel.publish('shuffle', { b: newB }); }, 1500);
             }
@@ -893,7 +918,7 @@
                     board[move.y1][move.x1].el.classList.add('hint-anim');
                     board[move.y2][move.x2].el.classList.add('hint-anim');
                 }
-            }, 5000); // Hint muncul dalam 5 detik
+            }, 5000); 
         }
     }
 
@@ -905,7 +930,7 @@
     }
     function onDown(e) {
         if(state.isAnim || state.turn !== myTurnId || !opponentConnected) return; 
-        const p = getGridPos(e); clearTimeout(hintTimer); removeHints(); // Reset hint saat pemain main
+        const p = getGridPos(e); clearTimeout(hintTimer); removeHints(); 
         if(p.x>=0 && p.y>=0) { isDrag=true; dStartX = e.touches?e.touches[0].clientX:e.clientX; dStartY = e.touches?e.touches[0].clientY:e.clientY; sCol=p.x; sRow=p.y; if(board[sRow] && board[sRow][sCol]) board[sRow][sCol].el.classList.add('swiping'); }
     }
     function onMove(e) {
@@ -924,8 +949,8 @@
     async function trySwap(x1, y1, x2, y2) {
         state.isAnim=true; pT(500); doSwap(x1,y1,x2,y2); await sleep(200);
         let groups = findMatchGroups();
-        if(groups.length>0) { await processMyMatches(groups); } 
-        else { pT(200); doSwap(x1,y1,x2,y2); await sleep(200); state.isAnim=false; checkBoardState(); } // kembalikan, cek hint lagi
+        if(groups.length>0) { await processMyMatches(groups, 1); } 
+        else { pT(200); doSwap(x1,y1,x2,y2); await sleep(200); state.isAnim=false; checkBoardState(); } 
     }
     function doSwap(x1,y1,x2,y2) { let t=board[y1][x1]; board[y1][x1]=board[y2][x2]; board[y2][x2]=t; updatePos(board[y1][x1].el,x1,y1); updatePos(board[y2][x2].el,x2,y2); }
 
@@ -948,13 +973,15 @@
         return Object.keys(groupMap).map(k => ({ pIdx: parseInt(k), cells: Array.from(groupMap[k]).map(s=>{let [x,y]=s.split(','); return {x:+x,y:+y};}) }));
     }
 
-    // ARENA SHAKE (BUMBU PROF)
     function shakeArena() {
         const arena = document.getElementById('battle-arena');
         arena.classList.remove('arena-shake'); void arena.offsetWidth; arena.classList.add('arena-shake');
     }
 
-    async function processMyMatches(groups) {
+    async function processMyMatches(groups, currentCombo = 1) {
+        let totalHeal = 0;
+        let isAttackThisTurn = false;
+
         for (let group of groups) {
             let ax=0, ay=0;
             group.cells.forEach(({x,y}) => {
@@ -962,17 +989,15 @@
                 ax+=x; ay+=y;
             });
 
-            if(group.cells.length >= 4) shakeArena(); // Extra shake jika combo besar
+            if(group.cells.length >= 4) shakeArena(); 
 
             if(group.pIdx === 5) {
-                let healAmt = 40 * group.cells.length; let myPoke = myTeam[state.myActive];
-                myPoke.hp = Math.min(myPoke.maxHp, myPoke.hp + healAmt); updateMyHp(); sEpic();
-                setLog(`PULIH! +${healAmt} HP`);
-                showFloatingDmg(ax/group.cells.length, ay/group.cells.length, `+${healAmt}`, false, true);
-                channel.publish('heal', { amount: healAmt, sender: myRole });
+                totalHeal += 40 * group.cells.length;
+                showFloatingDmg(ax/group.cells.length, ay/group.cells.length, `+${40 * group.cells.length}`, false, true);
                 continue;
             }
 
+            isAttackThisTurn = true;
             let myPoke = myTeam[group.pIdx]; let oppPoke = oppTeam[state.oppActive];
             if(state.myActive !== group.pIdx) setActive('p1', group.pIdx);
 
@@ -1001,13 +1026,14 @@
                 let stab = myPoke.types.includes(moveType) ? 1.5 : 1;
                 let baseDmg = Math.floor((atkStat / defStat) * (myPoke.learnedMove.power / 2) * (group.cells.length/3));
                 
-                isCrit = Math.random() < (myPoke.spe / 255); 
-                if (isCrit) { baseDmg *= 1.5; setLog(`💥 CRITICAL HIT dari ${myPoke.name}!`); shakeArena();}
-                else if (mult > 1) { setLog(`🔥 Super Effective!`); shakeArena();}
-                else if (mult < 1) { setLog(`💧 Tidak terlalu efektif...`); }
-                else { setLog(`⚔️ ${myPoke.name} menyerang!`); }
+                // KALKULASI COMBO MULTIPLIER PROF
+                let comboMult = 1 + ((currentCombo - 1) * 0.2); // Bonus 20% Dmg per Combo!
+                let comboDmg = Math.floor(baseDmg * comboMult);
 
-                finalDmg = Math.max(1, Math.floor(baseDmg * mult * stab * (0.85 + Math.random()*0.3)));
+                isCrit = Math.random() < (myPoke.spe / 255); 
+                if (isCrit) { comboDmg *= 1.5; shakeArena();}
+
+                finalDmg = Math.max(1, Math.floor(comboDmg * mult * stab * (0.85 + Math.random()*0.3)));
                 sHit(isCrit); 
                 showFloatingDmg(ax/group.cells.length, ay/group.cells.length, `-${finalDmg}`, isCrit);
                 
@@ -1017,21 +1043,40 @@
                 oppPoke.hp -= finalDmg; updateOppHp();
                 await sleep(300); p1S.classList.remove('attack-lunge-p1'); p2S.classList.remove('hit-flash');
 
+                channel.publish('attack', { sender: myRole, myActiveIdx: group.pIdx, damage: finalDmg, isFainted: isFainted, moveName: usedMoveName, isCrit: isCrit, combo: currentCombo });
+
                 if(oppPoke.hp <= 0) { sFaint(); setLog(`☠️ ${oppPoke.name} musuh Pingsan!`); }
             }
-
-            channel.publish('attack', { sender: myRole, myActiveIdx: group.pIdx, damage: finalDmg, isFainted: isFainted, moveName: usedMoveName, isCrit: isCrit });
             if(oppTeam.every(t=>t.hp<=0)) break; 
+        }
+
+        if(totalHeal > 0) {
+            let myPoke = myTeam[state.myActive];
+            myPoke.hp = Math.min(myPoke.maxHp, myPoke.hp + totalHeal);
+            updateMyHp(); sEpic(); setLog(`PULIH! +${totalHeal} HP`);
+            channel.publish('heal', { amount: totalHeal, sender: myRole });
+        }
+
+        // COMBO UI TEXT TRIGGER
+        if (currentCombo > 1 && isAttackThisTurn) {
+            setLog(`COMBO x${currentCombo}! Damage ++`);
+            showFloatingCombo(`COMBO x${currentCombo}!`);
+            shakeArena();
+        } else if (isAttackThisTurn) {
+            setLog(`⚔️ Serangan diluncurkan!`);
         }
 
         if(oppTeam.every(t=>t.hp<=0)) { endGame(true); return; }
 
         await applyGravity(); let nextG = findMatchGroups();
-        if(nextG.length>0) { await sleep(200); await processMyMatches(nextG); }
+        if(nextG.length>0) { 
+            await sleep(200); 
+            await processMyMatches(nextG, currentCombo + 1); // TERUSKAN COMBO
+        }
         else {
             state.turn = myTurnId === 'p1' ? 'p2' : 'p1';
             channel.publish('end-turn', { nextTurn: state.turn, boardState: board.map(r=>r.map(c=>c.pIdx)) });
-            updateBoardLock(); state.isAnim = false; checkBoardState(); // Cek Deadlock sblm ganti
+            updateBoardLock(); state.isAnim = false; checkBoardState(); 
         }
     }
 
@@ -1044,8 +1089,16 @@
             sFaint(); setLog(`${oppName} salah langkah!`);
         } else {
             if(data.moveName) { showEpicMove(data.moveName); await sleep(600); }
-            sHit(data.isCrit); setLog(data.isCrit ? `💥 CRITICAL HIT dari lawan!` : `⚔️ Lawan menyerang!`);
-            if (data.isCrit) shakeArena();
+            
+            // DETEKSI COMBO LAWAN
+            if(data.combo > 1) {
+                showFloatingCombo(`COMBO x${data.combo}!`);
+                setLog(`Lawan Combo x${data.combo}!`);
+                shakeArena();
+            } else {
+                setLog(data.isCrit ? `💥 CRITICAL HIT dari lawan!` : `⚔️ Lawan menyerang!`);
+            }
+            sHit(data.isCrit); if (data.isCrit) shakeArena();
 
             const p1S = document.getElementById('p1-sprite'); const p2S = document.getElementById('p2-sprite');
             p2S.classList.add('attack-lunge-p2'); await sleep(200); p1S.classList.add('hit-flash'); 
