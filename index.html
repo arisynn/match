@@ -152,6 +152,20 @@
         .hit-flash { animation: hit 0.4s ease; }
         @keyframes hit { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(2) opacity(0.5); transform: translateX(10px); } }
 
+        .epic-move-text {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-family: 'VT323', monospace; font-size: 2.2rem; color: #fff;
+            text-shadow: 3px 3px 0 #000, -2px -2px 0 #000;
+            white-space: nowrap; z-index: 60; opacity: 0; pointer-events: none;
+        }
+        .show-move { animation: slashMove 1.5s ease-out; }
+        @keyframes slashMove {
+            0% { transform: translate(-100%, -50%) skewX(-20deg); opacity: 0; }
+            15% { transform: translate(-50%, -50%) skewX(0deg); opacity: 1; }
+            85% { transform: translate(-50%, -50%) skewX(0deg); opacity: 1; }
+            100% { transform: translate(100%, -50%) skewX(20deg); opacity: 0; }
+        }
+
         /* --- PUZZLE BOARD (SOLID GRID HD) --- */
         .game-board-container {
             width: 100%; aspect-ratio: 1 / 1; position: relative;
@@ -324,6 +338,9 @@
 
         <!-- ARENA FIELD (Clean & Open) -->
         <div class="flex-none arena-bg w-full h-[180px] mb-2">
+            <!-- EPIC MOVE TEXT ADDED BACK HERE -->
+            <div id="epic-move" class="epic-move-text"></div>
+
             <!-- P1 Position (Left) -->
             <div class="sprite-container p1-pos" id="p1-container">
                 <div class="shadow-ellipse"></div>
