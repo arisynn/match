@@ -268,12 +268,7 @@
     const getStatic = (id) => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
 
     // --- ABLY ---
-    // Pakai channel history (rewind) supaya guest tidak miss event game-start
-    // walau subscribe-nya telat. Flag persist=true di channel options aktifkan ini.
-    const ably = new Ably.Realtime({
-        key: '4opURQ.FVPiqg:z5W8zQxWoBNlXmlAXvOv4Bz1bmn_ISnFucJGpjFijS8',
-        recover: (lastConnectionDetails, cb) => cb(true)
-    });
+    const ably = new Ably.Realtime('4opURQ.FVPiqg:z5W8zQxWoBNlXmlAXvOv4Bz1bmn_ISnFucJGpjFijS8');
     let channel; let myRole = ''; let myTurnId = '';
 
     let poolData = []; let typeRels = {}; 
@@ -293,13 +288,11 @@
 
     function setStat(msg) { document.getElementById('lobby-status').innerText = msg; }
 
-    // ==========================================
-    // HELPER: tunggu Ably connected sebelum lanjut
-    // ==========================================
-    function waitConnected() {
-        return new Promise(resolve => {
-            if (ably.connection.state === 'connected') return resolve();
-            ably.connection.once('connected', resolve);
+    // Tunggu channel attached sepenuhnya
+    function waitAttached(ch) {
+        return new Promise((resolve, reject) => {
+            if (ch.state === 'attached') return resolve();
+            ch.attach((err) => { if (err) reject(err); else resolve(); });
         });
     }
 
@@ -308,8 +301,6 @@
     // ==========================================
     async function createRoom() {
         initA();
-        await waitConnected();
-
         const code = Math.random().toString(36).substring(2, 6).toUpperCase();
         myRole = 'host'; myTurnId = 'p1';
 
@@ -318,28 +309,28 @@
         document.getElementById('display-room-code').innerText = code;
         document.getElementById('lobby-sync-msg').innerText = "Membangun Deck TCG...";
 
-        // Fetch pool dulu, baru pasang channel
         await fetchPool();
         document.getElementById('lobby-sync-msg').innerText = "Menunggu lawan bergabung...";
 
-        // [REWIND] channel menyimpan history — guest yang subscribe telat tetap dapat event
-        channel = ably.channels.get(`room-${code}`, { params: { rewind: '2m' } });
+        // Host pakai channel biasa (tidak perlu rewind)
+        channel = ably.channels.get(`room-${code}`);
+        await waitAttached(channel);
 
         let started = false;
 
-        // Host dengarkan sinyal dari guest
-        channel.subscribe('guest-ping', async () => {
-            // Kirim ulang game-start setiap ping (idempotent — tidak masalah kirim berkali-kali)
-            if (!started) {
-                await channel.publish('game-start', { pool: poolData, types: typeRels });
-            }
+        // Dengar ping dari guest, balas dengan data
+        channel.subscribe('guest-ping', () => {
+            if (started) return;
+            // Kirim ulang tiap ping — idempotent
+            channel.publish('game-start', { pool: poolData, types: typeRels });
         });
 
-        channel.subscribe('guest-ready', () => {
+        // Tunggu konfirmasi guest sudah terima
+        channel.subscribe('guest-ack', () => {
             if (started) return;
             started = true;
             channel.unsubscribe('guest-ping');
-            channel.unsubscribe('guest-ready');
+            channel.unsubscribe('guest-ack');
             startDraft();
         });
     }
@@ -349,45 +340,48 @@
     // ==========================================
     async function joinRoom() {
         initA();
-        await waitConnected();
-
         const code = document.getElementById('room-code-input').value.toUpperCase();
         if (code.length !== 4) return setStat("Kode 4 digit!");
         myRole = 'guest'; myTurnId = 'p2';
         setStat('Mencari Room...');
 
-        // [REWIND] Tangkap game-start yang mungkin sudah dikirim sebelum kita subscribe
-        channel = ably.channels.get(`room-${code}`, { params: { rewind: '2m' } });
+        // Guest pakai rewind=1 dengan qualified channel name
+        // Ini replay 1 pesan terakhir — tangkap game-start yang mungkin sudah terkirim
+        channel = ably.channels.get(`[?rewind=1]room-${code}`);
 
         let received = false;
+        let pingInterval;
 
-        // Dengar game-start — dengan rewind, event lama pun akan diterima
+        // SUBSCRIBE DULU sebelum attach/ping — penting!
         channel.subscribe('game-start', async (msg) => {
-            if (received) return; // tolak duplikat dari rewind
+            if (received) return;
             received = true;
             clearInterval(pingInterval);
+            setStat('Data diterima!');
 
             poolData = msg.data.pool;
             typeRels  = msg.data.types;
 
-            setStat('Data diterima! Memulai draft...');
-
-            // Beritahu host bahwa guest sudah ready → host startDraft
-            await channel.publish('guest-ready', {});
             channel.unsubscribe('game-start');
+            // Konfirmasi ke host, lalu mulai draft
+            await channel.publish('guest-ack', {});
             startDraft();
         });
 
-        // Ping host secara periodik sampai game-start diterima
+        // Tunggu channel attached, BARU mulai ping
+        await waitAttached(channel);
+        setStat('Menyinkronkan data...');
+
         const doPing = () => {
-            if (!received) {
-                setStat('Menyinkronkan data...');
-                channel.publish('guest-ping', {});
-            }
+            if (!received) channel.publish('guest-ping', {});
         };
 
-        doPing(); // langsung ping pertama
-        const pingInterval = setInterval(doPing, 2000);
+        doPing(); // ping pertama langsung
+        pingInterval = setInterval(() => {
+            if (received) { clearInterval(pingInterval); return; }
+            setStat('Menyinkronkan data...');
+            doPing();
+        }, 2000);
     }
 
     // ==========================================
