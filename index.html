@@ -294,6 +294,7 @@
     async function createRoom() {
         initA(); const code = Math.random().toString(36).substring(2, 6).toUpperCase();
         myRole = 'host'; myTurnId = 'p1';
+        let hostStarted = false;
         
         document.getElementById('lobby-actions').classList.add('hidden'); document.getElementById('lobby-waiting').classList.remove('hidden'); document.getElementById('display-room-code').innerText = code;
         
@@ -303,13 +304,20 @@
         document.getElementById('lobby-sync-msg').innerText = "Menunggu lawan bergabung...";
 
         channel = ably.channels.get(`room-${code}`);
-        
-        // Tunggu sinyal 'guest-ready' dari Guest
-        channel.subscribe('guest-ready', (msg) => {
-            // Ketika guest ready, tembak data
-            channel.publish('game-start', { pool: poolData, types: typeRels });
+
+        // Subscribe ke guest-ack: guest confirm sudah terima data → baru startDraft
+        channel.subscribe('guest-ack', () => {
+            if(hostStarted) return;
+            hostStarted = true;
+            channel.unsubscribe('guest-ready');
+            channel.unsubscribe('guest-ack');
             startDraft();
-            channel.unsubscribe('guest-ready'); // Hentikan langganan agar tak double
+        });
+        
+        // Respond setiap ping dari guest (jangan unsubscribe sampai guest ack)
+        channel.subscribe('guest-ready', () => {
+            if(hostStarted) return;
+            channel.publish('game-start', { pool: poolData, types: typeRels });
         });
     }
 
@@ -325,8 +333,9 @@
         channel.subscribe('game-start', (msg) => {
             clearInterval(handshakeInterval); // Stop ping
             poolData = msg.data.pool; typeRels = msg.data.types;
-            startDraft();
             channel.unsubscribe('game-start');
+            // Kirim ack ke host SETELAH subscribe selesai, baru startDraft
+            channel.publish('guest-ack', {}).then(() => startDraft());
         });
 
         // Ping Host terus menerus sampai direspon (Anti-Stuck)
