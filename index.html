@@ -593,10 +593,21 @@
     // --- FULLSCREEN TOGGLE ---
     function toggleFullScreen() {
         if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(err => {
+            document.documentElement.requestFullscreen().then(() => {
+                // Mengunci layar ke mode portrait khusus di HP yang mendukung
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock("portrait").catch(err => console.log("Gagal mengunci orientasi: ", err));
+                }
+            }).catch(err => {
                 showToast(`Fullscreen error: ${err.message}`);
             });
-        } else { document.exitFullscreen(); }
+        } else { 
+            document.exitFullscreen(); 
+            // Melepas kunci orientasi saat keluar dari fullscreen
+            if (screen.orientation && screen.orientation.unlock) {
+                screen.orientation.unlock();
+            }
+        }
     }
 
     // --- CONFIG & DATA ---
