@@ -20,6 +20,16 @@
         .pixel-text { font-family: 'VT323', monospace; }
         .tcg-text { font-family: 'Oswald', sans-serif; }
 
+        /* --- GLOBAL FULLSCREEN BTN --- */
+        #btn-fullscreen {
+            position: fixed; top: 12px; left: 12px; z-index: 999999;
+            width: 36px; height: 36px; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px);
+            border: 2px solid rgba(255,255,255,0.2); border-radius: 0.5rem; color: white;
+            display: flex; justify-content: center; align-items: center; cursor: pointer;
+            transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        #btn-fullscreen:active { transform: scale(0.9); }
+
         /* --- GLOBAL LOADING --- */
         #global-loading {
             position: fixed; inset: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(8px);
@@ -52,13 +62,13 @@
         .help-scroll::-webkit-scrollbar { width: 6px; }
         .help-scroll::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
         
-        .btn-help {
+        .btn-help, .btn-log {
             background: #e2e8f0; color: #64748b; width: 32px; height: 32px; 
             border-radius: 50%; font-weight: 900; display: flex; 
             justify-content: center; align-items: center; cursor: pointer;
             transition: all 0.2s; border: 2px solid #cbd5e1; font-size: 1.1rem;
         }
-        .btn-help:active { transform: scale(0.9); }
+        .btn-help:active, .btn-log:active { transform: scale(0.9); }
 
         /* --- LOBBY WAITING ROOM --- */
         .slot-card {
@@ -152,7 +162,7 @@
         @keyframes pulse-ep { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.3); } }
         .p2 .ep-bar-bg { transform: scaleX(-1); }
 
-        /* TEAM BAR UI (SYMMETRICAL) */
+        /* TEAM BAR UI (SYMMETRICAL & LIGHT THEME) */
         .team-bar-container { position: relative; display: flex; align-items: center; justify-content: center; height: 44px; }
         
         .team-icon-wrap { 
@@ -169,20 +179,12 @@
             100% { box-shadow: 0 0 20px #fde047, 0 0 30px #fde047; border-color: #fef08a; filter: brightness(1.3); transform: scale(1.15); }
         }
         .team-icon-wrap.is-full { animation: superGlow 0.8s infinite alternate; cursor: pointer; z-index: 20; }
-        
-        @keyframes ultReadyGlow {
-            0% { box-shadow: 0 0 10px #06b6d4; border-color: #22d3ee; filter: brightness(1.2); transform: scale(1.15); }
-            100% { box-shadow: 0 0 25px #22d3ee, 0 0 40px #67e8f9; border-color: #a5f3fc; filter: brightness(1.5); transform: scale(1.25); }
-        }
-        .team-icon-wrap.ult-on { animation: ultReadyGlow 0.5s infinite alternate; background: #ecfeff; }
 
         .arena-bg {
-            /* Dynamic background - transition applied for smooth element changes */
             background: linear-gradient(180deg, #87ceeb 0%, #e0f6ff 50%, #a7f3d0 50%, #4ade80 100%);
             border-radius: 1rem; border: 4px solid #fff;
             box-shadow: inset 0 8px 16px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
-            position: relative; overflow: hidden;
-            transition: background 1s ease;
+            position: relative; overflow: hidden; transition: background 1s ease;
         }
 
         .arena-shake { animation: shake-arena 0.4s cubic-bezier(.36,.07,.19,.97) both; }
@@ -212,6 +214,15 @@
             border-radius: 50%; filter: blur(2px); z-index: 1; margin-top: -8px;
         }
 
+        /* --- EPIC CUT-IN ANIMATION FOR ULTIMATE --- */
+        #cutin-overlay { transition: opacity 0.2s ease; }
+        .cutin-band {
+            background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 50%, #0ea5e9 100%);
+            border-top: 4px solid #fde047; border-bottom: 4px solid #fde047;
+            transform: skewY(-4deg) translateX(100%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
         /* --- ANIMATIONS --- */
         .attack-lunge-p1 { animation: lunge-r 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
         .attack-lunge-p2 { animation: lunge-l 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -221,66 +232,36 @@
         .hit-flash { animation: hit 0.4s ease; }
         @keyframes hit { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(2) opacity(0.5); transform: translateX(10px); } }
 
-        /* SWITCH ANIMATIONS */
         .switch-out { animation: switchOutAnim 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards; }
         .switch-in { animation: switchInAnim 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-        @keyframes switchOutAnim { 
-            0% { transform: translateY(0) scale(1) scaleX(var(--flip-x, 1)); opacity: 1; } 
-            100% { transform: translateY(50px) scale(0) scaleX(var(--flip-x, 1)); opacity: 0; } 
-        }
-        @keyframes switchInAnim { 
-            0% { transform: translateY(50px) scale(0) scaleX(var(--flip-x, 1)); opacity: 0; } 
-            100% { transform: translateY(0) scale(1) scaleX(var(--flip-x, 1)); opacity: 1; } 
-        }
-        .p1-flip { --flip-x: -1; }
-        .p2-flip { --flip-x: 1; }
+        @keyframes switchOutAnim { 0% { transform: translateY(0) scale(1) scaleX(var(--flip-x, 1)); opacity: 1; } 100% { transform: translateY(50px) scale(0) scaleX(var(--flip-x, 1)); opacity: 0; } }
+        @keyframes switchInAnim { 0% { transform: translateY(50px) scale(0) scaleX(var(--flip-x, 1)); opacity: 0; } 100% { transform: translateY(0) scale(1) scaleX(var(--flip-x, 1)); opacity: 1; } }
+        .p1-flip { --flip-x: -1; } .p2-flip { --flip-x: 1; }
 
         .epic-move-text {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-family: 'VT323', monospace; font-size: 2.2rem; color: #fff;
-            text-shadow: 3px 3px 0 #000, -2px -2px 0 #000;
+            font-family: 'VT323', monospace; font-size: 2.2rem; color: #fff; text-shadow: 3px 3px 0 #000, -2px -2px 0 #000;
             white-space: nowrap; z-index: 120; opacity: 0; pointer-events: none;
         }
         .show-move { animation: slashMove 1.5s ease-out; }
-        @keyframes slashMove {
-            0% { transform: translate(-100%, -50%) skewX(-20deg); opacity: 0; }
-            15% { transform: translate(-50%, -50%) skewX(0deg); opacity: 1; }
-            85% { transform: translate(-50%, -50%) skewX(0deg); opacity: 1; }
-            100% { transform: translate(100%, -50%) skewX(20deg); opacity: 0; }
-        }
+        @keyframes slashMove { 0% { transform: translate(-100%, -50%) skewX(-20deg); opacity: 0; } 15% { transform: translate(-50%, -50%) skewX(0deg); opacity: 1; } 85% { transform: translate(-50%, -50%) skewX(0deg); opacity: 1; } 100% { transform: translate(100%, -50%) skewX(20deg); opacity: 0; } }
 
         /* --- PUZZLE BOARD --- */
-        .game-board-container {
-            width: 100%; aspect-ratio: 1 / 1; position: relative;
-            background: #cbd5e1; border-radius: 1rem; border: 4px solid #fff;
-            box-shadow: 0 8px 15px rgba(0,0,0,0.1); touch-action: none;
-        }
-        
+        .game-board-container { width: 100%; aspect-ratio: 1 / 1; position: relative; background: #cbd5e1; border-radius: 1rem; border: 4px solid #fff; box-shadow: 0 8px 15px rgba(0,0,0,0.1); touch-action: none; }
         .gem { position: absolute; width: 16.666%; height: 16.666%; padding: 2px; transition: top 0.2s, left 0.2s, transform 0.1s; z-index: 10; pointer-events: none; }
-        
-        .gem-inner { 
-            width: 100%; height: 100%; background: #ffffff; border-radius: 0.5rem; 
-            border: 2px solid #e2e8f0; display: flex; justify-content: center; align-items: center; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden; transition: all 0.2s;
-        }
+        .gem-inner { width: 100%; height: 100%; background: #ffffff; border-radius: 0.5rem; border: 2px solid #e2e8f0; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden; transition: all 0.2s; }
         .gem-inner.is-potion { background: radial-gradient(circle, #ecfdf5 0%, #a7f3d0 100%); border-color: #34d399; }
-
-        .gem.swiping { z-index: 20; }
-        .gem.swiping .gem-inner { border-color: #0ea5e9; transform: scale(1.15); box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3); }
+        .gem.swiping { z-index: 20; } .gem.swiping .gem-inner { border-color: #0ea5e9; transform: scale(1.15); box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3); }
         .gem.popping .gem-inner { transform: scale(0); opacity: 0; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         
         @keyframes pulse-hint { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.08); filter: brightness(1.2); box-shadow: 0 0 12px #facc15; border-color: #facc15;} }
-        .gem.hint-anim { z-index: 15; }
-        .gem.hint-anim .gem-inner { animation: pulse-hint 1.5s infinite; border-color: #facc15; }
-
+        .gem.hint-anim { z-index: 15; } .gem.hint-anim .gem-inner { animation: pulse-hint 1.5s infinite; border-color: #facc15; }
         .gem img { width: 85%; height: 85%; object-fit: contain; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.15)); }
         
         .floating-dmg { position: absolute; font-family: 'VT323', monospace; font-size: 2.5rem; color: #e11d48; text-shadow: 2px 2px 0 #fff, -1px -1px 0 #fff; pointer-events: none; z-index: 50; animation: floatUp 0.8s forwards ease-out; }
         .floating-crit { font-size: 3.5rem; color: #f59e0b; text-shadow: 3px 3px 0 #b45309, -1px -1px 0 #fff; z-index: 55; }
         .floating-energy { color: #3b82f6; text-shadow: 2px 2px 0 #fff, -1px -1px 0 #fff; font-size: 2rem; }
         .floating-heal { color: #10b981; text-shadow: 2px 2px 0 #fff, -1px -1px 0 #fff; }
-        
-        /* COMBO TEXT ANIMATION */
         .floating-combo { font-size: 3.5rem; color: #a855f7; text-shadow: 3px 3px 0 #fff, -2px -2px 0 #fff; z-index: 60; font-style: italic; animation: popCombo 1.2s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         
         @keyframes floatUp { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 20% { transform: translate(-50%, -80%) scale(1.2); opacity: 1; } 100% { transform: translate(-50%, -120px) scale(1); opacity: 0; } }
@@ -288,6 +269,11 @@
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen relative max-w-md mx-auto bg-slate-100">
+
+    <!-- GLOBAL FULLSCREEN BUTTON -->
+    <button id="btn-fullscreen" onclick="toggleFullScreen()" title="Toggle Fullscreen">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+    </button>
 
     <div id="toast"></div>
 
@@ -306,41 +292,47 @@
         </div>
     </div>
 
+    <!-- LOG HISTORY MODAL -->
+    <div id="log-history-modal" class="modal-overlay">
+        <div class="modal-content !max-w-sm p-4">
+            <div class="flex justify-between items-center mb-3 flex-none border-b-2 border-slate-100 pb-2">
+                <h3 class="text-lg font-black text-slate-800 uppercase">Sejarah Pertarungan</h3>
+                <button onclick="sClick(); closeLogHistory()" class="text-slate-400 hover:text-rose-500 font-black text-2xl leading-none transition-colors">&times;</button>
+            </div>
+            <div id="log-history-content" class="help-scroll space-y-1 flex-1 min-h-[50vh]">
+                <!-- History logs here -->
+            </div>
+        </div>
+    </div>
+
     <!-- HELP MODAL -->
     <div id="help-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="flex justify-between items-center mb-4 flex-none border-b-2 border-slate-100 pb-2">
                 <h2 class="text-xl font-black text-slate-800 uppercase flex items-center gap-2">
                     <span class="bg-sky-500 text-white w-6 h-6 rounded-full inline-flex items-center justify-center text-sm">?</span>
-                    Buku Panduan Master
+                    Buku Panduan
                 </h2>
                 <button onclick="sClick(); hideHelp()" class="text-slate-400 hover:text-rose-500 font-black text-3xl leading-none transition-colors">&times;</button>
             </div>
-            
             <div class="help-scroll space-y-4 text-sm text-slate-600 font-medium pb-2">
                 <div>
-                    <h3 class="font-bold text-sky-600 mb-1 border-b border-slate-200 pb-1">[1] Mekanik RPG & STAB</h3>
+                    <h3 class="font-bold text-sky-600 mb-1 border-b border-slate-200 pb-1">[1] Elemen & Imunitas</h3>
                     <ul class="list-disc pl-4 space-y-1">
-                        <li><b>Taktik Elemen:</b> Menyerang kelemahan musuh memberi damage 2x lipat. Menyerang elemen kebal mengurangi setengah damage.</li>
-                        <li><b>Kritikal (Speed):</b> Kecepatan asli Pokemon tinggi = kemungkinan mendaratkan kritikal lebih besar.</li>
+                        <li><b>Taktik Elemen:</b> Menyerang kelemahan = 2x damage. Menyerang resistensi = setengah damage.</li>
+                        <li><b>Sistem Imun:</b> Serangan tertentu tidak mempan sama sekali ke tipe kebalnya (Misal Ghost ditembak Normal) dan memberikan damage 0!</li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="font-bold text-amber-500 mb-1 border-b border-slate-200 pb-1">[2] Ultimate Taktis & Combo Nerf</h3>
+                    <h3 class="font-bold text-amber-500 mb-1 border-b border-slate-200 pb-1">[2] Combo & Ultimate Instan</h3>
                     <ul class="list-disc pl-4 space-y-1">
-                        <li><b>Serangan Biasa:</b> Menghasilkan 50% kekuatan asli.</li>
-                        <li><b>Diminishing Combo:</b> Rentetan combo akan terus dikurangi kekuatannya (100% -> 50% -> 25%). Namun pengisian energi tetap utuh!</li>
-                        <li><b>Ultimate Manual:</b> Energi terisi dari batu yang pecah. Saat energi penuh, ikon Pokemon di bawah bar HP akan <b>BERSINAR TERANG</b>. Tekan ikon tersebut untuk mengaktifkan mode Ultimate, lalu pecahkan batunya untuk melepaskan serangan penuh (100% Damage)!</li>
+                        <li><b>Diminishing Combo:</b> Rentetan combo berturut akan dikurangi kekuatannya (100% -> 50% -> 25%). Namun energi tetap terisi penuh!</li>
+                        <li><b>Ultimate Taktis:</b> Saat energi Pokemon terisi, ikonnya akan <b>BERSINAR</b>. <b>Klik ikon tersebut</b> untuk secara INSTAN melesatkan Ultimate ke lawan! Ingat, menembakkan Ultimate akan otomatis mengakhiri giliranmu.</li>
                     </ul>
-                </div>
-                <div>
-                    <h3 class="font-bold text-teal-500 mb-1 border-b border-slate-200 pb-1">[3] UI Tim & Switch 🔄</h3>
-                    <p>Di bawah bar HP terdapat panel UI Tim. Klik panah `<` atau `>` untuk melihat tim mu atau tim musuh. Klik tombol <b>SWITCH</b> untuk menukar Pokemon aktif dengan cadangan (mengakhiri giliran).</p>
                 </div>
             </div>
-            
             <div class="mt-4 pt-3 border-t-2 border-slate-100 flex justify-center flex-none">
-                <button onclick="sClick(); hideHelp()" class="bg-sky-500 hover:bg-sky-600 text-white font-black py-2 px-8 rounded-xl active:scale-95 transition-transform w-full">SAYA MENGERTI</button>
+                <button onclick="sClick(); hideHelp()" class="bg-sky-500 hover:bg-sky-600 text-white font-black py-2 px-8 rounded-xl active:scale-95 transition-transform w-full">MENGERTI</button>
             </div>
         </div>
     </div>
@@ -416,11 +408,32 @@
                 </div>
             </div>
             
-            <div class="bg-slate-50 border border-slate-200 w-full py-2 rounded-lg mb-6">
+            <!-- HOST GEN SELECTOR UI -->
+            <div id="host-gen-selector" class="w-full mb-4 hidden z-50">
+                <div class="relative w-full">
+                    <button onclick="sClick(); toggleGenMenu()" id="btn-gen-select" class="w-full flex justify-between items-center bg-sky-50 border-2 border-sky-300 p-3 rounded-xl shadow-sm text-sm font-bold uppercase text-sky-700 transition-colors active:scale-95">
+                        <div class="flex flex-col items-start">
+                            <span class="text-[10px] text-sky-500 font-black tracking-widest leading-none mb-1">GENERASI POKEMON</span>
+                            <span id="gen-select-text">Acak Semua (Gen 1-5)</span>
+                        </div>
+                        <span id="gen-select-icon" class="transform transition-transform text-sky-500 text-xl leading-none">▼</span>
+                    </button>
+                    <div id="gen-menu-list" class="hidden absolute top-full left-0 w-full mt-2 bg-white border-2 border-sky-200 rounded-xl shadow-xl flex flex-col overflow-hidden text-left z-[100]">
+                        <div onclick="sClick(); selectGen('all', 'Acak Semua (Gen 1-5)')" class="p-3 border-b border-slate-100 hover:bg-sky-100 text-sm font-bold text-slate-600 hover:text-sky-700 cursor-pointer uppercase transition-colors">Acak Semua (Gen 1-5)</div>
+                        <div onclick="sClick(); selectGen('1', 'Generasi 1 (Kanto)')" class="p-3 border-b border-slate-100 hover:bg-sky-100 text-sm font-bold text-slate-600 hover:text-sky-700 cursor-pointer uppercase transition-colors">Generasi 1 (Kanto)</div>
+                        <div onclick="sClick(); selectGen('2', 'Generasi 2 (Johto)')" class="p-3 border-b border-slate-100 hover:bg-sky-100 text-sm font-bold text-slate-600 hover:text-sky-700 cursor-pointer uppercase transition-colors">Generasi 2 (Johto)</div>
+                        <div onclick="sClick(); selectGen('3', 'Generasi 3 (Hoenn)')" class="p-3 border-b border-slate-100 hover:bg-sky-100 text-sm font-bold text-slate-600 hover:text-sky-700 cursor-pointer uppercase transition-colors">Generasi 3 (Hoenn)</div>
+                        <div onclick="sClick(); selectGen('4', 'Generasi 4 (Sinnoh)')" class="p-3 border-b border-slate-100 hover:bg-sky-100 text-sm font-bold text-slate-600 hover:text-sky-700 cursor-pointer uppercase transition-colors">Generasi 4 (Sinnoh)</div>
+                        <div onclick="sClick(); selectGen('5', 'Generasi 5 (Unova)')" class="p-3 hover:bg-sky-100 text-sm font-bold text-slate-600 hover:text-sky-700 cursor-pointer uppercase transition-colors">Generasi 5 (Unova)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 border border-slate-200 w-full py-2 rounded-lg mb-6 relative z-10">
                 <p id="lobby-status-text" class="text-sm font-bold text-slate-500 animate-pulse">Menyiapkan Koneksi...</p>
             </div>
             
-            <div class="w-full space-y-3">
+            <div class="w-full space-y-3 relative z-10">
                 <button id="btn-start-game" onclick="sClick(); hostStartGame()" class="hidden w-full py-4 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-black text-lg shadow-lg active:scale-95 transition-all uppercase tracking-wider">MULAI BATTLE</button>
                 <button onclick="sClick(); cancelLobby()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold text-sm transition-colors border-2 border-slate-300 active:scale-95">BATAL & KELUAR</button>
             </div>
@@ -463,7 +476,7 @@
     <div id="game-container" class="fixed inset-0 bg-slate-50 z-30 flex-col p-2 hidden overflow-y-auto overflow-x-hidden pb-6">
         
         <!-- STATUS BARS (Slimmed down) -->
-        <div class="top-status-bar flex-none mb-0.5">
+        <div class="top-status-bar flex-none mb-0.5 mt-8"> <!-- Added mt-8 to clear fullscreen button space -->
             <!-- Player 1 -->
             <div id="plate-p1" class="fighter-plate p1">
                 <div class="flex justify-between items-center w-full mb-1">
@@ -515,10 +528,10 @@
             </div>
         </div>
 
-        <!-- TEAM UI BAR & SWITCH (Symmetrical) -->
-        <div class="flex-none w-full bg-slate-800 rounded-xl mb-1 shadow-inner border-2 border-slate-900 team-bar-container">
+        <!-- TEAM UI BAR & SWITCH (Symmetrical & Light) -->
+        <div class="flex-none w-full bg-white rounded-xl mb-1 shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-slate-200 team-bar-container">
             <!-- View Toggle (Absolute Left) -->
-            <button onclick="sClick(); toggleTeamView()" id="btn-toggle-team" class="absolute left-2 w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 font-black flex items-center justify-center shadow-sm transition-colors">&lt;</button>
+            <button onclick="sClick(); toggleTeamView()" id="btn-toggle-team" class="absolute left-2 w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-black flex items-center justify-center shadow-sm border border-slate-200 transition-colors">&lt;</button>
             
             <!-- Icons (Centered perfectly) -->
             <div id="team-icons-view" class="flex justify-center gap-2 px-2 z-10">
@@ -544,13 +557,13 @@
             </div>
         </div>
 
-        <!-- BATTLE LOG & HELP BUTTON -->
+        <!-- BATTLE LOG & HISTORY BUTTON -->
         <div class="flex-none w-full flex gap-1 mb-1">
             <div class="flex-1 bg-white border-4 border-slate-300 rounded-xl p-1 shadow-sm flex items-center justify-center min-h-[45px] overflow-hidden">
                 <span id="log-text" class="pixel-text text-[1.1rem] font-bold text-slate-800 leading-tight text-center px-2 w-full break-words">Pertarungan dimulai!</span>
             </div>
-            <!-- HELP BUTTON IN BATTLE -->
-            <button onclick="sClick(); showHelp()" class="btn-help flex-none self-center bg-white shadow-sm h-[45px] w-[45px] rounded-xl" title="Cara Bermain">?</button>
+            <!-- LOG HISTORY BUTTON IN BATTLE -->
+            <button onclick="sClick(); showLogHistory()" class="btn-log flex-none self-center bg-white shadow-sm h-[45px] w-[45px] rounded-xl font-bold text-2xl pb-1" title="Riwayat Log">≡</button>
         </div>
 
         <!-- PUZZLE BOARD -->
@@ -564,12 +577,33 @@
         </div>
     </div>
 
+    <!-- EPIC CUT-IN ULTIMATE OVERLAY -->
+    <div id="cutin-overlay" class="fixed inset-0 z-[200000] pointer-events-none flex items-center justify-center overflow-hidden hidden">
+        <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm"></div>
+        <div id="cutin-band" class="cutin-band relative w-full h-40 flex items-center opacity-0">
+            <img id="cutin-img" src="" class="absolute right-10 h-64 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] scale-125 z-10">
+            <div class="pl-8 text-white font-black italic uppercase text-4xl font-['Oswald'] drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] z-20">
+                <span id="cutin-name" class="tracking-widest">PIKACHU</span><br>
+                <span class="text-yellow-300 text-2xl tracking-[0.2em]">ULTIMATE STRIKE!</span>
+            </div>
+        </div>
+    </div>
+
 <script>
+    // --- FULLSCREEN TOGGLE ---
+    function toggleFullScreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                showToast(`Fullscreen error: ${err.message}`);
+            });
+        } else { document.exitFullscreen(); }
+    }
+
     // --- CONFIG & DATA ---
     const ROWS = 6; const COLS = 6; const POOL_SIZE = 15;
     const TYPE_COLORS = { normal:'#A8A77A', fire:'#EE8130', water:'#6390F0', electric:'#F7D02C', grass:'#7AC74C', ice:'#96D9D6', fighting:'#C22E28', poison:'#A33EA1', ground:'#E2BF65', flying:'#A98FF3', psychic:'#F95587', bug:'#A6B91A', rock:'#B6A136', ghost:'#735797', dragon:'#6F35FC', dark:'#705898', steel:'#B7B7CE', fairy:'#D685AD' };
     
-    // DYNAMIC ARENA BACKGROUND MAP (Tambahan fitur)
+    // DYNAMIC ARENA BACKGROUND MAP
     const TYPE_BGS = {
         normal: 'linear-gradient(180deg, #e2e8f0 0%, #f8fafc 50%, #cbd5e1 50%, #94a3b8 100%)',
         fire: 'linear-gradient(180deg, #fca5a5 0%, #fee2e2 50%, #f87171 50%, #ef4444 100%)',
@@ -591,21 +625,6 @@
         { name: 'quick-attack', power: 40, type: 'normal', class: 'physical' },
         { name: 'peck', power: 35, type: 'flying', class: 'physical' }
     ];
-
-    const POOL_GRASS = [1,2,3,43,44,45,69,70,71,152,153,154,252,253,254,387,388,389];
-    const POOL_FIRE = [4,5,6,37,38,58,59,77,78,155,156,157,255,256,257,390,391,392];
-    const POOL_WATER = [7,8,9,54,55,60,61,62,130,131,134,158,159,160,258,259,260,393,394,395];
-    const POOL_ELEC = [25,26,81,82,100,101,125,135,179,180,181,239,243,309,310,403,404,405];
-
-    function getRandomFrom(arr, count) {
-        let res = []; let temp = [...arr];
-        for(let i=0; i<count; i++) {
-            if(temp.length === 0) break;
-            let idx = Math.floor(Math.random() * temp.length);
-            res.push(temp.splice(idx, 1)[0]);
-        }
-        return res;
-    }
 
     const getStatic = (id) => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
     const getAnim = (id) => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`;
@@ -629,6 +648,11 @@
     
     let isDataLoaded = false; 
     let hintTimer = null; 
+    
+    let battleLogHistory = [];
+    
+    let isGenMenuOpen = false;
+    let selectedGen = 'all';
 
     // --- AUDIO ---
     let actx; 
@@ -655,6 +679,57 @@
     function showHelp() { document.getElementById('help-modal').classList.add('show'); }
     function hideHelp() { document.getElementById('help-modal').classList.remove('show'); }
     
+    // Log History Functions
+    function pushLog(htmlStr, plainStr) {
+        battleLogHistory.unshift(plainStr);
+        if(battleLogHistory.length > 50) battleLogHistory.pop();
+        document.getElementById('log-text').innerHTML = htmlStr;
+    }
+    function showLogHistory() {
+        let html = battleLogHistory.map(l => `<div class="text-sm font-medium text-slate-700 border-b border-slate-200 py-1 mb-1">${l}</div>`).join('');
+        document.getElementById('log-history-content').innerHTML = html || "<p class='text-slate-400 italic text-center mt-4'>Belum ada log pertarungan.</p>";
+        document.getElementById('log-history-modal').classList.add('show');
+    }
+    function closeLogHistory() { document.getElementById('log-history-modal').classList.remove('show'); }
+    
+    // CUSTOM ACCORDION DROPDOWN
+    function toggleGenMenu() {
+        isGenMenuOpen = !isGenMenuOpen;
+        const menu = document.getElementById('gen-menu-list');
+        const icon = document.getElementById('gen-select-icon');
+        if (isGenMenuOpen) {
+            menu.classList.remove('hidden');
+            icon.style.transform = 'rotate(180deg)';
+        } else {
+            menu.classList.add('hidden');
+            icon.style.transform = 'rotate(0deg)';
+        }
+    }
+
+    async function selectGen(val, text) {
+        selectedGen = val;
+        document.getElementById('gen-select-text').innerText = text;
+        toggleGenMenu();
+        
+        if (myRole !== 'host') return;
+        
+        isDataLoaded = false;
+        document.getElementById('lobby-status-text').innerText = "Memuat ulang data Gen...";
+        const btnStart = document.getElementById('btn-start-game');
+        btnStart.disabled = true;
+        btnStart.innerText = "MEMUAT DATA...";
+        btnStart.className = "w-full py-4 bg-slate-300 text-slate-500 rounded-xl font-black text-lg shadow-inner cursor-not-allowed uppercase tracking-wider animate-pulse";
+        
+        let success = await fetchPool();
+        if (success) {
+            isDataLoaded = true;
+            updateLobbyPresenceUI(); // Refresh Start Button State
+        } else {
+            showToast("Gagal memuat kartu gen ini.");
+            document.getElementById('lobby-status-text').innerText = "Gagal memuat sistem.";
+        }
+    }
+    
     // TEAM UI LOGIC
     function toggleTeamView() {
         viewingMyTeam = !viewingMyTeam;
@@ -677,7 +752,7 @@
             let isActive = idx === activeIdx;
             
             let wrap = document.createElement('div');
-            wrap.className = `team-icon-wrap ${isActive ? 'is-active' : 'border border-slate-400 opacity-80'}`;
+            wrap.className = `team-icon-wrap ${isActive ? 'is-active' : 'border border-slate-300 opacity-80'}`;
             if(isDead) wrap.classList.add('opacity-40');
             
             let energyPct = Math.min(100, (p.energy / p.maxEnergy) * 100);
@@ -689,19 +764,19 @@
             img.style.filter = `grayscale(${grayscale}%)`;
             wrap.appendChild(img);
             
-            // LOGIC KLIK ULTIMATE - DIJAMIN BISA DIKLIK!
+            // LOGIC KLIK ULTIMATE INSTAN
             if (isFull && !isDead) {
                 wrap.classList.add('is-full');
-                if (p.ultReady) wrap.classList.add('ult-on');
                 
                 if (viewingMyTeam) {
                     wrap.onclick = (e) => {
-                        e.stopPropagation(); // Biar gampang keklik
+                        e.stopPropagation();
+                        if(state.turn !== myTurnId || state.isAnim) {
+                            if(state.turn !== myTurnId) showToast("Tunggu giliranmu!");
+                            return;
+                        }
                         sClick();
-                        p.ultReady = !p.ultReady;
-                        renderTeamBar();
-                        if(p.ultReady) showToast(`Mode Ultimate ${p.name.toUpperCase()} SIAP! Match elemennya!`);
-                        else showToast(`Ultimate Batal.`);
+                        castUltimateInstantly(idx);
                     };
                 }
             }
@@ -765,7 +840,7 @@
         setActive('p1', idxTarget);
         
         p1S.classList.remove('switch-out'); p1S.classList.add('switch-in');
-        setLog(`[SISTEM] Kamu menukar dengan ${myTeam[idxTarget].name}! Giliran berakhir.`);
+        pushLog(`[SISTEM] Kamu mengeluarkan ${myTeam[idxTarget].name}!`, `[SWITCH] Kamu menarik Pokemon dan menukar dengan ${myTeam[idxTarget].name}. Giliran berakhir.`);
         await sleep(600); p1S.classList.remove('switch-in');
         
         state.turn = myTurnId === 'p1' ? 'p2' : 'p1';
@@ -802,7 +877,9 @@
         document.getElementById('waiting-room').classList.remove('hidden'); document.getElementById('waiting-room').classList.add('flex');
         document.getElementById('lobby-scoreboard').classList.add('hidden');
         document.getElementById('display-room-code').innerText = code;
-        resetLobbyUI(); document.getElementById('lobby-status-text').innerText = "Menyiapkan Koneksi...";
+        resetLobbyUI(); 
+        document.getElementById('host-gen-selector').classList.remove('hidden');
+        document.getElementById('lobby-status-text').innerText = "Menyiapkan Koneksi...";
         try {
             await initAblyAsync();
             channel = ably.channels.get(`poke-room-${code}`);
@@ -859,6 +936,10 @@
         document.getElementById('slot-1-avatar').classList.add('hidden'); document.getElementById('slot-1-initial').classList.remove('hidden');
         document.getElementById('slot-2-avatar').classList.add('hidden'); document.getElementById('slot-2-initial').classList.remove('hidden');
         document.getElementById('btn-start-game').classList.add('hidden');
+        
+        document.getElementById('host-gen-selector').classList.add('hidden');
+        selectedGen = 'all'; document.getElementById('gen-select-text').innerText = 'Acak Semua (Gen 1-5)';
+        if(isGenMenuOpen) toggleGenMenu();
     }
 
     function updateLobbyPresenceUI() {
@@ -938,19 +1019,23 @@
     }
 
     // ==========================================
-    // 2. FETCH POKEAPI (Balanced Draft)
+    // 2. FETCH POKEAPI (Generation Selectable)
     // ==========================================
     async function fetchPool() {
         try {
+            // GEN SELECTION LOGIC
+            let genVal = selectedGen;
+            let range = [1, 649]; // Default All up to Gen 5
+            if(genVal === '1') range = [1, 151];
+            else if(genVal === '2') range = [152, 251];
+            else if(genVal === '3') range = [252, 386];
+            else if(genVal === '4') range = [387, 493];
+            else if(genVal === '5') range = [494, 649];
+
             let ids = [];
-            ids = ids.concat(getRandomFrom(POOL_GRASS, 3));
-            ids = ids.concat(getRandomFrom(POOL_FIRE, 3));
-            ids = ids.concat(getRandomFrom(POOL_WATER, 3));
-            ids = ids.concat(getRandomFrom(POOL_ELEC, 3));
-            
-            let usedSet = new Set(ids);
+            let usedSet = new Set();
             while(ids.length < POOL_SIZE) {
-                let rId = Math.floor(Math.random() * 493) + 1;
+                let rId = Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
                 if(!usedSet.has(rId)) { ids.push(rId); usedSet.add(rId); }
             }
 
@@ -1137,6 +1222,8 @@
         
         document.getElementById('player-player-name').innerText = myName; document.getElementById('enemy-player-name').innerText = oppName;
         setActive('p1', 0); setActive('p2', 0); state.turn = 'p1'; viewingMyTeam = true;
+        battleLogHistory = [];
+        pushLog("Pertarungan dimulai!", "[SISTEM] Pertarungan dimulai.");
         
         channel.unsubscribe('board-init'); channel.unsubscribe('attack'); channel.unsubscribe('end-turn'); channel.unsubscribe('heal'); channel.unsubscribe('shuffle'); channel.unsubscribe('switch-sync'); channel.unsubscribe('manual-switch');
 
@@ -1150,7 +1237,7 @@
         channel.subscribe('board-init', (msg) => { if(myRole === 'guest') { renderBoardFromData(msg.data.b); updateBoardLock(); checkBoardState(); } });
         channel.subscribe('attack', async (msg) => { if(msg.data.sender !== myRole) await processReceivedAttack(msg.data); });
         channel.subscribe('heal', (msg) => {
-            if(msg.data.sender !== myRole) { let oppPoke = oppTeam[state.oppActive]; oppPoke.hp = Math.min(oppPoke.maxHp, oppPoke.hp + msg.data.amount); updateOppStatus(); setLog(`Lawan memulihkan HP!`); }
+            if(msg.data.sender !== myRole) { let oppPoke = oppTeam[state.oppActive]; oppPoke.hp = Math.min(oppPoke.maxHp, oppPoke.hp + msg.data.amount); updateOppStatus(); pushLog(`Lawan memulihkan HP!`, `[HEAL] Lawan memulihkan ${msg.data.amount} HP.`); }
         });
         channel.subscribe('end-turn', (msg) => {
             if(msg.data.nextTurn === myTurnId) { renderBoardFromData(msg.data.boardState); state.turn = myTurnId; updateBoardLock(); state.isAnim = false; checkBoardState(); }
@@ -1180,7 +1267,7 @@
                 p2S.classList.add('switch-out'); sSwitch(); await sleep(300);
                 setActive('p2', oppPokeIdx);
                 p2S.classList.remove('switch-out'); p2S.classList.add('switch-in'); 
-                setLog(`[SISTEM] Lawan menukar pokemon dengan ${oppTeam[oppPokeIdx].name}!`);
+                pushLog(`[SISTEM] Lawan mengeluarkan ${oppTeam[oppPokeIdx].name}!`, `[SWITCH] Lawan menarik Pokemon dan menukar dengan ${oppTeam[oppPokeIdx].name}.`);
                 await sleep(600);
                 p2S.classList.remove('switch-in');
             }
@@ -1239,8 +1326,138 @@
         renderTeamBar(); // UPDATE TEAM BAR
     }
 
-    function setLog(txt) { document.getElementById('log-text').innerHTML = txt; }
-    
+    // EPIC CUT-IN ANIMATION HANDLER
+    function showUltimateCutin(poke) {
+        sEpic();
+        const overlay = document.getElementById('cutin-overlay');
+        const band = document.getElementById('cutin-band');
+        document.getElementById('cutin-img').src = poke.spriteA;
+        document.getElementById('cutin-img').onerror = function(){this.src=poke.spriteS;};
+        document.getElementById('cutin-name').innerText = poke.name;
+
+        overlay.classList.remove('hidden');
+        
+        requestAnimationFrame(() => {
+            band.style.opacity = '1';
+            band.style.transform = 'skewY(-4deg) translateX(0)';
+        });
+
+        setTimeout(() => {
+            band.style.transform = 'skewY(-4deg) translateX(-100%)';
+            band.style.opacity = '0';
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                band.style.transform = 'skewY(-4deg) translateX(100%)'; 
+            }, 300);
+        }, 1200);
+    }
+
+    // INSTANT ULTIMATE LOGIC
+    async function castUltimateInstantly(idx) {
+        state.isAnim = true;
+        clearTimeout(hintTimer); removeHints();
+        
+        let myPoke = myTeam[idx];
+        
+        // Ganti Pokemon jika yang di klik bukan yang lagi aktif
+        if(state.myActive !== idx) {
+            const p1S = document.getElementById('p1-sprite');
+            p1S.classList.add('switch-out'); sSwitch(); await sleep(300);
+            setActive('p1', idx);
+            p1S.classList.remove('switch-out'); p1S.classList.add('switch-in');
+            channel.publish('switch-sync', { sender: myRole, newActive: idx });
+            await sleep(300); p1S.classList.remove('switch-in');
+        }
+
+        // Tampilkan Animasi Cut-in Epic
+        showUltimateCutin(myPoke);
+        await sleep(1500); 
+
+        myPoke.energy = 0; updateMyStatus(); // Consume Energy
+
+        let oppPoke = oppTeam[state.oppActive];
+        let currentMove = myPoke.learnedMove;
+        let isPhysical = currentMove.class === 'physical';
+        let atkStat = isPhysical ? myPoke.atk : myPoke.spa;
+        let defStat = isPhysical ? oppPoke.def : oppPoke.spd;
+
+        let mult = 1; let moveType = currentMove.type;
+        if(typeRels[moveType]) {
+            oppPoke.types.forEach(opT => {
+                if(typeRels[moveType].double.includes(opT)) mult *= 2;
+                if(typeRels[moveType].half.includes(opT)) mult *= 0.5;
+                if(typeRels[moveType].zero.includes(opT)) mult *= 0;
+            });
+        }
+
+        let finalDmg = 0; let isCrit = false;
+        let logPlain = ""; let logHtml = "";
+        let moveNameUpper = currentMove.name.toUpperCase();
+
+        if (mult === 0) {
+            logHtml = `<span class="text-slate-500 font-bold">[IMUN]</span> Ultimate ${moveNameUpper} gagal!`;
+            logPlain = `[ULTIMATE] ${myPoke.name} menggunakan ${moveNameUpper} ke ${oppPoke.name}, tapi IMUN (Damage 0)!`;
+            showFloatingDmg(COLS/2, ROWS/2, "IMUN!", false);
+        } else {
+            let stab = myPoke.types.includes(moveType) ? 1.5 : 1;
+            let levelMod = 22; 
+            let baseDmg = Math.floor(((levelMod * currentMove.power * (atkStat / defStat)) / 50) + 2);
+            let critChance = Math.min(myPoke.spe / 255, 0.5); 
+            isCrit = Math.random() < critChance; 
+            let critMod = isCrit ? 1.5 : 1;
+            let rngRoll = 0.85 + Math.random() * 0.15;
+
+            finalDmg = Math.floor(baseDmg * mult * stab * critMod * rngRoll);
+            finalDmg = Math.max(1, finalDmg); // min 1 dmg if not immune
+
+            let effText = mult > 1 ? " (Super Efektif!)" : (mult < 1 ? " (Kurang Efektif)" : "");
+            let critText = isCrit ? " [CRITICAL!]" : "";
+
+            logHtml = `<span class='text-sky-600 font-black'>[ULTI]</span> ${myPoke.name} => ${finalDmg} DMG!`;
+            logPlain = `[ULTIMATE] ${myPoke.name} melesatkan ${moveNameUpper} ke ${oppPoke.name} memberikan ${finalDmg} damage!${effText}${critText}`;
+
+            sHit(true); showEpicMove(currentMove.name); shakeArena();
+            showFloatingDmg(COLS/2, ROWS/2, `-${finalDmg}`, true);
+
+            const p1S = document.getElementById('p1-sprite'); const p2S = document.getElementById('p2-sprite');
+            p1S.classList.add('attack-lunge-p1'); await sleep(200); p2S.classList.add('hit-flash');
+            oppPoke.hp -= finalDmg; updateOppStatus();
+            await sleep(300); p1S.classList.remove('attack-lunge-p1'); p2S.classList.remove('hit-flash');
+        }
+
+        pushLog(logHtml, logPlain);
+
+        channel.publish('attack', { 
+            sender: myRole, myActiveIdx: idx, 
+            damage: finalDmg, isFainted: false, 
+            moveName: currentMove.name, isCrit: isCrit, 
+            isUltimate: true, newEnergy: myPoke.energy,
+            effCode: mult, chainCount: 0
+        });
+
+        if(oppPoke.hp <= 0) {
+            sFaint(); pushLog(`[FAINT] ${oppPoke.name} tumbang!`, `[FAINT] ${oppPoke.name} musuh telah dikalahkan!`);
+            await sleep(500);
+            let nextIdx = oppTeam.findIndex(t => t.hp > 0);
+            if(nextIdx !== -1) {
+                const p2Sp = document.getElementById('p2-sprite');
+                p2Sp.classList.add('switch-out'); await sleep(300);
+                setActive('p2', nextIdx);
+                oppPoke = oppTeam[nextIdx]; 
+                p2Sp.classList.remove('switch-out'); p2Sp.classList.add('switch-in');
+                pushLog(`Lawan mengeluarkan ${oppPoke.name}!`, `[SISTEM] Lawan memasukkan ${oppPoke.name} ke arena.`);
+                await sleep(600); p2Sp.classList.remove('switch-in');
+            } else {
+                endGame(true); return;
+            }
+        }
+
+        // AKHIRI GILIRAN SETELAH ULTIMATE
+        state.turn = myTurnId === 'p1' ? 'p2' : 'p1';
+        channel.publish('end-turn', { nextTurn: state.turn, boardState: board.map(r=>r.map(c=>c.pIdx)) });
+        updateBoardLock(); state.isAnim = false; checkBoardState();
+    }
+
     function updateBoardLock() {
         const lockEl = document.getElementById('board-lock'); const lockTxt = document.getElementById('board-lock-text');
         document.getElementById('plate-p1').classList.remove('active-turn');
@@ -1258,11 +1475,11 @@
 
         if(state.turn === myTurnId) { 
             btnSwitch.disabled = false;
-            lockEl.classList.add('hidden'); setLog("Giliranmu! Geser elemen atau Switch Pokemon."); 
+            lockEl.classList.add('hidden'); pushLog(document.getElementById('log-text').innerHTML, `[GILIRAN] Sekarang giliranmu.`); 
             document.getElementById('plate-p1').classList.add('active-turn'); 
         } else { 
             btnSwitch.disabled = true;
-            lockEl.classList.remove('hidden'); setLog(`Menunggu pergerakan ${oppName}...`); 
+            lockEl.classList.remove('hidden'); pushLog(document.getElementById('log-text').innerHTML, `[GILIRAN] Menunggu pergerakan lawan...`); 
             document.getElementById('plate-p2').classList.add('active-turn'); 
         }
     }
@@ -1341,7 +1558,7 @@
         
         if(!move) {
             state.isAnim = true; 
-            setLog("[INFO] Papan macet! Mengocok ulang area...");
+            pushLog("[INFO] Papan macet! Mengocok ulang...", "[SISTEM] Tidak ada kombinasi yang bisa dibuat. Papan dikocok.");
             if (myRole === 'host') {
                 setTimeout(() => { let newB = getValidInitialBoard(); channel.publish('shuffle', { b: newB }); }, 1500);
             }
@@ -1417,7 +1634,6 @@
     async function processMyMatches(groups, comboChain) {
         let totalHeal = 0;
         
-        // FITUR TAMBAHAN: Munculkan Text Besar bila ini adalah Combo!
         if(comboChain > 0) {
             showFloatingDmg(COLS/2, ROWS/2, `COMBO x${comboChain+1}!`, false, false, true);
         }
@@ -1439,51 +1655,33 @@
 
             let myPoke = myTeam[group.pIdx]; let oppPoke = oppTeam[state.oppActive];
             
-            // --- ANIMASI SWITCH SEBELUM MENYERANG JIKA MATCH BUKAN POKEMON AKTIF ---
+            // Animasi Swap
             if(state.myActive !== group.pIdx) {
                 const p1S = document.getElementById('p1-sprite');
-                p1S.classList.add('switch-out');
-                sSwitch();
-                await sleep(300);
+                p1S.classList.add('switch-out'); sSwitch(); await sleep(300);
                 setActive('p1', group.pIdx); 
-                p1S.classList.remove('switch-out');
-                p1S.classList.add('switch-in');
+                p1S.classList.remove('switch-out'); p1S.classList.add('switch-in');
                 channel.publish('switch-sync', { sender: myRole, newActive: group.pIdx });
-                await sleep(300);
-                p1S.classList.remove('switch-in');
+                await sleep(300); p1S.classList.remove('switch-in');
             }
 
             if (myPoke.hp <= 0) {
-                sFaint(); setLog(`[GAGAL] ${myPoke.name} sudah PINGSAN!`);
+                sFaint(); pushLog(`[GAGAL] ${myPoke.name} sudah PINGSAN!`, `[GAGAL] Kamu mencocokkan batu ${myPoke.name} yang sudah tumbang.`);
                 showFloatingDmg(ax/group.cells.length, ay/group.cells.length, "[PINGSAN]", false);
                 await sleep(400);
             } else {
                 let energyGained = group.cells.length;
-                let isUltimate = false;
+                myPoke.energy = Math.min(myPoke.maxEnergy, myPoke.energy + energyGained);
                 
-                // ULTIMATE MANUAL LOGIC
-                if (myPoke.energy >= myPoke.maxEnergy && myPoke.ultReady) {
-                    isUltimate = true;
-                    myPoke.energy = 0; // Consume
-                    myPoke.ultReady = false;
-                } else {
-                    myPoke.energy = Math.min(myPoke.maxEnergy, myPoke.energy + energyGained);
-                }
-                
-                if(!isUltimate) { showFloatingDmg(ax/group.cells.length, ay/group.cells.length, `+${energyGained} EP`, false, false); }
+                showFloatingDmg(ax/group.cells.length, ay/group.cells.length, `+${energyGained} EP`, false, false);
                 updateMyStatus();
                 await sleep(200);
 
-                let currentMove = isUltimate ? myPoke.learnedMove : myPoke.basicMove;
+                let currentMove = myPoke.basicMove;
                 let isPhysical = currentMove.class === 'physical';
                 
                 let atkStat = isPhysical ? myPoke.atk : myPoke.spa;
                 let defStat = isPhysical ? oppPoke.def : oppPoke.spd;
-                
-                // NERF SERANGAN BIASA: Dibagi 2
-                if (!isUltimate) {
-                    atkStat = atkStat / 2.0;
-                }
                 
                 let mult = 1; let moveType = currentMove.type;
                 if(typeRels[moveType]) {
@@ -1494,57 +1692,66 @@
                     });
                 }
 
-                let stab = myPoke.types.includes(moveType) ? 1.5 : 1;
-                let levelMod = 22; 
-                let baseDmg = Math.floor(((levelMod * currentMove.power * (atkStat / defStat)) / 50) + 2);
-                let matchBonus = 1 + ((group.cells.length - 3) * 0.25);
-                
-                let critChance = Math.min(myPoke.spe / 255, 0.5); 
-                let isCrit = Math.random() < critChance; 
-                let critMod = isCrit ? 1.5 : 1;
-                
-                let rngRoll = 0.85 + Math.random() * 0.15;
-                let comboPenalty = Math.max(0.25, Math.pow(0.5, comboChain)); 
-
-                let finalDmg = Math.floor(baseDmg * matchBonus * mult * stab * critMod * rngRoll * comboPenalty);
-                finalDmg = Math.max(1, finalDmg); 
-                
+                let finalDmg = 0; let isCrit = false;
                 let usedMoveName = currentMove.name;
+                let moveNameUpper = usedMoveName.toUpperCase();
+                let logPlain = ""; let logHtml = "";
 
-                let effectivenessHtml = mult > 1 ? "<br><span class='text-rose-500 text-[0.8rem] font-black uppercase tracking-wider'>Super Effective!</span>" : (mult < 1 ? "<br><span class='text-sky-500 text-[0.8rem] font-black uppercase tracking-wider'>Kurang Efektif...</span>" : "");
-                let critHtml = isCrit ? "<span class='text-amber-500 text-[0.8rem] font-black tracking-wider uppercase'>[CRITICAL HIT!]</span> " : "";
-                let comboHtml = comboChain > 0 ? `<br><span class='text-slate-500 text-[0.7rem] uppercase'>Combo x${comboChain+1} (Dmg Penalti)</span>` : "";
-
-                if (isUltimate) {
-                    showEpicMove(usedMoveName); 
-                    shakeArena();
-                    setLog(`<span class='text-sky-600 font-black'>[ULTIMATE]</span> ${myPoke.name} memakai ${usedMoveName.toUpperCase()}!${effectivenessHtml}<br>${critHtml}${comboHtml}`);
-                    await sleep(600);
+                // IMUNITAS LOGIC 
+                if (mult === 0) {
+                    logHtml = `<span class="text-slate-500 font-bold">[IMUN]</span> ${myPoke.name} serang ${oppPoke.name} tapi kebal!`;
+                    logPlain = `[SERANG] ${myPoke.name} menggunakan ${moveNameUpper} ke ${oppPoke.name}, tapi IMUN (Damage 0)!`;
+                    showFloatingDmg(ax/group.cells.length, ay/group.cells.length, "IMUN!", false);
+                    
+                    pushLog(logHtml, logPlain);
                 } else {
-                    setLog(`[SERANG] ${myPoke.name} memakai ${usedMoveName.toUpperCase()}!${effectivenessHtml}<br>${critHtml}${comboHtml}`);
+                    let stab = myPoke.types.includes(moveType) ? 1.5 : 1;
+                    let levelMod = 22; 
+                    let baseDmg = Math.floor(((levelMod * currentMove.power * (atkStat / defStat)) / 50) + 2);
+                    let matchBonus = 1 + ((group.cells.length - 3) * 0.25);
+                    
+                    let critChance = Math.min(myPoke.spe / 255, 0.5); 
+                    isCrit = Math.random() < critChance; 
+                    let critMod = isCrit ? 1.5 : 1;
+                    
+                    let rngRoll = 0.85 + Math.random() * 0.15;
+                    let comboPenalty = Math.max(0.25, Math.pow(0.5, comboChain)); 
+
+                    finalDmg = Math.floor(baseDmg * matchBonus * mult * stab * critMod * rngRoll * comboPenalty);
+                    finalDmg = Math.max(1, finalDmg); 
+
+                    let effHtml = mult > 1 ? "<br><span class='text-rose-500 text-[0.8rem] font-black uppercase tracking-wider'>Super Effective!</span>" : (mult < 1 ? "<br><span class='text-sky-500 text-[0.8rem] font-black uppercase tracking-wider'>Kurang Efektif...</span>" : "");
+                    let critHtml = isCrit ? "<span class='text-amber-500 text-[0.8rem] font-black tracking-wider uppercase'>[CRITICAL HIT!]</span> " : "";
+                    let comboHtml = comboChain > 0 ? `<br><span class='text-slate-500 text-[0.7rem] uppercase'>Combo x${comboChain+1} (Penalti Damage)</span>` : "";
+
+                    let effText = mult > 1 ? " (Super Efektif!)" : (mult < 1 ? " (Kurang Efektif)" : "");
+                    let critText = isCrit ? " [CRITICAL!]" : "";
+
+                    logHtml = `[SERANG] ${myPoke.name} memakai ${moveNameUpper}!${effHtml}<br>${critHtml}${comboHtml}`;
+                    logPlain = `[SERANG] ${myPoke.name} menggunakan ${moveNameUpper} memberikan ${finalDmg} damage ke ${oppPoke.name}.${effText}${critText}`;
+
+                    pushLog(logHtml, logPlain);
+                    sHit(isCrit); 
+                    showFloatingDmg(ax/group.cells.length, ay/group.cells.length, `-${finalDmg}`, isCrit);
+                    
+                    const p1S = document.getElementById('p1-sprite'); const p2S = document.getElementById('p2-sprite');
+                    p1S.classList.add('attack-lunge-p1'); await sleep(200); p2S.classList.add('hit-flash');
+                    
+                    oppPoke.hp -= finalDmg; updateOppStatus();
+                    await sleep(300); p1S.classList.remove('attack-lunge-p1'); p2S.classList.remove('hit-flash');
                 }
 
-                sHit(isCrit || isUltimate); 
-                showFloatingDmg(ax/group.cells.length, ay/group.cells.length, `-${finalDmg}`, isCrit || isUltimate);
-                
-                const p1S = document.getElementById('p1-sprite'); const p2S = document.getElementById('p2-sprite');
-                p1S.classList.add('attack-lunge-p1'); await sleep(200); p2S.classList.add('hit-flash');
-                
-                oppPoke.hp -= finalDmg; updateOppStatus();
-                await sleep(300); p1S.classList.remove('attack-lunge-p1'); p2S.classList.remove('hit-flash');
-
+                // Publish socket walau dmg 0 (biar sinkron)
                 channel.publish('attack', { 
                     sender: myRole, myActiveIdx: group.pIdx, 
                     damage: finalDmg, isFainted: false, 
                     moveName: usedMoveName, isCrit: isCrit, 
-                    isUltimate: isUltimate,
-                    newEnergy: myPoke.energy,
-                    effCode: mult,
-                    chainCount: comboChain
+                    isUltimate: false, newEnergy: myPoke.energy,
+                    effCode: mult, chainCount: comboChain
                 });
 
                 if(oppPoke.hp <= 0) { 
-                    sFaint(); setLog(`[FAINTED] ${oppPoke.name} musuh telah Tumbang!`); 
+                    sFaint(); pushLog(`[FAINT] ${oppPoke.name} musuh tumbang!`, `[FAINT] ${oppPoke.name} musuh telah dikalahkan.`);
                     await sleep(500);
                     let nextIdx = oppTeam.findIndex(t => t.hp > 0);
                     if(nextIdx !== -1) {
@@ -1553,7 +1760,7 @@
                         setActive('p2', nextIdx);
                         oppPoke = oppTeam[nextIdx]; 
                         p2Sp.classList.remove('switch-out'); p2Sp.classList.add('switch-in');
-                        setLog(`[SISTEM] Musuh mengeluarkan ${oppPoke.name}!`);
+                        pushLog(`Lawan mengeluarkan ${oppPoke.name}!`, `[SISTEM] Lawan mengganti dengan ${oppPoke.name}.`);
                         await sleep(600); p2Sp.classList.remove('switch-in');
                     }
                 }
@@ -1565,7 +1772,7 @@
             let myPoke = myTeam[state.myActive];
             if(myPoke.hp > 0) {
                 myPoke.hp = Math.min(myPoke.maxHp, myPoke.hp + totalHeal);
-                updateMyStatus(); sEpic(); setLog(`[PEMULIHAN] Mendapat +${totalHeal} HP`);
+                updateMyStatus(); sEpic(); pushLog(`[PEMULIHAN] Mendapat +${totalHeal} HP`, `[HEAL] Kamu memulihkan ${totalHeal} HP melalui potion.`);
                 channel.publish('heal', { amount: totalHeal, sender: myRole });
             }
         }
@@ -1598,41 +1805,53 @@
         let oppPoke = oppTeam[oppPokeIdx]; let myPoke = myTeam[state.myActive];
 
         if(data.isFainted) {
-            sFaint(); setLog(`[FAINTED] ${oppName} menghancurkan batu Pokemon yang telah tumbang!`);
+            sFaint(); pushLog(`[GAGAL] Lawan menghancurkan batu Pokemon yang tumbang!`, `[GAGAL] Lawan mencocokkan batu pokemon yang tumbang.`);
         } else {
             oppPoke.energy = data.newEnergy;
             updateOppStatus();
 
-            let effectivenessHtml = data.effCode > 1 ? "<br><span class='text-rose-500 text-[0.8rem] font-black uppercase tracking-wider'>Super Effective!</span>" : (data.effCode < 1 ? "<br><span class='text-sky-500 text-[0.8rem] font-black uppercase tracking-wider'>Kurang Efektif...</span>" : "");
+            let logHtml = ""; let logPlain = "";
+            let effHtml = data.effCode > 1 ? "<br><span class='text-rose-500 text-[0.8rem] font-black uppercase tracking-wider'>Super Effective!</span>" : (data.effCode < 1 ? "<br><span class='text-sky-500 text-[0.8rem] font-black uppercase tracking-wider'>Kurang Efektif...</span>" : "");
             let critHtml = data.isCrit ? "<span class='text-amber-500 text-[0.8rem] font-black tracking-wider uppercase'>[CRITICAL HIT!]</span> " : "";
-            let comboHtml = data.chainCount > 0 ? `<br><span class='text-slate-500 text-[0.7rem] uppercase'>Combo x${data.chainCount+1} (Dmg Penalti)</span>` : "";
+            let comboHtml = data.chainCount > 0 ? `<br><span class='text-slate-500 text-[0.7rem] uppercase'>Combo x${data.chainCount+1}</span>` : "";
 
-            if(data.isUltimate) { 
-                showEpicMove(data.moveName); 
-                setLog(`<span class='text-sky-600 font-black'>[ULTIMATE LAWAN]</span> memakai ${data.moveName.toUpperCase()}!${effectivenessHtml}<br>${critHtml}${comboHtml}`);
-                shakeArena();
-                await sleep(600); 
+            let effText = data.effCode > 1 ? " (Super Efektif!)" : (data.effCode < 1 ? " (Kurang Efektif)" : "");
+            let critText = data.isCrit ? " [CRITICAL!]" : "";
+            let moveNameUpper = data.moveName.toUpperCase();
+
+            if (data.effCode === 0) {
+                logHtml = `<span class="text-slate-500 font-bold">[IMUN]</span> Serangan lawan gagal!`;
+                logPlain = `[SERANG] Lawan menggunakan ${moveNameUpper} ke ${myPoke.name}, tapi IMUN (Damage 0)!`;
             } else {
-                setLog(`[SERANG LAWAN] memakai ${data.moveName.toUpperCase()}!${effectivenessHtml}<br>${critHtml}${comboHtml}`);
+                if(data.isUltimate) { 
+                    showEpicMove(data.moveName); shakeArena(); await sleep(600);
+                    logHtml = `<span class='text-rose-600 font-black'>[ULTI LAWAN]</span> => ${dmg} DMG!${effHtml}<br>${critHtml}${comboHtml}`;
+                    logPlain = `[ULTIMATE LAWAN] ${oppPoke.name} melesatkan ${moveNameUpper} memberikan ${dmg} damage ke ${myPoke.name}.${effText}${critText}`;
+                } else {
+                    logHtml = `[SERANG LAWAN] memakai ${moveNameUpper}!${effHtml}<br>${critHtml}${comboHtml}`;
+                    logPlain = `[SERANG LAWAN] ${oppPoke.name} menggunakan ${moveNameUpper} memberikan ${dmg} damage ke ${myPoke.name}.${effText}${critText}`;
+                }
+                
+                sHit(data.isCrit || data.isUltimate); 
+                const p1S = document.getElementById('p1-sprite'); const p2S = document.getElementById('p2-sprite');
+                p2S.classList.add('attack-lunge-p2'); await sleep(200); p1S.classList.add('hit-flash'); 
+                myPoke.hp -= dmg; updateMyStatus();
+                await sleep(300); p2S.classList.remove('attack-lunge-p2'); p1S.classList.remove('hit-flash'); 
             }
             
-            sHit(data.isCrit || data.isUltimate); 
+            pushLog(logHtml, logPlain);
 
-            const p1S = document.getElementById('p1-sprite'); const p2S = document.getElementById('p2-sprite');
-            p2S.classList.add('attack-lunge-p2'); await sleep(200); p1S.classList.add('hit-flash'); 
-            myPoke.hp -= dmg; updateMyStatus();
-            await sleep(300); p2S.classList.remove('attack-lunge-p2'); p1S.classList.remove('hit-flash'); 
-            
             if(myPoke.hp <= 0) { 
-                sFaint(); setLog(`[FAINTED] ${myPoke.name} Tumbang!`); 
+                sFaint(); pushLog(`[FAINT] ${myPoke.name} Tumbang!`, `[FAINT] ${myPoke.name} milikmu telah tumbang!`);
                 await sleep(500);
                 let nextIdx = myTeam.findIndex(t => t.hp > 0);
                 if(nextIdx !== -1) {
+                    const p1S = document.getElementById('p1-sprite');
                     p1S.classList.add('switch-out'); await sleep(300);
                     setActive('p1', nextIdx);
                     myPoke = myTeam[nextIdx];
                     p1S.classList.remove('switch-out'); p1S.classList.add('switch-in');
-                    setLog(`[SISTEM] Maju, ${myPoke.name}!`);
+                    pushLog(`[SISTEM] Maju, ${myPoke.name}!`, `[SWITCH] Kamu memasukkan ${myPoke.name} ke arena.`);
                     await sleep(600); p1S.classList.remove('switch-in');
                 }
             }
@@ -1672,14 +1891,14 @@
     async function endGame(win) {
         state.isAnim = true; clearTimeout(hintTimer); removeHints();
         
-        setLog(win ? "MENANG! Semua musuh tumbang!" : "KALAH! Timmu telah dihabisi!");
+        pushLog(win ? "MENANG! Semua musuh tumbang!" : "KALAH! Timmu telah dihabisi!", win ? "[GAME OVER] Kamu Memenangkan Pertarungan!" : "[GAME OVER] Kamu Kalah.");
         document.getElementById('log-text').className = win ? "pixel-text text-xl font-bold text-emerald-500 leading-none text-center px-2 w-full break-words" : "pixel-text text-xl font-bold text-rose-500 leading-none text-center px-2 w-full break-words";
 
         if(win) myScore++; else oppScore++;
 
         await sleep(3000);
 
-        myTeam = []; oppTeam = []; board = []; draftTurn = 'p1';
+        myTeam = []; oppTeam = []; board = []; draftTurn = 'p1'; battleLogHistory = [];
         document.getElementById('p1-deck-slots').innerHTML = '<p id="p1-deck-empty" class="text-xs text-slate-400 italic my-auto mx-auto w-full text-center">Pilih dari pool di atas!</p>';
         document.getElementById('p2-deck-slots').innerHTML = '<p id="p2-deck-empty" class="text-xs text-slate-400 italic my-auto mx-auto w-full text-center">Menunggu pilihan lawan...</p>';
         document.getElementById('p1-count').innerText = `0/5`; document.getElementById('p2-count').innerText = `0/5`;
