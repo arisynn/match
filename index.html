@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -24,7 +23,6 @@
         /* --- DRAFT PICK UI --- */
         #draft-screen { display: flex; flex-direction: column; height: 100%; width: 100%; background: #e2e8f0; gap: 4px; padding: 4px;}
 
-        /* Deck Area Horizontal Scroll */
         .deck-container {
             flex: none; display: flex; flex-direction: column;
             background: #fff; border-radius: 0.5rem; padding: 0.5rem;
@@ -33,12 +31,11 @@
         .deck-area {
             display: flex; gap: 0.5rem; overflow-x: auto; overflow-y: hidden;
             padding: 0.25rem 0; scroll-behavior: smooth;
-            min-height: 135px; /* Pas untuk tinggi kartu */
+            min-height: 135px;
         }
         .deck-area::-webkit-scrollbar { height: 6px; }
         .deck-area::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
 
-        /* TCG Cards */
         .tcg-grid {
             flex: 1; min-h-0; 
             display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;
@@ -73,7 +70,7 @@
 
         .type-badge { font-family: 'Oswald', sans-serif; font-size: 0.5rem; padding: 0.1rem 0.25rem; border-radius: 0.25rem; color: white; text-transform: uppercase; }
 
-        /* --- BATTLE ARENA (GBA STYLE + TYPES) --- */
+        /* --- BATTLE ARENA --- */
         .arena-bg {
             background: linear-gradient(to bottom, #dbeafe 0%, #e0f2fe 40%, #bbf7d0 60%, #86efac 100%);
             border-radius: 0.5rem; border: 4px solid #475569;
@@ -124,7 +121,7 @@
             100% { transform: translate(100%, -50%) skewX(20deg); opacity: 0; }
         }
 
-        /* --- PUZZLE BOARD (6x6) --- */
+        /* --- PUZZLE BOARD --- */
         .game-board-container {
             width: 100%; aspect-ratio: 1 / 1; position: relative;
             background: #fff; border-radius: 0.5rem; border: 4px solid #475569;
@@ -138,7 +135,6 @@
         
         .floating-dmg { position: absolute; font-family: 'VT323', monospace; font-size: 2.5rem; color: #e11d48; text-shadow: 2px 2px 0 #fff, -1px -1px 0 #fff; pointer-events: none; z-index: 50; animation: floatUp 0.8s forwards ease-out; }
         .floating-crit { font-size: 3.5rem; color: #f59e0b; text-shadow: 3px 3px 0 #b45309, -1px -1px 0 #fff; z-index: 55; }
-        .floating-heal { color: #10b981; }
         @keyframes floatUp { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 20% { transform: translate(-50%, -80%) scale(1.2); opacity: 1; } 100% { transform: translate(-50%, -120px) scale(1); opacity: 0; } }
     </style>
 </head>
@@ -150,6 +146,12 @@
             <h1 class="text-4xl font-black text-slate-800 mb-6 uppercase leading-tight">Master<br><span class="text-sky-500">Battle</span></h1>
             
             <div id="lobby-actions" class="space-y-4">
+                <!-- NAMA PEMAIN -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1 text-left px-1">Nama Kamu:</label>
+                    <input type="text" id="player-name-input" placeholder="DAZAI" maxlength="10" class="w-full p-3 border-2 border-slate-300 rounded-xl mb-2 text-center text-xl font-black uppercase outline-none focus:border-sky-400 bg-slate-50">
+                </div>
+
                 <div class="p-3 bg-sky-50 border-2 border-sky-200 rounded-xl">
                     <button onclick="createRoom()" class="w-full py-3 bg-sky-500 hover:bg-sky-600 text-white rounded-lg font-black active:scale-95 transition-transform">BUAT ROOM</button>
                 </div>
@@ -169,48 +171,47 @@
         </div>
     </div>
 
-    <!-- 2. DRAFT PICK (CARD MOVEMENT & DECK SCROLL) -->
+    <!-- 2. DRAFT PICK -->
     <div id="draft-screen" class="fixed inset-0 bg-slate-100 z-40 hidden">
-        
-        <!-- Header Turn -->
         <div class="flex-none p-3 text-center bg-white shadow-sm z-10 rounded-b-xl border-b-2 border-slate-200">
             <h2 id="draft-turn-text" class="text-xl font-black uppercase text-slate-400">MEMUAT KARTU...</h2>
         </div>
 
-        <!-- Lawan Deck (Horizontal Scroll) -->
         <div class="deck-container mt-1">
-            <div class="flex justify-between px-1 mb-1"><span class="text-[11px] font-black text-rose-500">DECK LAWAN</span><span id="p2-count" class="text-[11px] font-bold text-slate-400">0/5</span></div>
+            <div class="flex justify-between px-1 mb-1">
+                <span class="text-[11px] font-black text-rose-500">DECK <span id="ui-opp-name" class="uppercase">LAWAN</span></span>
+                <span id="p2-count" class="text-[11px] font-bold text-slate-400">0/5</span>
+            </div>
             <div class="deck-area" id="p2-deck-slots">
-                <!-- Kartu TCG musuh akan APPEND kesini -->
                 <p id="p2-deck-empty" class="text-xs text-slate-400 italic my-auto mx-auto w-full text-center">Menunggu pilihan lawan...</p>
             </div>
         </div>
 
-        <!-- Pool Kartu Tengah -->
         <div id="pool-grid" class="tcg-grid mt-1"></div>
 
-        <!-- Pemain Deck (Horizontal Scroll) -->
         <div class="deck-container mb-1">
-            <div class="flex justify-between px-1 mb-1"><span class="text-[11px] font-black text-sky-500">DECK KAMU</span><span id="p1-count" class="text-[11px] font-bold text-slate-400">0/5</span></div>
+            <div class="flex justify-between px-1 mb-1">
+                <span class="text-[11px] font-black text-sky-500">DECK <span id="ui-my-name" class="uppercase">KAMU</span></span>
+                <span id="p1-count" class="text-[11px] font-bold text-slate-400">0/5</span>
+            </div>
             <div class="deck-area" id="p1-deck-slots">
-                <!-- Kartu TCG kita akan APPEND kesini -->
                 <p id="p1-deck-empty" class="text-xs text-slate-400 italic my-auto mx-auto w-full text-center">Pilih dari pool di atas!</p>
             </div>
         </div>
-
     </div>
 
-    <!-- 3. BATTLE ARENA (GBA & STAB INFO) -->
+    <!-- 3. BATTLE ARENA -->
     <div id="game-container" class="fixed inset-0 bg-slate-100 z-30 flex flex-col p-3 hidden justify-between">
-        
-        <!-- Arena GBA -->
         <div class="flex-none arena-bg w-full h-[220px] mb-2">
             <div id="epic-move" class="epic-move-text">FLAMETHROWER!</div>
 
             <!-- Enemy Status -->
             <div class="gba-status-box gba-enemy-box">
                 <div class="flex justify-between items-end">
-                    <span id="enemy-name" class="font-black text-[13px] uppercase truncate w-3/4 text-slate-800">ENEMY</span>
+                    <div class="flex flex-col w-3/4">
+                        <span id="enemy-player-name" class="text-[9px] font-black text-rose-500 uppercase truncate">ENEMY</span>
+                        <span id="enemy-name" class="font-black text-[13px] uppercase truncate text-slate-800 leading-none">POKEMON</span>
+                    </div>
                     <span class="text-[9px] font-bold text-slate-600">Lv50</span>
                 </div>
                 <div id="enemy-type-badge" class="mt-1 flex gap-1"></div>
@@ -221,7 +222,10 @@
             <!-- Player Status -->
             <div class="gba-status-box gba-player-box">
                 <div class="flex justify-between items-end">
-                    <span id="player-name" class="font-black text-[13px] uppercase truncate w-3/4 text-slate-800">PLAYER</span>
+                    <div class="flex flex-col w-3/4">
+                        <span id="player-player-name" class="text-[9px] font-black text-sky-500 uppercase truncate">PLAYER</span>
+                        <span id="player-name" class="font-black text-[13px] uppercase truncate text-slate-800 leading-none">POKEMON</span>
+                    </div>
                     <span class="text-[9px] font-bold text-slate-600">Lv50</span>
                 </div>
                 <div id="player-type-badge" class="mt-1 flex gap-1"></div>
@@ -229,17 +233,14 @@
                 <div class="text-right text-[9px] font-black mt-1"><span id="player-hp-text">0/0</span></div>
             </div>
 
-            <!-- Sprites -->
             <div class="sprite-container p2-pos" id="p2-container"><img id="p2-sprite" src="" class="monster-sprite" alt="Enemy"></div>
             <div class="sprite-container p1-pos" id="p1-container"><img id="p1-sprite" src="" class="monster-sprite" alt="Player"></div>
         </div>
 
-        <!-- Battle Log -->
         <div class="flex-none w-full bg-white border-4 border-slate-400 rounded-lg p-2 mb-3 shadow-sm flex items-center min-h-[45px]">
             <span id="log-text" class="pixel-text text-[22px] font-bold text-slate-800 leading-none">Pertarungan dimulai!</span>
         </div>
 
-        <!-- Papan Puzzle -->
         <div class="flex-1 w-full max-w-sm mx-auto flex justify-center mb-2">
             <div id="board" class="game-board-container">
                 <div id="gems-container" class="absolute inset-0"></div>
@@ -250,33 +251,40 @@
         </div>
     </div>
 
-    <!-- 4. MODAL RESULT -->
+    <!-- 4. MODAL RESULT & REMATCH -->
     <div id="game-over" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center hidden">
         <div class="bg-white p-8 rounded-2xl text-center max-w-sm w-[90%] border-4 border-slate-300">
             <h2 id="result-title" class="text-6xl font-black mb-2"></h2>
-            <p id="result-subtitle" class="text-slate-500 font-bold mb-8 text-lg"></p>
-            <button onclick="location.reload()" class="w-full py-4 bg-sky-500 hover:bg-sky-600 rounded-xl font-black text-white active:scale-95 shadow-lg">MAIN LAGI</button>
+            <p id="result-subtitle" class="text-slate-500 font-bold mb-4 text-lg"></p>
+            
+            <div class="flex flex-col gap-3 w-full mt-4">
+                <button onclick="requestRematch()" id="btn-rematch" class="w-full py-4 bg-sky-500 hover:bg-sky-600 rounded-xl font-black text-white active:scale-95 shadow-lg transition-all">REMATCH</button>
+                <button onclick="returnToLobby()" class="w-full py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-black active:scale-95 shadow-sm transition-all">KEMBALI KE LOBBY</button>
+            </div>
+            <p id="rematch-status" class="text-xs text-sky-600 mt-3 font-bold animate-pulse hidden">Menunggu lawan menyetujui rematch...</p>
         </div>
     </div>
 
 <script>
-    // --- CONFIG ---
+    // --- CONFIG & DATA ---
     const ROWS = 6; const COLS = 6; const POOL_SIZE = 15;
     const TYPE_COLORS = { normal:'#A8A77A', fire:'#EE8130', water:'#6390F0', electric:'#F7D02C', grass:'#7AC74C', ice:'#96D9D6', fighting:'#C22E28', poison:'#A33EA1', ground:'#E2BF65', flying:'#A98FF3', psychic:'#F95587', bug:'#A6B91A', rock:'#B6A136', ghost:'#735797', dragon:'#6F35FC', dark:'#705898', steel:'#B7B7CE', fairy:'#D685AD' };
     
     const getAnim = (id) => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`;
     const getStatic = (id) => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
 
-    // --- ABLY ---
+    // --- ABLY & STATE ---
     const ably = new Ably.Realtime('4opURQ.FVPiqg:z5W8zQxWoBNlXmlAXvOv4Bz1bmn_ISnFucJGpjFijS8');
-    let channel; let myRole = ''; let myTurnId = '';
-
+    let channel; 
+    let myRole = ''; let myTurnId = '';
+    let myName = 'Player'; let oppName = 'Enemy';
+    
     let poolData = []; let typeRels = {}; 
     let myTeam = []; let oppTeam = [];
     let draftTurn = 'p1';
-    
     let board = [];
     let state = { turn: 'p1', isAnim: false, myActive: 0, oppActive: 0 };
+    let rematchReq = { me: false, opp: false };
 
     // --- AUDIO ---
     let actx;
@@ -287,8 +295,6 @@
     function sEpic() { pT(900, 'triangle', 0.2, 0.05); setTimeout(()=>pT(1200, 'sine', 0.3, 0.05), 100); }
 
     function setStat(msg) { document.getElementById('lobby-status').innerText = msg; }
-
-    // Tunggu channel attached sepenuhnya
     function waitAttached(ch) {
         return new Promise((resolve, reject) => {
             if (ch.state === 'attached') return resolve();
@@ -296,100 +302,85 @@
         });
     }
 
+    function getName() {
+        let input = document.getElementById('player-name-input').value.trim();
+        return input === "" ? (myRole === 'host' ? "HOST" : "GUEST") : input;
+    }
+
     // ==========================================
-    // 1. LOBBY — HOST
+    // 1. MULTIPLAYER HANDSHAKE (NEW ROBUST LOGIC)
     // ==========================================
     async function createRoom() {
         initA();
+        myName = getName();
         const code = Math.random().toString(36).substring(2, 6).toUpperCase();
         myRole = 'host'; myTurnId = 'p1';
 
         document.getElementById('lobby-actions').classList.add('hidden');
         document.getElementById('lobby-waiting').classList.remove('hidden');
         document.getElementById('display-room-code').innerText = code;
-        document.getElementById('lobby-sync-msg').innerText = "Membangun Deck TCG...";
-
-        await fetchPool();
         document.getElementById('lobby-sync-msg').innerText = "Menunggu lawan bergabung...";
 
-        // Host pakai channel biasa (tidak perlu rewind)
         channel = ably.channels.get(`room-${code}`);
         await waitAttached(channel);
 
-        let started = false;
-
-        // Dengar ping dari guest, balas dengan data
-        channel.subscribe('guest-ping', () => {
-            if (started) return;
-            // Kirim ulang tiap ping — idempotent
-            channel.publish('game-start', { pool: poolData, types: typeRels });
+        // Tunggu Guest Join
+        channel.subscribe('join', async (msg) => {
+            oppName = msg.data.name;
+            setStat(`${oppName} bergabung. Memuat kartu...`);
+            await fetchPool();
+            channel.publish('init-data', { pool: poolData, types: typeRels, hostName: myName });
         });
 
-        // Tunggu konfirmasi guest sudah terima
-        channel.subscribe('guest-ack', () => {
-            if (started) return;
-            started = true;
-            channel.unsubscribe('guest-ping');
-            channel.unsubscribe('guest-ack');
+        // Tunggu Guest Ready
+        channel.subscribe('ready', () => {
+            setStat("Memulai Game...");
             startDraft();
         });
+
+        setupGameListeners();
     }
 
-    // ==========================================
-    // 1. LOBBY — GUEST
-    // ==========================================
     async function joinRoom() {
         initA();
+        myName = getName();
         const code = document.getElementById('room-code-input').value.toUpperCase();
         if (code.length !== 4) return setStat("Kode 4 digit!");
         myRole = 'guest'; myTurnId = 'p2';
-        setStat('Mencari Room...');
+        setStat('Menghubungkan ke Room...');
 
-        // Guest pakai rewind=1 dengan qualified channel name
-        // Ini replay 1 pesan terakhir — tangkap game-start yang mungkin sudah terkirim
-        channel = ably.channels.get(`[?rewind=1]room-${code}`);
+        channel = ably.channels.get(`room-${code}`);
+        await waitAttached(channel);
 
-        let received = false;
-        let pingInterval;
-
-        // SUBSCRIBE DULU sebelum attach/ping — penting!
-        channel.subscribe('game-start', async (msg) => {
-            if (received) return;
-            received = true;
-            clearInterval(pingInterval);
-            setStat('Data diterima!');
-
+        // Tunggu Host ngirim data awal
+        channel.subscribe('init-data', (msg) => {
+            oppName = msg.data.hostName;
             poolData = msg.data.pool;
-            typeRels  = msg.data.types;
-
-            channel.unsubscribe('game-start');
-            // Konfirmasi ke host, lalu mulai draft
-            await channel.publish('guest-ack', {});
+            typeRels = msg.data.types;
+            channel.publish('ready', { name: myName });
             startDraft();
         });
 
-        // Tunggu channel attached, BARU mulai ping
-        await waitAttached(channel);
-        setStat('Menyinkronkan data...');
+        // Kasih tau Host kita join
+        channel.publish('join', { name: myName });
+        setupGameListeners();
+    }
 
-        const doPing = () => {
-            if (!received) channel.publish('guest-ping', {});
-        };
-
-        doPing(); // ping pertama langsung
-        pingInterval = setInterval(() => {
-            if (received) { clearInterval(pingInterval); return; }
-            setStat('Menyinkronkan data...');
-            doPing();
-        }, 2000);
+    function setupGameListeners() {
+        channel.subscribe('rematch', async (msg) => {
+            if(msg.data.sender !== myRole) {
+                rematchReq.opp = true;
+                checkRematchLogic();
+            }
+        });
     }
 
     // ==========================================
-    // 2. FETCH POKEAPI (LENGKAP 6 STATS)
+    // 2. FETCH POKEAPI
     // ==========================================
     async function fetchPool() {
         let ids = new Set();
-        while(ids.size < POOL_SIZE) ids.add(Math.floor(Math.random() * 493) + 1); // Gen 1-4
+        while(ids.size < POOL_SIZE) ids.add(Math.floor(Math.random() * 493) + 1);
         
         const promises = Array.from(ids).map(id => fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then(r=>r.json()));
         const res = await Promise.all(promises);
@@ -424,7 +415,6 @@
         });
     }
 
-    // Lazy Fetch Attack (+ ambil Element Tipe untuk STAB)
     async function fetchAttackMove(movesList) {
         for(let i=0; i<4; i++) {
             let rand = movesList[Math.floor(Math.random() * movesList.length)].move;
@@ -437,25 +427,32 @@
     }
 
     // ==========================================
-    // 3. DRAFT PICK (REAL MOVEMENT)
+    // 3. DRAFT PICK
     // ==========================================
     function startDraft() {
-        document.getElementById('lobby-screen').classList.add('hidden'); document.getElementById('draft-screen').style.display = 'flex';
+        document.getElementById('lobby-screen').classList.add('hidden'); 
+        document.getElementById('game-over').classList.add('hidden');
+        document.getElementById('draft-screen').style.display = 'flex';
+        
+        document.getElementById('ui-my-name').innerText = myName;
+        document.getElementById('ui-opp-name').innerText = oppName;
+
         renderPool(); updateDraftUI();
 
+        // Clear previous listener to avoid double triggers during rematch
+        channel.unsubscribe('pick');
         channel.subscribe('pick', (msg) => {
             const { pTurn, pCardId, pIdx } = msg.data;
             if(pTurn !== myTurnId) {
                 const poke = poolData[pIdx]; oppTeam.push(poke);
                 
-                // PINDAHKAN KARTU KE DECK LAWAN
                 const cardEl = document.getElementById(pCardId);
                 const deckOpp = document.getElementById('p2-deck-slots');
                 document.getElementById('p2-deck-empty').style.display = 'none';
                 
                 cardEl.style.borderColor = '#e11d48'; cardEl.style.opacity = '0.6'; cardEl.style.pointerEvents = 'none';
                 deckOpp.appendChild(cardEl);
-                deckOpp.scrollLeft = deckOpp.scrollWidth; // Auto scroll to right
+                deckOpp.scrollLeft = deckOpp.scrollWidth;
                 
                 document.getElementById('p2-count').innerText = `${oppTeam.length}/5`;
                 draftTurn = myTurnId; updateDraftUI(); pT(600); checkDraftDone();
@@ -491,14 +488,13 @@
 
         pT(600); myTeam.push(poke);
         
-        // PINDAHKAN KARTU KE DECK KITA
         const cardEl = document.getElementById(cardId);
         const deckMy = document.getElementById('p1-deck-slots');
         document.getElementById('p1-deck-empty').style.display = 'none';
         
         cardEl.style.borderColor = '#0ea5e9'; cardEl.style.boxShadow = '0 0 10px rgba(14, 165, 233, 0.4)'; cardEl.style.pointerEvents = 'none';
         deckMy.appendChild(cardEl);
-        deckMy.scrollLeft = deckMy.scrollWidth; // Auto scroll
+        deckMy.scrollLeft = deckMy.scrollWidth;
         
         document.getElementById('p1-count').innerText = `${myTeam.length}/5`;
         
@@ -512,7 +508,7 @@
         if(draftTurn === myTurnId) {
             txt.innerText = "GILIRANMU! PILIH KARTU"; txt.className = "text-2xl font-black uppercase text-sky-500";
         } else {
-            txt.innerText = "MENUNGGU LAWAN..."; txt.className = "text-2xl font-black uppercase text-rose-500";
+            txt.innerText = `MENUNGGU ${oppName}...`; txt.className = "text-2xl font-black uppercase text-rose-500";
         }
     }
 
@@ -529,9 +525,16 @@
     function initBattle() {
         document.getElementById('draft-screen').style.display = 'none'; document.getElementById('game-container').classList.remove('hidden');
         
+        // Tampilkan nama player di Arena
+        document.getElementById('player-player-name').innerText = myName;
+        document.getElementById('enemy-player-name').innerText = oppName;
+
         setActive('p1', 0); setActive('p2', 0); 
         state.turn = 'p1'; updateBoardLock();
         
+        // Clear old listeners
+        channel.unsubscribe('board-init'); channel.unsubscribe('attack'); channel.unsubscribe('end-turn');
+
         if(myRole === 'host') {
             generateBoardData();
             setTimeout(()=> channel.publish('board-init', { b: board.map(row=>row.map(c=>c.pIdx)) }), 500);
@@ -549,7 +552,6 @@
         const poke = team[idx];
         const spriteEl = document.getElementById(`${side}-sprite`);
         
-        // Render Badges di GBA UI
         let badgesHtml = poke.types.map(t => `<span class="type-badge" style="background:${TYPE_COLORS[t]||'#777'}">${t.substring(0,3)}</span>`).join('');
 
         if(side === 'p1') { 
@@ -591,7 +593,7 @@
     function setLog(txt) { document.getElementById('log-text').innerText = txt; }
     function updateBoardLock() {
         if(state.turn === myTurnId) { document.getElementById('board-lock').classList.add('hidden'); setLog("Giliranmu! Cocokkan puzzle."); }
-        else { document.getElementById('board-lock').classList.remove('hidden'); setLog("Menunggu lawan menyerang..."); }
+        else { document.getElementById('board-lock').classList.remove('hidden'); setLog(`Menunggu ${oppName}...`); }
     }
 
     function showEpicMove(moveName) {
@@ -600,7 +602,7 @@
     }
 
     // ==========================================
-    // 5. PUZZLE 6x6 & RPG STAB DAMAGE LOGIC
+    // 5. PUZZLE 6x6 & RPG LOGIC
     // ==========================================
     const boardEl = document.getElementById('board'); const gemsContainer = document.getElementById('gems-container');
 
@@ -699,13 +701,10 @@
                 usedMoveName = myPoke.learnedMove.name;
                 showEpicMove(usedMoveName); await sleep(600); 
 
-                // PHY VS SPECIAL
                 let atkStat = myPoke.learnedMove.class === 'special' ? myPoke.spa : myPoke.atk;
                 let defStat = myPoke.learnedMove.class === 'special' ? oppPoke.spd : oppPoke.def;
                 
-                // TYPE MULTIPLIER (Elemen Move vs Elemen Lawan)
-                let mult = 1;
-                let moveType = myPoke.learnedMove.type;
+                let mult = 1; let moveType = myPoke.learnedMove.type;
                 if(typeRels[moveType]) {
                     oppPoke.types.forEach(opT => {
                         if(typeRels[moveType].double.includes(opT)) mult *= 2;
@@ -714,12 +713,9 @@
                     });
                 }
 
-                // STAB (Same Type Attack Bonus)
                 let stab = myPoke.types.includes(moveType) ? 1.5 : 1;
-
                 let baseDmg = Math.floor((atkStat / defStat) * (myPoke.learnedMove.power / 2) * (group.cells.length/3));
                 
-                // CRITICAL HIT
                 isCrit = Math.random() < (myPoke.spe / 255); 
                 if (isCrit) { baseDmg *= 1.5; setLog(`CRITICAL HIT dari ${myPoke.name}!`); }
                 else if (mult > 1) { setLog(`Super Effective!`); }
@@ -763,7 +759,7 @@
         let oppPoke = oppTeam[oppPokeIdx]; let myPoke = myTeam[state.myActive];
 
         if(data.isFainted) {
-            sFaint(); setLog(`Lawan salah langkah!`);
+            sFaint(); setLog(`${oppName} salah langkah!`);
         } else {
             if(data.moveName) { showEpicMove(data.moveName); await sleep(600); }
 
@@ -804,6 +800,9 @@
         boardEl.appendChild(el); setTimeout(()=>el.remove(), 1000);
     }
 
+    // ==========================================
+    // 6. GAME OVER & REMATCH LOBBY
+    // ==========================================
     function endGame(win) {
         state.isAnim = true; const m = document.getElementById('game-over');
         if(win) { document.getElementById('result-title').innerText="MENANG!"; document.getElementById('result-title').className="text-6xl font-black mb-2 text-sky-500"; document.getElementById('result-subtitle').innerText="Semua Pokemon musuh kalah!"; }
@@ -811,9 +810,54 @@
         setTimeout(() => m.classList.remove('hidden'), 1000);
     }
 
+    function requestRematch() {
+        rematchReq.me = true;
+        const btn = document.getElementById('btn-rematch');
+        btn.innerText = "MENUNGGU PERSETUJUAN...";
+        btn.disabled = true;
+        btn.classList.replace('bg-sky-500', 'bg-slate-400');
+        document.getElementById('rematch-status').classList.remove('hidden');
+        channel.publish('rematch', { sender: myRole });
+        checkRematchLogic();
+    }
+
+    async function checkRematchLogic() {
+        if (rematchReq.me && rematchReq.opp) {
+            // Reset state game
+            rematchReq = { me: false, opp: false };
+            myTeam = []; oppTeam = []; board = []; draftTurn = 'p1';
+            
+            // Bersihkan deck HTML
+            document.getElementById('p1-deck-slots').innerHTML = '<p id="p1-deck-empty" class="text-xs text-slate-400 italic my-auto mx-auto w-full text-center">Pilih dari pool di atas!</p>';
+            document.getElementById('p2-deck-slots').innerHTML = '<p id="p2-deck-empty" class="text-xs text-slate-400 italic my-auto mx-auto w-full text-center">Menunggu pilihan lawan...</p>';
+            document.getElementById('p1-count').innerText = `0/5`;
+            document.getElementById('p2-count').innerText = `0/5`;
+            
+            // Kembalikan tombol rematch
+            const btn = document.getElementById('btn-rematch');
+            btn.innerText = "REMATCH"; btn.disabled = false;
+            btn.classList.replace('bg-slate-400', 'bg-sky-500');
+            document.getElementById('rematch-status').classList.add('hidden');
+            
+            // Pindah ke UI Draft Pick
+            document.getElementById('game-over').classList.add('hidden');
+            document.getElementById('game-container').classList.add('hidden');
+            document.getElementById('draft-screen').style.display = 'flex';
+            document.getElementById('draft-turn-text').innerText = "MEMUAT POOL BARU...";
+
+            if (myRole === 'host') {
+                await fetchPool();
+                channel.publish('init-data', { pool: poolData, types: typeRels, hostName: myName });
+            }
+        }
+    }
+
+    function returnToLobby() {
+        if(channel) channel.detach();
+        location.reload(); // Reload bersih untuk kembali ke lobby awal
+    }
+
     function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 </script>
 </body>
 </html>
-
-
