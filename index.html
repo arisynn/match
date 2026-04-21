@@ -601,6 +601,19 @@
         </div>
     </div>
 
+    <!-- GAME OVER SCREEN (NEW) -->
+    <div id="game-over-screen" class="fixed inset-0 z-[300000] bg-slate-900/95 backdrop-blur-md hidden flex-col items-center justify-center font-['Oswald'] transition-opacity duration-1000 opacity-0">
+        <h1 id="go-title" class="text-6xl font-black italic mb-4 tracking-widest scale-125 transition-transform duration-700">VICTORY!</h1>
+        <div class="relative w-full h-56 flex justify-center items-center my-6">
+            <div class="absolute inset-0 bg-gradient-to-t from-transparent via-white/10 to-transparent animate-pulse"></div>
+            <img id="go-mvp-img" src="" class="h-full object-contain drop-shadow-[0_10px_20px_rgba(255,255,255,0.5)] scale-150 relative z-10 transition-transform hover:scale-125">
+        </div>
+        <div class="text-center z-20 mt-4">
+            <p class="text-slate-400 text-sm font-bold tracking-widest mb-1 uppercase">MVP (Last Stand)</p>
+            <p id="go-mvp-name" class="text-white text-4xl font-black tracking-widest uppercase drop-shadow-md">PIKACHU</p>
+        </div>
+    </div>
+
 <script>
     // --- FULLSCREEN TOGGLE DENGAN PORTRAIT LOCK ---
     function toggleFullScreen() {
@@ -776,15 +789,18 @@
         
         team.forEach((p, idx) => {
             let isDead = p.hp <= 0;
+            
+            // JANGAN TAMPILKAN JIKA PINGSAN
+            if (isDead) return;
+
             let isFull = p.energy >= p.maxEnergy;
             let isActive = idx === activeIdx;
             
             let wrap = document.createElement('div');
             wrap.className = `team-icon-wrap ${isActive ? 'is-active' : 'border border-slate-300 opacity-80'}`;
-            if(isDead) wrap.classList.add('opacity-40');
             
             let energyPct = Math.min(100, (p.energy / p.maxEnergy) * 100);
-            let grayscale = isDead ? 100 : (100 - energyPct);
+            let grayscale = (100 - energyPct);
             
             let img = document.createElement('img');
             img.src = p.spriteS;
@@ -1936,8 +1952,44 @@
 
         if(win) myScore++; else oppScore++;
 
-        await sleep(3000);
+        // SHOW GAME OVER OVERLAY WITH MVP
+        const goScreen = document.getElementById('game-over-screen');
+        const goTitle = document.getElementById('go-title');
+        const goMvpImg = document.getElementById('go-mvp-img');
+        const goMvpName = document.getElementById('go-mvp-name');
+        
+        goTitle.innerText = win ? "VICTORY!" : "DEFEAT!";
+        goTitle.className = win 
+            ? "text-6xl font-black italic mb-4 tracking-widest transition-transform duration-700 text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.8)] scale-125" 
+            : "text-6xl font-black italic mb-4 tracking-widest transition-transform duration-700 text-rose-500 drop-shadow-[0_0_15px_rgba(244,63,94,0.8)] scale-125";
+        
+        let mvp = win ? myTeam[state.myActive] : oppTeam[state.oppActive];
+        goMvpImg.src = mvp.spriteA;
+        goMvpImg.onerror = function(){this.src=mvp.spriteS;};
+        goMvpName.innerText = mvp.name;
+        
+        goScreen.classList.remove('hidden');
+        goScreen.classList.add('flex');
+        
+        // Fade in Screen
+        await sleep(50);
+        goScreen.classList.remove('opacity-0');
+        goScreen.classList.add('opacity-100');
 
+        await sleep(4000); // Tahan layar stats selama 4 detik
+
+        // Transisi halus (Fade to Black) sebelum kembali ke Lobby
+        const fadeOverlay = document.createElement('div');
+        fadeOverlay.className = "fixed inset-0 bg-slate-900 z-[400000] transition-opacity duration-500 opacity-0 pointer-events-none";
+        document.body.appendChild(fadeOverlay);
+        
+        await sleep(50);
+        fadeOverlay.classList.remove('opacity-0');
+        fadeOverlay.classList.add('opacity-100');
+        
+        await sleep(500); // Layar sepenuhnya hitam
+
+        // RESET STATE
         myTeam = []; oppTeam = []; board = []; draftTurn = 'p1'; battleLogHistory = [];
         document.getElementById('p1-deck-slots').innerHTML = '<p id="p1-deck-empty" class="text-xs text-slate-400 italic my-auto mx-auto w-full text-center">Pilih dari pool di atas!</p>';
         document.getElementById('p2-deck-slots').innerHTML = '<p id="p2-deck-empty" class="text-xs text-slate-400 italic my-auto mx-auto w-full text-center">Menunggu pilihan lawan...</p>';
@@ -1946,8 +1998,14 @@
 
         document.getElementById('game-container').classList.add('hidden');
         document.getElementById('game-container').classList.remove('flex');
-        document.getElementById('waiting-room').classList.remove('hidden');
+        
+        // Hide Game Over Screen
+        goScreen.classList.add('hidden');
+        goScreen.classList.remove('flex');
+        goScreen.classList.remove('opacity-100');
+        goScreen.classList.add('opacity-0');
 
+        document.getElementById('waiting-room').classList.remove('hidden');
         document.getElementById('lobby-scoreboard').classList.remove('hidden');
         document.getElementById('lobby-scoreboard').classList.add('flex');
         document.getElementById('score-p1-name').innerText = myName;
@@ -1973,6 +2031,11 @@
             document.getElementById('lobby-status-text').innerText = "Menunggu Host memulai ronde baru...";
             btnStart.classList.add('hidden');
         }
+
+        // Fade Out the black screen
+        fadeOverlay.classList.remove('opacity-100');
+        fadeOverlay.classList.add('opacity-0');
+        setTimeout(() => fadeOverlay.remove(), 500);
     }
 
     function cancelLobby() {
